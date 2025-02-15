@@ -4,17 +4,16 @@
 
 {% block content %}
     <div class="container">
+        {% if CUSTOM_ROLES.ADMIN in DB_ROLES %}
+            {% include 'utils/_messages.html' %}
+            <form method="post" action="">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-sm btn-danger">{% trans 'Синхронизировать' %}</button>
+            </form>
+            <hr/>
+        {% endif %}
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            {% if request.user.email == 'admin@oshsu.kg' %}
-                {% include 'utils/_messages.html' %}
-                <form method="post" action="">
-                    {% csrf_token %}
-
-                    <button type="submit" class="btn btn-sm btn-danger">{% trans 'Синхронизировать' %}</button>
-                </form>
-                <hr/>
-            {% endif %}
-
             <h2 class="text-center my-4">{% trans 'Список факультетов' %}</h2>
             <div class="table-responsive">
                 <table class="table table-striped">
