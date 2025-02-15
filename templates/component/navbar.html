@@ -1,0 +1,27 @@
+{% load i18n %}
+
+<ul>
+    {% if request.user.is_authenticated %}
+        <li class="{% if navbar == 'index' %}active{% endif %}">
+            <a href="{% url 'index' %}"><i class="fas fa-home"></i><span>{% trans 'Главная' %}</span></a>
+        </li>
+
+        {% if CUSTOM_ROLES.SPEC in DB_ROLES or CUSTOM_ROLES.ADMIN in DB_ROLES %}
+            <li class="{% if navbar == 'faculty' %}active{% endif %}">
+                <a href="{% url 'faculty' %}"><i class="fas fa-book"></i><span>{% trans 'Факультеты' %}</span></a>
+            </li>
+        {% endif %}
+
+        <li class="{% if navbar == 'at-register-student' %}active{% endif %}">
+            <a href="{% url 'academic-transcript-student' %}"><i
+                    class="fas fa-registered"></i><span>{% trans 'Регистрация' %}</span></a>
+        </li>
+        <li>
+            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i><span>{% trans 'Выход' %}</span></a>
+        </li>
+    {% else %}
+        <li>
+            <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i><span>{% trans 'Войти' %}</span></a>
+        </li>
+    {% endif %}
+</ul>

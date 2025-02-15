@@ -1,0 +1,32 @@
+{% extends 'admin_base.html' %}
+{% load static i18n crispy_forms_tags cms_tags %}
+
+
+{% block content %}
+    <div class="container">
+
+        <a class="add_tabledata addBtn btn btn-danger btn-sm mb-2"
+           href="{% url 'index' %}">
+            <i class="fa fa-arrow-left"></i> {% trans 'Категории' %}
+        </a>
+
+        <h3 class="text-center">{% trans 'Выберите факультет:' %}</h3>
+        <hr/>
+        <div class="row">
+            {% for faculty in faculties %}
+                <div class="col-md-3 mb-2">
+                    <div class="card h-100 d-flex flex-column">
+                        <div class="card-body flex-grow-1">
+                            <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id pk=transcript.id %}">
+                                <h6 class="card-title mb-0">{{ faculty.title }} ({{ faculty.short_name }})</h6>
+                            </a>
+                            {% trans 'Кол-во зарег. справок:' %} {{ faculty.transcript_count }} <br/>
+                            {% trans 'Кол-во использ. справок:' %} {{ faculty.registration_count }} <br/>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+{% endblock %}

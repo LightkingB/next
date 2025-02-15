@@ -1,0 +1,26 @@
+{% load cms_tags i18n %}
+
+<form method="post" action="{{ request.path }}" class="ajax-update-form">
+    {% csrf_token %}
+    <div class="modal-header">
+        <h5><i class="fa fa-check modal-icon text-primary"></i>
+            {% trans "Процесс потверждения!!!" %}
+        </h5>
+        <small class="modal-subtitle"></small>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <p class="lead">
+            <strong>{{ object }}</strong> ?
+        </p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-dismiss="modal"><i class="fa fa-times"></i>
+            {% trans 'Закрыть' %}
+        </button>
+        <button type="submit" class="btn btn-sm btn-outline-primary"><i
+                class="fa fa-check"></i> {% trans 'Подтверждаю' %}</button>
+    </div>
+</form>

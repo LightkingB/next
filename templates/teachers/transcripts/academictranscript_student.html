@@ -1,0 +1,153 @@
+{% extends 'admin_base.html' %}
+{% load static i18n crispy_forms_tags cms_tags %}
+
+
+{% block content %}
+    <div class="container">
+        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" placeholder="ФИО или уникальный номер студента"
+                               name="student"/>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" name="search_myedu"
+                                class="btn btn-danger">{% trans 'Поиск из MyEDU' %}</button>
+                    </div>
+                </div>
+            </form>
+            {% if students %}
+                <div class="row my-4">
+                    <table class="table table-bordered table-sm table-responsive-xl">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">{% trans 'ФИО' %}</th>
+                            <th scope="col">{% trans 'Факультет' %}</th>
+                            <th scope="col" rowspan="2" class="option_th"></th>
+                        </tr>
+                        </thead>
+                        <tbody class="order">
+                        {% for student in students %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ student.student_fio }}</td>
+                                <td>{{ student.faculty_name }}</td>
+                                <td>
+
+                                    <button
+                                            class="btn btn-sm btn-danger select-student"
+                                            data-student='{
+                                            "student_fio": "{{ student.student_fio }}",
+                                            "faculty_id": "{{ student.faculty_id }}",
+                                            "faculty_name": "{{ student.faculty_name }}",
+                                            "student_id": "{{ student.student_id }}"
+                                        }'
+                                            data-toggle="modal"
+                                            data-target="#studentModal">
+                                        Выбрать
+                                    </button>
+
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr class="table-warning nosort">
+                                <td colspan="100%" class="text-center">
+                                    <small class="text-muted">{% trans 'Пусто' %}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        {% else %}
+            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="studentModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Выбранный студент</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>ФИО:</strong> <span id="modal-student-fio"></span></p>
+                    <p><strong>Факультет:</strong> <span id="modal-student-faculty"></span></p>
+                    <input type="hidden" id="modal-student-id">
+                    <div class="form-group">
+                        <label for="unique-number">Уникальный номер</label>
+                        <input type="text" class="form-control" id="unique-number">
+                        <div id="error-message" class="text-danger" style="display: none;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="save-student">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            let selectedStudent = {};
+
+            $(".select-student").on("click", function () {
+                let studentData = JSON.parse($(this).attr("data-student"));
+                selectedStudent = studentData;
+
+                $("#modal-student-fio").text(studentData.student_fio);
+                $("#modal-student-faculty").text(studentData.faculty_name);
+                $("#modal-student-id").val(studentData.student_id);
+                $("#unique-number").val("");
+                $("#error-message").hide();
+
+                $("#studentModal").modal("show");
+            });
+
+
+            $("#save-student").on("click", function () {
+                let uniqueNumber = $("#unique-number").val().trim();
+                if (uniqueNumber === "") {
+                    $("#error-message").text("Введите уникальный номер!").show();
+                    return;
+                }
+
+                $.ajax({
+                    url: "{% url 'save_student_academic_transcript' %}",
+                    type: "POST",
+                    contentType: "application/json",
+                    headers: {"X-CSRFToken": "{{ csrf_token }}"},
+                    data: JSON.stringify({
+                        student_fio: selectedStudent.student_fio,
+                        faculty_id: selectedStudent.faculty_id,
+                        faculty_name: selectedStudent.faculty_name,
+                        student_id: selectedStudent.student_id,
+                        unique_number: uniqueNumber
+                    }),
+                    success: function (response) {
+                        if (response.success) {
+                            toastr["success"](response.message);
+                            $("#studentModal").modal("hide");
+                        } else {
+                            $("#error-message").text(response.message).show();
+                        }
+                    },
+                    error: function (xhr) {
+                        $("#error-message").text("Ошибка при сохранении!").show();
+                    }
+                });
+            });
+        });
+
+    </script>
+{% endblock %}

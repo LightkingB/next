@@ -1,0 +1,44 @@
+{% extends 'admin_base.html' %}
+{% load static i18n crispy_forms_tags cms_tags %}
+
+
+{% block content %}
+    <div class="container">
+        <a class="add_tabledata addBtn btn btn-danger btn-sm mb-2"
+           href="{% url 'index' %}">
+            <i class="fa fa-arrow-left"></i> {% trans 'Категории' %}
+        </a>
+        <h2 class="mb-4 text-center">{% trans 'Отчет по справкам' %}</h2>
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-sm table-responsive-xl">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">{% trans '№ академической справки' %}</th>
+                    <th scope="col">{% trans 'ФИО студента' %}</th>
+                    <th scope="col">{% trans 'Факультет' %}</th>
+                </tr>
+                </thead>
+                <tbody class="order">
+                {% for report in regtranscripts %}
+                    <tr data-id="{{ report.id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ report.faculty_transcript.transcript_number }}</td>
+                        <td>{{ report.student_fio }}</td>
+                        <td>{{ report.faculty.title }}</td>
+                    </tr>
+                {% empty %}
+                    <tr class="table-warning nosort">
+                        <td colspan="100%" class="text-center">
+                            <small class="text-muted">{% trans 'Пусто' %}</small>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+{% endblock %}

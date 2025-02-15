@@ -1,0 +1,69 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title> {% block title %} {% trans 'Отдел качеств' %} {% endblock %}</title>
+
+    {% include "component/header.html" %}
+    {% block css %} {% endblock %}
+
+</head>
+
+<body>
+<nav class="navbar-qualities">
+    <div class="header">
+        <a href="#" id="menu-action">
+            <i class="fa fa-bars"></i>
+            <span>{% trans 'Закрыть меню' %}</span>
+        </a>
+        <div class="logo">
+            {% trans 'Админ. панель' %}
+        </div>
+    </div>
+    <div class="sidebar">
+        {% include "component/navbar.html" %}
+    </div>
+</nav>
+<!-- Content -->
+<div class="main">
+    {% block content %}
+    {% endblock %}
+</div>
+<div class="modal fade" id="modal-ajax">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
+{% include 'component/footer.html' %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#menu-action').click(function () {
+            $('.sidebar').toggleClass('active');
+            $('.main').toggleClass('active');
+            $(this).toggleClass('active');
+
+            if ($('.sidebar').hasClass('active')) {
+                $(this).find('i').addClass('fa-close');
+                $(this).find('i').removeClass('fa-bars');
+            } else {
+                $(this).find('i').addClass('fa-bars');
+                $(this).find('i').removeClass('fa-close');
+            }
+        });
+
+        $('#menu-action').hover(function () {
+            $('.sidebar').toggleClass('hovered');
+        });
+    });
+</script>
+{% block scripts %}
+
+{% endblock %}
+</body>
+</html>

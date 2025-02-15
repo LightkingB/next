@@ -1,0 +1,23 @@
+{% load i18n static %}
+<div class="search-form mb-4">
+    <form method="get" class="search-complex__form" action="">
+        <div class="form-row">
+            {% for field in filter.form %}
+                <div class="col-md-3 col-12">
+                    <div class="form-group{% if field.errors %} invalid{% endif %}">
+                        <label for="{{ field.id_for_label }}">{% trans field.label %}</label>
+                        {{ field }}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="col-md-3 col-12 mt-4">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    {% trans 'Поиск' %}
+                </button>
+                <a href="{{ request.path }}" class="btn btn-sm btn-danger">
+                    {% trans 'Очистить' %}
+                </a>
+            </div>
+        </div>
+    </form>
+</div>

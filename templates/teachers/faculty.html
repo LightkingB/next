@@ -1,0 +1,47 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+            {% if request.user.email == 'admin@oshsu.kg' %}
+                {% include 'utils/_messages.html' %}
+                <form method="post" action="">
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-sm btn-danger">{% trans 'Синхронизировать' %}</button>
+                </form>
+                <hr/>
+            {% endif %}
+
+            <h2 class="text-center my-4">{% trans 'Список факультетов' %}</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">{% trans 'Название' %}</th>
+                        <th scope="col">{% trans 'Короткое' %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for faculty in faculties %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ faculty.title }}</td>
+                            <td>{{ faculty.short_name }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3">{% trans 'Нет данных' %}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+        {% endif %}
+    </div>
+{% endblock %}
