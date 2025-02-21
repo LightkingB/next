@@ -1,6 +1,6 @@
 import requests
 from django.db import transaction
-from django.db.models import Count, Prefetch, Q, Exists, OuterRef
+from django.db.models import Count, Q, Exists, OuterRef
 from django.http import Http404
 
 from bsadmin.consts import API_URL
@@ -34,7 +34,8 @@ class UserService:
                 "myedu_id": myedu_data['user']['id'],
                 "last_name": myedu_data['user']['last_name'],
                 "first_name": myedu_data['user']['name'],
-                "fathers_name": myedu_data['user']['father_name']
+                "fathers_name": myedu_data['user']['father_name'],
+                "is_worker": myedu_data['user']['is_working'],
             }
         )
         user.set_password(password)

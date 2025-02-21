@@ -1,5 +1,3 @@
-import json
-
 import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -10,7 +8,7 @@ from django.views.generic import ListView
 
 from bsadmin.consts import API_URL
 from bsadmin.forms import LoginForm, FacultyTranscriptForm, FailFacultyTranscriptForm
-from bsadmin.models import RegistrationTranscript, FacultyTranscript
+from bsadmin.models import RegistrationTranscript
 from bsadmin.services import UserService, HttpMyEduServiceAPI
 from utils.filter_pagination import Pagination
 
