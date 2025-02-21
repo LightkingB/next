@@ -68,7 +68,7 @@ class UserService:
             )
         ).values(
             'id', 'title', 'short_name', 'total_documents', 'used_documents', 'defective_documents'
-        )
+        ).order_by('title')
         return faculties
 
     @staticmethod
