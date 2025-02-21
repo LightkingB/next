@@ -1,0 +1,174 @@
+{% extends 'admin_base.html' %}
+{% load static i18n crispy_forms_tags cms_tags %}
+
+
+{% block content %}
+    <div class="container">
+
+        <h2 class="mb-4 text-center">{{ faculty.title }}({{ faculty.short_name }})</h2>
+        <hr/>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a class="add_tabledata addBtn btn btn-danger btn-sm"
+                   href="{% url 'index' %}">
+                    <i class="fa fa-arrow-left"></i> {% trans 'Список факультетов' %}
+                </a>
+                <a class="add_tabledata addBtn btn btn-success btn-sm mx-2"
+                   href="{% url 'faculty-academic-transcript-report' faculty_id=faculty.id %}">
+                    <i class="fas fa-flag"></i> {% trans 'Отчёт' %}
+                </a>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadModal">
+                Справка была повреждена ?
+            </button>
+
+        </div>
+        <hr/>
+
+        <ul class="list-group">
+            {% for category in category_list %}
+                <li class="list-group-item">
+                    <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
+                        {{ category.title }} - количество листов: {{ category.page_count }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <hr/>
+        <h4 class="text-center">Список академических справок</h4>
+
+        <hr/>
+        {% include 'utils/_messages.html' %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm table-responsive-xl">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Категория</th>
+                    <th scope="col">Номер справки</th>
+                    <th scope="col">Повреждена ?</th>
+                </tr>
+                </thead>
+                <tbody class="order">
+                {% for transcript in transcripts %}
+                    <tr class="{% if transcript.is_defective %} error-block {% endif %} {% if transcript.is_used %} success-block {% endif %}">
+
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ transcript.category.title }} (лист: {{ transcript.category.page_count }})</td>
+                        <td>
+                            {{ transcript.transcript_number }}
+                            {% if transcript.is_used %}
+                                <i class="fas fa-check-square"></i>
+                            {% endif %}
+
+                            {% if transcript.is_defective %}
+                                <i class="fas fa-times"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transcript.is_defective and transcript.files %}
+                                <a href="{{ transcript.files.url }}" target="_blank"><i class="fas fa-file-pdf"></i></a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "utils/_pagination.html" with page_obj=transcripts %}
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Повреждена справка?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="uploadForm" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="transcript_number">Уникальный номер справки</label>
+                            <input type="text" class="form-control form-control-sm" id="transcript_number"
+                                   name="transcript_number"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label for="files">Загрузить файл</label>
+                            <input type="file" class="form-control form-control-sm" id="files" name="files" required>
+                        </div>
+
+                        <div id="error-message" class="alert alert-danger d-none">
+
+                            <span id="error-text"></span>
+                        </div>
+
+                        <div id="not-found-message" class="alert alert-warning d-none">
+
+                            <span id="not-found-text"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Закрыть</button>
+                        <button type="submit" class="btn btn-sm btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $("#uploadForm").submit(function (event) {
+                event.preventDefault();
+
+                var formData = new FormData(this);
+
+
+                $("#error-message").addClass("d-none");
+                $("#not-found-message").addClass("d-none");
+
+
+                $("#error-text").text("");
+                $("#not-found-text").text("");
+
+                $.ajax({
+                    url: "{% url 'fail_transcript' %}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        if (response.success) {
+                            toastr["success"]("Данные успешно занесены в базу");
+                            location.reload();
+                        } else if (response.error) {
+                            $("#error-text").text(response.error);
+                            $("#error-message").removeClass("d-none");
+                        } else if (response.not_found) {
+                            $("#not-found-text").text(response.not_found);
+                            $("#not-found-message").removeClass("d-none");
+                        }
+                    },
+                    error: function () {
+                        $("#error-text").text("Произошла ошибка. Попробуйте снова.");
+                        $("#error-message").removeClass("d-none");
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

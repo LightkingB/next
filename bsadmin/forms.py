@@ -1,6 +1,7 @@
 from django import forms
+from django.forms import ClearableFileInput
 
-from bsadmin.models import AcademicTranscript, FacultyTranscript
+from bsadmin.models import FacultyTranscript
 
 
 class DateInput(forms.DateInput):
@@ -31,37 +32,10 @@ class LoginForm(forms.Form):
                                ))
 
 
-class AcademicTranscriptForm(forms.ModelForm):
-    class Meta:
-        model = AcademicTranscript
-        fields = ['title', 'count']
-
-        widgets = {
-            'title': forms.TextInput(
-                attrs={
-                    "id": "title",
-                    "class": "form-control form-control-sm",
-                    "placeholder": 'Название',
-                    "autofocus": "autofocus",
-                    "oninvalid": "this.setCustomValidity('Пожалуйста, заполните!')",
-                    "oninput": "setCustomValidity('')"
-                }),
-            'count': forms.NumberInput(
-                attrs={
-                    "id": "count",
-                    "class": "form-control form-control-sm",
-                    "placeholder": 'Количество',
-                    "autofocus": "autofocus",
-                    "oninvalid": "this.setCustomValidity('Пожалуйста, заполните!')",
-                    "oninput": "setCustomValidity('')"
-                })
-        }
-
-
 class FacultyTranscriptForm(forms.ModelForm):
     class Meta:
         model = FacultyTranscript
-        fields = ['transcript_number', 'category']
+        fields = ['transcript_number']
 
         widgets = {
             'transcript_number': forms.TextInput(
@@ -72,14 +46,16 @@ class FacultyTranscriptForm(forms.ModelForm):
                     "autofocus": "autofocus",
                     "oninvalid": "this.setCustomValidity('Пожалуйста, заполните!')",
                     "oninput": "setCustomValidity('')"
-                }),
-            'category': forms.Select(
-                attrs={
-                    "id": "category",
-                    "class": "form-control form-control",
-                    "autofocus": "autofocus",
-                    "oninvalid": "this.setCustomValidity('Пожалуйста, заполните!')",
-                    "oninput": "setCustomValidity('')"
                 })
 
         }
+
+
+class CustomClearableFileInput(ClearableFileInput):
+    template_name = "utils/_file.html"
+
+
+class FailFacultyTranscriptForm(forms.ModelForm):
+    class Meta:
+        model = FacultyTranscript
+        fields = ['transcript_number', 'files']

@@ -1,0 +1,14 @@
+{% load static i18n %}
+<div class="custom-file-wrapper">
+    <label for="id_{{ widget.name }}">{% trans "Документ" %}:</label>
+    {% if widget.is_initial %}
+        <a href="{{ widget.value.url }}"> <i class="fas fa-file"></i> Просмотр</a>
+
+        {% if not widget.required %}
+            <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"
+                    {% if widget.attrs.disabled %} disabled{% endif %}>
+            <label class="mb-0" for="{{ widget.checkbox_id }}">{% trans 'Удалить' %}</label>
+        {% endif %}
+    {% endif %}
+    <input type="{{ widget.type }}" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+</div>

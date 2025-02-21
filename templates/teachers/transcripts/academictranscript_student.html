@@ -5,149 +5,123 @@
 {% block content %}
     <div class="container">
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <form action="" method="post">
+
+            <form action="" method="post" class="mb-4">
                 {% csrf_token %}
                 <div class="form-row">
                     <div class="col-md-6">
                         <input type="text" class="form-control" placeholder="ФИО или уникальный номер студента"
-                               name="student"/>
+                               name="student" id="myedu_id"/>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                         <button type="submit" name="search_myedu"
                                 class="btn btn-danger">{% trans 'Поиск из MyEDU' %}</button>
                     </div>
                 </div>
+                <div class="my-2">
+                    <label>
+                        Если студент отсутствует в MyEDU
+                        <input type="checkbox" name="manual_entry" id="manual_entry"
+                               {% if manual_entry_checked %}checked{% endif %}/>
+                    </label>
+                </div>
+                <div class="form-row" id="custom_transcript_student"
+                     style="display: {% if manual_entry_checked %}flex{% else %}none{% endif %};">
+                    <div class="col-md-6">
+                        <label for="custom_student_fio" class="form-label">Введите ФИО студента</label>
+                        <input type="text" class="form-control" id="custom_student_fio" name="custom_student_fio"
+                               placeholder="Асанов Асан Асанович"
+                               value="{{ custom_data.custom_student_fio|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="custom_faculty" class="form-label">Введите факультет</label>
+                        <select class="form-control" aria-label="" id="custom_faculty" name="custom_faculty_id">
+                            {% for faculty in faculties %}
+                                <option value="{{ faculty.id }}"
+                                        {% if faculty.id|stringformat:"s" == custom_data.custom_faculty_id %}selected{% endif %}>
+                                    {{ faculty.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="custom_transcript_number" class="form-label">№ академической справки</label>
+                        <input type="text" class="form-control" id="custom_transcript_number"
+                               name="custom_transcript_number"
+                               placeholder="123456789"
+                               value="{{ custom_data.custom_transcript_number|default_if_none:'' }}">
+                    </div>
+
+                    <div class="my-2 text-center col-md-12">
+                    <button type="submit" class="btn btn-danger">Сохранить</button>
+                    </div>
+                </div>
+
             </form>
+            {% include 'utils/_messages.html' %}
             {% if students %}
                 <div class="row my-4">
-                    <table class="table table-bordered table-sm table-responsive-xl">
-                        <thead class="thead-light">
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">{% trans 'ФИО' %}</th>
-                            <th scope="col">{% trans 'Факультет' %}</th>
-                            <th scope="col" rowspan="2" class="option_th"></th>
-                        </tr>
-                        </thead>
-                        <tbody class="order">
-                        {% for student in students %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ student.student_fio }}</td>
-                                <td>{{ student.faculty_name }}</td>
-                                <td>
+                    {% for student in students %}
+                        <div class="col-md-6 mb-2">
+                            <div class="card h-100 d-flex flex-column">
+                                <div class="card-body flex-grow-1">
 
-                                    <button
-                                            class="btn btn-sm btn-danger select-student"
-                                            data-student='{
-                                            "student_fio": "{{ student.student_fio }}",
-                                            "faculty_id": "{{ student.faculty_id }}",
-                                            "faculty_name": "{{ student.faculty_name }}",
-                                            "student_id": "{{ student.student_id }}"
-                                        }'
-                                            data-toggle="modal"
-                                            data-target="#studentModal">
-                                        Выбрать
-                                    </button>
-
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr class="table-warning nosort">
-                                <td colspan="100%" class="text-center">
-                                    <small class="text-muted">{% trans 'Пусто' %}</small>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                                    <form action="{% url 'save-student-academic-transcript' %}" method="post">
+                                        {% csrf_token %}
+                                        <h5 class="card-title mb-0">{{ student.student_fio }}</h5>
+                                        <p class="card-text">
+                                            {{ student.faculty_name }}
+                                        </p>
+                                        <input type="hidden" value="{{ student.student_id }}" name="student_id">
+                                        <input type="hidden" value="{{ student.student_fio }}" name="student_fio">
+                                        <input type="hidden" value="{{ student.faculty_id }}" name="faculty_id">
+                                        <div class="form-row">
+                                            <div class="col-md-9">
+                                                <input type="text"
+                                                       class="form-control transcript_number"
+                                                       name="transcript_number"
+                                                       placeholder="Номер академической справки"
+                                                />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="submit" class="btn btn-danger">Сохранить</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             {% endif %}
         {% else %}
             <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
         {% endif %}
     </div>
-
-    <div class="modal fade" id="studentModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Выбранный студент</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>ФИО:</strong> <span id="modal-student-fio"></span></p>
-                    <p><strong>Факультет:</strong> <span id="modal-student-faculty"></span></p>
-                    <input type="hidden" id="modal-student-id">
-                    <div class="form-group">
-                        <label for="unique-number">Уникальный номер</label>
-                        <input type="text" class="form-control" id="unique-number">
-                        <div id="error-message" class="text-danger" style="display: none;"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Закрыть</button>
-                    <button type="button" class="btn btn-sm btn-danger" id="save-student">Сохранить</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", function () {
-            let selectedStudent = {};
+            $('#myedu_id').focus().val('');
 
-            $(".select-student").on("click", function () {
-                let studentData = JSON.parse($(this).attr("data-student"));
-                selectedStudent = studentData;
-
-                $("#modal-student-fio").text(studentData.student_fio);
-                $("#modal-student-faculty").text(studentData.faculty_name);
-                $("#modal-student-id").val(studentData.student_id);
-                $("#unique-number").val("");
-                $("#error-message").hide();
-
-                $("#studentModal").modal("show");
-            });
-
-
-            $("#save-student").on("click", function () {
-                let uniqueNumber = $("#unique-number").val().trim();
-                if (uniqueNumber === "") {
-                    $("#error-message").text("Введите уникальный номер!").show();
-                    return;
+            const observer = new MutationObserver(() => {
+                let input = $('.transcript_number:first');
+                if (input.length) {
+                    input.focus();
+                    observer.disconnect();
                 }
-
-                $.ajax({
-                    url: "{% url 'save_student_academic_transcript' %}",
-                    type: "POST",
-                    contentType: "application/json",
-                    headers: {"X-CSRFToken": "{{ csrf_token }}"},
-                    data: JSON.stringify({
-                        student_fio: selectedStudent.student_fio,
-                        faculty_id: selectedStudent.faculty_id,
-                        faculty_name: selectedStudent.faculty_name,
-                        student_id: selectedStudent.student_id,
-                        unique_number: uniqueNumber
-                    }),
-                    success: function (response) {
-                        if (response.success) {
-                            toastr["success"](response.message);
-                            $("#studentModal").modal("hide");
-                        } else {
-                            $("#error-message").text(response.message).show();
-                        }
-                    },
-                    error: function (xhr) {
-                        $("#error-message").text("Ошибка при сохранении!").show();
-                    }
-                });
             });
-        });
 
+            observer.observe(document.body, {childList: true, subtree: true});
+
+            $('#manual_entry').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#custom_transcript_student').css('display', 'flex');
+                } else {
+                    $('#custom_transcript_student').css('display', 'none');
+                }
+            });
+
+        });
     </script>
 {% endblock %}

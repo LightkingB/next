@@ -1,8 +1,10 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
+from django.core.validators import FileExtensionValidator
 from django.db import models
 
 from bsadmin.manager import CustomUserManager
+from utils.validator import validate_file_size
 
 
 class Role(models.Model):
@@ -10,7 +12,7 @@ class Role(models.Model):
         verbose_name = 'Роль'
         verbose_name_plural = 'Роли'
 
-    name = models.CharField(max_length=150, unique=True)
+    name = models.CharField(max_length=150, unique=True, verbose_name="Название")
 
     def __str__(self):
         return self.name
@@ -29,13 +31,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
+    is_worker = models.BooleanField(default=False)
 
     roles = models.ManyToManyField("Role", related_name="users")
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "myedu_id"]
 
     def __str__(self):
         return self.email
@@ -61,45 +64,39 @@ class CategoryTranscript(models.Model):
         verbose_name_plural = 'Категории академической справки'
 
     title = models.CharField(max_length=255, verbose_name="Название")
+    page_count = models.PositiveIntegerField(default=0, verbose_name="Количество страниц")
 
     def __str__(self):
-        return self.title
-
-
-class AcademicTranscript(models.Model):
-    class Meta:
-        verbose_name = 'Информация о академичской справки'
-        verbose_name_plural = 'Информации о академичской справки'
-
-    title = models.CharField(max_length=255, verbose_name="Название")
-    count = models.PositiveIntegerField(verbose_name="Количество")
-    create_date = models.DateField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
+        return f'{self.title} - {self.page_count}'
 
 
 class FacultyTranscript(models.Model):
     class Meta:
         verbose_name = 'Академическая справка'
         verbose_name_plural = 'Академические справки'
+        unique_together = ('transcript_number', 'category')
 
     transcript_number = models.CharField(max_length=255, unique=True, verbose_name="Уникальный идентификатор")
     category = models.ForeignKey(CategoryTranscript, on_delete=models.PROTECT, verbose_name="Категория")
-    academic_transcript = models.ForeignKey(AcademicTranscript, on_delete=models.PROTECT,
-                                            verbose_name="Академическая справка")
     faculty = models.ForeignKey(Faculty, on_delete=models.PROTECT, verbose_name="Факультет")
+    is_defective = models.BooleanField(default=False)
+    files = models.FileField(upload_to="transcripts/fails/", verbose_name="Документ", blank=True, null=True,
+                             validators=[
+                                 FileExtensionValidator(allowed_extensions=['pdf']),
+                                 validate_file_size,
+                             ])
 
     def __str__(self):
-        return f'{self.transcript_number} - {self.academic_transcript.title}'
+        return f'{self.transcript_number}'
 
-    def to_dict(self):
+    def to_ft_dict(self):
         return {
             'id': self.id,
             'transcript_number': self.transcript_number,
             'category': {
                 'id': self.category.id,
-                'title': self.category.title
+                'title': self.category.title,
+                'count': self.category.page_count
             }
         }
 
@@ -111,10 +108,9 @@ class RegistrationTranscript(models.Model):
 
     faculty_transcript = models.ForeignKey(FacultyTranscript, on_delete=models.PROTECT,
                                            verbose_name="Академическая справка")
-    student_uuid = models.CharField(max_length=100, unique=True, verbose_name="Уникальный номер студента")
+    student_uuid = models.CharField(max_length=100, verbose_name="Уникальный номер студента")
     student_fio = models.CharField(max_length=150, verbose_name="ФИО студента")
-    faculty = models.ForeignKey(Faculty, on_delete=models.PROTECT,
-                                verbose_name="Факультет студента")
+    faculty = models.ForeignKey(Faculty, on_delete=models.PROTECT, verbose_name="Факультет студента")
 
     def __str__(self):
         return f'{self.student_uuid} - {self.faculty_transcript.transcript_number}'

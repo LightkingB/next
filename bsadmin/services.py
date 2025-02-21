@@ -4,7 +4,7 @@ from django.db.models import Count, Prefetch, Q, Exists, OuterRef
 from django.http import Http404
 
 from bsadmin.consts import API_URL
-from bsadmin.models import CustomUser, Faculty, AcademicTranscript, FacultyTranscript, RegistrationTranscript, \
+from bsadmin.models import CustomUser, Faculty, FacultyTranscript, RegistrationTranscript, \
     CategoryTranscript
 
 
@@ -46,38 +46,40 @@ class UserService:
         return Faculty.objects.filter(visit=True).order_by('title')
 
     @staticmethod
-    def reg_academic_transcript_faculties(transcript_id):
-        faculty_transcripts_qs = FacultyTranscript.objects.filter(academic_transcript_id=transcript_id)
-        prefetched_transcripts = Prefetch('facultytranscript_set', queryset=faculty_transcripts_qs)
-
-        faculties = (
-            Faculty.objects
-            .prefetch_related(prefetched_transcripts)
-            .annotate(
-                transcript_count=Count('facultytranscript',
-                                       filter=Q(facultytranscript__academic_transcript_id=transcript_id)),
-                registration_count=Count('facultytranscript__registrationtranscript')
+    def academic_transcripts_by_faculty_id(faculty_id):
+        return FacultyTranscript.objects.filter(faculty_id=faculty_id).select_related('category').annotate(
+            is_used=Exists(
+                RegistrationTranscript.objects.filter(faculty_transcript=OuterRef('pk'))
             )
+        ).order_by('id')
+
+    @staticmethod
+    def active_faculties_transcripts():
+        faculties = Faculty.objects.annotate(
+            total_documents=Count('facultytranscript', distinct=True),
+            used_documents=Count(
+                'facultytranscript__registrationtranscript', distinct=True
+            ),
+            defective_documents=Count(
+                'facultytranscript',
+                filter=Q(facultytranscript__is_defective=True),
+                distinct=True
+            )
+        ).values(
+            'id', 'title', 'short_name', 'total_documents', 'used_documents', 'defective_documents'
         )
         return faculties
 
     @staticmethod
-    def reg_academic_transcript_faculty(faculty_id, academic_transcript_id):
+    def reg_academic_transcript_faculty(faculty_id, category_id):
         return FacultyTranscript.objects.filter(
             faculty_id=faculty_id,
-            academic_transcript_id=academic_transcript_id
+            category_id=category_id
         ).select_related('category').annotate(
             is_used=Exists(
                 RegistrationTranscript.objects.filter(faculty_transcript=OuterRef('pk'))
             )
-        )
-
-    @staticmethod
-    def get_academic_transcript_by_id_or_404(transcript_id):
-        try:
-            return AcademicTranscript.objects.get(id=transcript_id)
-        except AcademicTranscript.DoesNotExist:
-            raise Http404
+        ).order_by('-id')
 
     @staticmethod
     def get_faculty_by_id_or_404(faculty_id):
@@ -87,9 +89,27 @@ class UserService:
             raise Http404
 
     @staticmethod
+    def get_category_transcript_by_id_or_404(category_id):
+        try:
+            return CategoryTranscript.objects.get(id=category_id)
+        except CategoryTranscript.DoesNotExist:
+            raise Http404
+
+    @staticmethod
+    def categories():
+        return CategoryTranscript.objects.all()
+
+    @staticmethod
     def get_academic_transcript_by_number(transcript_number):
         try:
             return FacultyTranscript.objects.get(transcript_number=transcript_number)
+        except FacultyTranscript.DoesNotExist:
+            return None
+
+    @staticmethod
+    def get_active_academic_transcript_by_number(transcript_number):
+        try:
+            return FacultyTranscript.objects.get(transcript_number=transcript_number, is_defective=False)
         except FacultyTranscript.DoesNotExist:
             return None
 
@@ -142,6 +162,6 @@ class UserService:
         return self.active_faculties(), None
 
     @staticmethod
-    def report_all_reg_academic_transcript_by_transcript_id(transcript_id):
+    def report_faculty_reg_academic_transcript(faculty_id):
         return RegistrationTranscript.objects.select_related('faculty_transcript', 'faculty').filter(
-            faculty_transcript__academic_transcript_id=transcript_id).order_by('student_fio')
+            faculty_transcript__faculty_id=faculty_id).order_by('student_fio')

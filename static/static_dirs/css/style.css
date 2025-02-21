@@ -34,6 +34,17 @@ p {
     color: #fff;
 }
 
+.page-item.active .page-link {
+    z-index: 3;
+    color: #fff;
+    background-color: #A00E07;
+    border-color: #A00E07;
+}
+
+.page-link, .page-link:hover {
+    color: #A00E07;
+}
+
 .btn-danger {
     background: #A00E07 !important;
 }
@@ -262,6 +273,11 @@ p {
     margin-bottom: 0;
 }
 
+.error-block {
+    color: #A00E07;
+    margin-bottom: 0;
+}
+
 .success-block {
     color: #238027;
     margin-bottom: 0;
@@ -275,6 +291,7 @@ input[type='checkbox'] {
 
 input[type='file'] {
     font-size: 12px;
+    height: auto;
 }
 
 .controls {
@@ -450,4 +467,8 @@ label {
 .active a:hover {
     color: #000 !important;
     background: #fff;
+}
+
+#custom_transcript_student {
+    display: none;
 }

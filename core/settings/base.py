@@ -23,7 +23,6 @@ SYSTEM_APPS = [
 ]
 
 THIRD_APPS = [
-    'cms.apps.CmsConfig',
     'django_filters',
     'debug_toolbar',
     'crispy_forms',
@@ -32,7 +31,9 @@ THIRD_APPS = [
 ]
 
 CUSTOM_APPS = [
+    'cms.apps.CmsConfig',
     'bsadmin.apps.BsadminConfig',
+    'stepper.apps.StepperConfig',
 ]
 
 INSTALLED_APPS = FIRST_APPS + SYSTEM_APPS + CUSTOM_APPS + THIRD_APPS

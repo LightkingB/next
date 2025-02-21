@@ -4,29 +4,224 @@
 
 {% block content %}
     <div class="container">
-
-        <a class="add_tabledata addBtn btn btn-danger btn-sm mb-2"
-           href="{% url 'index' %}">
-            <i class="fa fa-arrow-left"></i> {% trans 'Категории' %}
-        </a>
-
-        <h3 class="text-center">{% trans 'Выберите факультет:' %}</h3>
+        <div class="mb-2">
+            <a class="add_tabledata addBtn btn btn-danger btn-sm"
+               href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
+                <i class="fa fa-arrow-left"></i> {% trans 'Выбрать другую категорию' %}
+            </a>
+        </div>
         <hr/>
-        <div class="row">
-            {% for faculty in faculties %}
-                <div class="col-md-3 mb-2">
-                    <div class="card h-100 d-flex flex-column">
-                        <div class="card-body flex-grow-1">
-                            <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id pk=transcript.id %}">
-                                <h6 class="card-title mb-0">{{ faculty.title }} ({{ faculty.short_name }})</h6>
-                            </a>
-                            {% trans 'Кол-во зарег. справок:' %} {{ faculty.transcript_count }} <br/>
-                            {% trans 'Кол-во использ. справок:' %} {{ faculty.registration_count }} <br/>
-                        </div>
+        <b>{{ category.title }} - количество листов: {{ category.page_count }}</b>
+        <h5>Факультет: {{ faculty.title }}({{ faculty.short_name }})</h5>
+        <hr/>
+        <div class="mb-4">
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-6 mb-0">
+                        {{ form.transcript_number|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mt-md-4 mt-0 mb-0">
+                        <button type="submit" class="btn btn-danger">{% trans 'Сохранить' %}</button>
                     </div>
                 </div>
-            {% endfor %}
-        </div>
 
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm table-responsive-xl"
+                   id="table-ajax-facultytranscript">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">{% trans 'Академическая справка' %}</th>
+                    <th scope="col">{% trans 'Повреждена' %}</th>
+                    <th scope="col" rowspan="2" class="option_th"></th>
+                </tr>
+                </thead>
+                <tbody class="order">
+                {% for doc in facultytranscript_list %}
+                    <tr data-id="{{ doc.id }}"
+                        class="{% if doc.is_defective %} error-block {% endif %} {% if doc.is_used %} success-block {% endif %}">
+                        <td>{{ forloop.counter }}</td>
+
+                        <td>
+                            {{ doc.category.title }}({{ doc.category.page_count }}) - {{ doc.transcript_number }}
+                            {% if  doc.is_used %}
+                                <i class="fas fa-check-square"></i>
+                            {% endif %}
+                            {% if doc.is_defective %}
+                                <i class="fas fa-times"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc.is_defective and doc.files %}
+                                <a href="{{ transcript.files.url }}" target="_blank"><i class="fas fa-file-pdf"></i></a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not doc.is_used and not doc.is_defective %}
+                                <button class="btn btn-warning btn-sm update-ft-button" data-id="{{ doc.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm delete-ft-button" data-id="{{ doc.id }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr class="table-warning nosort">
+                        <td colspan="100%" class="text-center">
+                            <small class="text-muted">{% trans 'Пусто' %}</small>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% include "utils/_pagination.html" with page_obj=facultytranscript_list %}
+        </div>
     </div>
+
+
+    <!-- Модальное окно для обновления -->
+    <div class="modal fade" id="updateFacultyTranscriptModal" tabindex="-1" role="dialog"
+         aria-labelledby="updateFacultyTranscriptModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateFacultyTranscriptModalLabel">Редактировать запись</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="update-ft-form" method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="update_transcript_number">Уникальный идентификатор</label>
+                            <input type="text" class="form-control" id="update_transcript_number"
+                                   name="transcript_number"
+                                   required>
+                        </div>
+
+                        <button type="submit" class="btn btn-sm btn-danger">Редактировать</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для подтверждения удаления -->
+    <div class="modal fade" id="deleteFacultyTranscriptModal" tabindex="-1" role="dialog"
+         aria-labelledby="deleteFacultyTranscriptModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteFacultyTranscriptModalLabel">Подтвердите удаление</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите удалить запись:</p>
+                    <h5><strong>Справку №:</strong> <span id="deleteTranscriptNumber"></span></h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="confirmFTDelete">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#transcript_number').focus().val('');
+
+            $('button.update-ft-button').on('click', function () {
+                var id = $(this).data('id');
+                $('#updateFacultyTranscriptModal').modal('show');
+
+                $.ajax({
+                    url: '/faculty/update/' + id + '/transcript/',
+                    type: 'GET',
+                    success: function (response) {
+                        $('#update_transcript_number').val(response.data.transcript_number);
+                        $('#update-ft-form').attr('action', '/faculty/update/' + id + '/transcript/');
+                    },
+                    error: function () {
+                        alert('Ошибка запроса');
+                    }
+                });
+            });
+
+
+            $('#update-ft-form').on('submit', function (e) {
+                e.preventDefault();
+                var formData = $(this).serialize();
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            var row = $('tr[data-id="' + response.data.id + '"]');
+                            row.find('td').eq(1).text(response.data.category.title + '(' + response.data.category.count + ') - ' + response.data.transcript_number);
+                            $('#updateFacultyTranscriptModal').modal('hide');
+                            toastr["success"](response.message);
+                        } else {
+                            toastr["error"](response.message);
+                        }
+                    },
+                    error: function () {
+                        toastr["error"]('Повторите попытку!');
+                    }
+                });
+            });
+        });
+
+        var rowToDelete = null;
+
+
+        $('.delete-ft-button').on('click', function () {
+            rowToDelete = $(this).closest('tr');
+
+            var transcriptNumber = rowToDelete.find('td').eq(1).text();
+
+            $('#deleteTranscriptNumber').text(transcriptNumber);
+            $('#deleteFacultyTranscriptModal').modal('show');
+        });
+
+
+        $('#confirmFTDelete').on('click', function () {
+            var id = rowToDelete.data('id');
+            $.ajax({
+                url: '/faculty/delete/' + id + '/transcript/',
+                type: 'DELETE',
+                success: function (response) {
+                    if (response.status === 'success') {
+                        rowToDelete.remove();
+                        $('#deleteFacultyTranscriptModal').modal('hide');
+                        toastr["success"](response.message);
+                    } else {
+                        toastr["error"](response.message);
+                    }
+                },
+                error: function () {
+                    toastr["error"]('Повторите попытку!');
+                }
+            });
+        });
+
+    </script>
 {% endblock %}

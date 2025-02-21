@@ -4,33 +4,23 @@
 
 {% block content %}
     <div class="container">
-        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <h4>{% trans 'Добавить академическую справку' %}</h4>
-            <hr/>
-            <div class="text-right mb-2">
-
-                <a class="add_tabledata addBtn btn btn-danger btn-sm ajax-load-form"
-                   href="{% url 'academic-transcript-create' %}">
-                    <i class="fas fa-plus-circle"></i> {% trans 'Добавить информацию' %}
-                </a>
-            </div>
-            <table class="table table-bordered table-sm table-responsive-xl"
-                   id="table-ajax-{{ academictranscript_list|verbose_name:'model_name' }}">
-                <thead class="thead-light">
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">{% trans 'Название' %}</th>
-                    <th scope="col">{% trans 'Количество' %}</th>
-                    <th scope="col" rowspan="2" class="option_th"></th>
-                </tr>
-                </thead>
-                <tbody class="order">
-                {% include 'teachers/transcripts/academictranscript_list.html' %}
-                </tbody>
-            </table>
-
-        {% else %}
-            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
-        {% endif %}
+        <h3 class="text-center">{% trans 'Выберите факультет:' %}</h3>
+        <hr/>
+        <div class="row">
+            {% for faculty in faculties %}
+                <div class="col-md-3 mb-2">
+                    <div class="card h-100 d-flex flex-column">
+                        <div class="card-body flex-grow-1">
+                            <a href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
+                                <h6 class="card-title mb-0">{{ faculty.title }} ({{ faculty.short_name }})</h6>
+                            </a>
+                            {% trans 'Зарегистрированные справки:' %} {{ faculty.total_documents }} <br/>
+                            {% trans 'Использванные справки:' %} {{ faculty.used_documents }} <br/>
+                            {% trans 'Бракованные справки:' %} {{ faculty.defective_documents }} <br/>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}
