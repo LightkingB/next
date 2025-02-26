@@ -24,4 +24,8 @@
             <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i><span>{% trans 'Войти' %}</span></a>
         </li>
     {% endif %}
+
+    <li class="{% if navbar == 'at-search' %}active{% endif %}">
+        <a href="{% url 'at-search' %}"><i class="fas fa-search"></i><span>{% trans 'Поиск' %}</span></a>
+    </li>
 </ul>

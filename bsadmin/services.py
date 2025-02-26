@@ -5,7 +5,7 @@ from django.http import Http404
 
 from bsadmin.consts import API_URL
 from bsadmin.models import CustomUser, Faculty, FacultyTranscript, RegistrationTranscript, \
-    CategoryTranscript
+    CategoryTranscript, Speciality
 
 
 class HttpMyEduServiceAPI:
@@ -22,6 +22,11 @@ class HttpMyEduServiceAPI:
     @staticmethod
     def fetch_faculties_from_myedu():
         response = requests.get(API_URL + "/open/faculty")
+        return response.json() if response.status_code == 200 else None
+
+    @staticmethod
+    def fetch_specialities_from_myedu(faculty_id):
+        response = requests.get(API_URL + "/open/getspecialitywithidfaculty?id_faculty=" + str(faculty_id))
         return response.json() if response.status_code == 200 else None
 
 
@@ -45,6 +50,18 @@ class UserService:
     @staticmethod
     def active_faculties():
         return Faculty.objects.filter(visit=True).order_by('title')
+
+    @staticmethod
+    def active_specialities_by_faculty(faculty_id):
+        return Speciality.objects.filter(visit=True, faculty_id=faculty_id).order_by('title')
+
+    @staticmethod
+    def specialities_by_faculty(faculty_id):
+        return Speciality.objects.filter(faculty_id=faculty_id)
+
+    @staticmethod
+    def specialities_values_by_faculty(faculty_id):
+        return Speciality.objects.filter(faculty_id=faculty_id).values('id', 'title', 'code')
 
     @staticmethod
     def academic_transcripts_by_faculty_id(faculty_id):
@@ -139,6 +156,13 @@ class UserService:
         except Faculty.DoesNotExist:
             return None
 
+    @staticmethod
+    def get_spec_by_myedu_spec_id_or_none(myedu_spec_id):
+        try:
+            return Speciality.objects.get(myedu_spec_id=myedu_spec_id)
+        except Speciality.DoesNotExist:
+            return None
+
     def fetch_and_update_faculties(self):
         faculties_data = HttpMyEduServiceAPI.fetch_faculties_from_myedu()
         if faculties_data is None:
@@ -151,14 +175,59 @@ class UserService:
         faculties_to_activate = set(db_faculties.keys()) & set(external_faculties.keys())
 
         new_faculties = [
-            Faculty(title=data["name_ru"], short_name=data["short_name_ru"], myedu_faculty_id=myedu_id, visit=True)
+            Faculty(title=data["name_ru"], short_name=data["short_name_ru"],
+                    myedu_faculty_id=myedu_id, visit=True)
             for myedu_id, data in external_faculties.items() if myedu_id not in db_faculties
         ]
 
         with transaction.atomic():
             Faculty.objects.filter(myedu_faculty_id__in=faculties_to_deactivate).update(visit=False)
-            Faculty.objects.filter(myedu_faculty_id__in=faculties_to_activate).update(visit=True)
+
+            for myedu_id in faculties_to_activate:
+                faculty = db_faculties[myedu_id]
+                external_data = external_faculties[myedu_id]
+                faculty.title = external_data["name_ru"]
+                faculty.short_name = external_data["short_name_ru"]
+                faculty.visit = True
+                faculty.save(update_fields=["title", "short_name", "visit"])
+
             Faculty.objects.bulk_create(new_faculties)
+
+        return self.active_faculties(), None
+
+    def fetch_and_update_specialities_by_faculty(self, faculty):
+        specialities_data = HttpMyEduServiceAPI.fetch_specialities_from_myedu(faculty.myedu_faculty_id)
+        if specialities_data is None:
+            return None, "Ошибка при получении специальности"
+        faculty_id = faculty.id
+        external_specialities = {speciality["id"]: speciality for speciality in specialities_data}
+        db_specialities = {speciality.myedu_spec_id: speciality for speciality in
+                           self.specialities_by_faculty(faculty_id)}
+
+        specialities_to_deactivate = set(db_specialities.keys()) - set(external_specialities.keys())
+        specialities_to_activate = set(db_specialities.keys()) & set(external_specialities.keys())
+
+        new_specialities = [
+            Speciality(title=data["name_ru"], short_name=data["short_name_ru"], code=data["code"],
+                       myedu_spec_id=myedu_id, visit=True,
+                       faculty_id=faculty_id)
+            for myedu_id, data in external_specialities.items() if myedu_id not in db_specialities
+        ]
+
+        with transaction.atomic():
+            Speciality.objects.filter(myedu_spec_id__in=specialities_to_deactivate).update(visit=False)
+
+            for myedu_id in specialities_to_activate:
+                speciality = db_specialities[myedu_id]
+                external_data = external_specialities[myedu_id]
+                speciality.title = external_data["name_ru"]
+                speciality.short_name = external_data["short_name_ru"]
+                speciality.visit = True
+                speciality.faculty_id = faculty_id
+                speciality.code = external_data["code"]
+                speciality.save(update_fields=["title", "short_name", "visit", "code"])
+
+            Speciality.objects.bulk_create(new_specialities)
 
         return self.active_faculties(), None
 
@@ -166,3 +235,11 @@ class UserService:
     def report_faculty_reg_academic_transcript(faculty_id):
         return RegistrationTranscript.objects.select_related('faculty_transcript', 'faculty').filter(
             faculty_transcript__faculty_id=faculty_id).order_by('student_fio')
+
+    @staticmethod
+    def search_academic_transcript_number(transcript_number):
+        is_transcript_number_exist = RegistrationTranscript.objects.select_related('faculty_transcript').filter(
+            faculty_transcript__transcript_number__endswith=transcript_number)
+        if is_transcript_number_exist:
+            return True
+        return False

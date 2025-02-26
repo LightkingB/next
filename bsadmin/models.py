@@ -58,6 +58,22 @@ class Faculty(models.Model):
         return self.title
 
 
+class Speciality(models.Model):
+    class Meta:
+        verbose_name = 'Специальность'
+        verbose_name_plural = 'Специальности'
+
+    title = models.CharField(max_length=255, verbose_name="Название")
+    myedu_spec_id = models.PositiveIntegerField(unique=True, verbose_name="MyEDU Специальность ID")
+    short_name = models.CharField(max_length=150, verbose_name="Короткое название")
+    visit = models.BooleanField(default=True, verbose_name="Показывать")
+    code = models.CharField(verbose_name="Шифр", max_length=255, null=True, blank=True)
+    faculty = models.ForeignKey(Faculty, on_delete=models.PROTECT, verbose_name="Факультет")
+
+    def __str__(self):
+        return self.title
+
+
 class CategoryTranscript(models.Model):
     class Meta:
         verbose_name = 'Категория академической справки'
@@ -74,7 +90,7 @@ class FacultyTranscript(models.Model):
     class Meta:
         verbose_name = 'Академическая справка'
         verbose_name_plural = 'Академические справки'
-        unique_together = ('transcript_number', 'category')
+        unique_together = ('transcript_number',)
 
     transcript_number = models.CharField(max_length=255, unique=True, verbose_name="Уникальный идентификатор")
     category = models.ForeignKey(CategoryTranscript, on_delete=models.PROTECT, verbose_name="Категория")
@@ -111,6 +127,9 @@ class RegistrationTranscript(models.Model):
     student_uuid = models.CharField(max_length=100, verbose_name="Уникальный номер студента")
     student_fio = models.CharField(max_length=150, verbose_name="ФИО студента")
     faculty = models.ForeignKey(Faculty, on_delete=models.PROTECT, verbose_name="Факультет студента")
+    faculty_history = models.CharField(max_length=255, verbose_name="История факультета", null=True, blank=True)
+    speciality = models.ForeignKey(Speciality, on_delete=models.PROTECT, verbose_name="Специальность студента")
+    speciality_history = models.CharField(max_length=255, verbose_name="История специальности", null=True, blank=True)
 
     def __str__(self):
         return f'{self.student_uuid} - {self.faculty_transcript.transcript_number}'

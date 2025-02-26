@@ -9,31 +9,30 @@
             <form method="post" action="">
                 {% csrf_token %}
 
+                <a href="{% url 'faculty' %}" class="btn btn-sm btn-danger"><i class="fa fa-arrow-left"></i> Список
+                    факультетов</a>
                 <button type="submit" class="btn btn-sm btn-danger">{% trans 'Синхронизировать' %}</button>
+
             </form>
             <hr/>
         {% endif %}
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <h2 class="text-center my-4">{% trans 'Список факультетов' %}</h2>
+            <h4 class="my-4">{% trans 'Список специальностей факультета' %} "{{ faculty.title }}"</h4>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">{% trans 'Название' %}</th>
-                        <th scope="col">{% trans 'Короткое' %}</th>
+                        <th scope="col">{% trans 'Код' %}</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for faculty in faculties %}
+                    {% for speciality in specialities %}
                         <tr>
                             <th scope="row">{{ forloop.counter }}</th>
-                            <td>
-                                <a href="{% url 'speciality' faculty_id=faculty.id %}">
-                                    {{ faculty.title }}
-                                </a>
-                            </td>
-                            <td>{{ faculty.short_name }}</td>
+                            <td>{{ speciality.title }}</td>
+                            <td>{{ speciality.code|default:"-" }}</td>
                         </tr>
                     {% empty %}
                         <tr>

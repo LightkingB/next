@@ -27,15 +27,11 @@
                 </div>
                 <div class="form-row" id="custom_transcript_student"
                      style="display: {% if manual_entry_checked %}flex{% else %}none{% endif %};">
+
                     <div class="col-md-6">
-                        <label for="custom_student_fio" class="form-label">Введите ФИО студента</label>
-                        <input type="text" class="form-control" id="custom_student_fio" name="custom_student_fio"
-                               placeholder="Асанов Асан Асанович"
-                               value="{{ custom_data.custom_student_fio|default_if_none:'' }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="custom_faculty" class="form-label">Введите факультет</label>
+                        <label for="custom_faculty" class="form-label">Выберите факультет</label>
                         <select class="form-control" aria-label="" id="custom_faculty" name="custom_faculty_id">
+                            <option selected value=''>----------</option>
                             {% for faculty in faculties %}
                                 <option value="{{ faculty.id }}"
                                         {% if faculty.id|stringformat:"s" == custom_data.custom_faculty_id %}selected{% endif %}>
@@ -44,7 +40,25 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-6">
+                        <label for="custom_speciality" class="form-label">Выберите специальность</label>
+                        <select class="form-control" aria-label="" id="custom_speciality" name="custom_speciality_id">
+                            <option selected value=''>----------</option>
+                            {% for speciality in custom_data.specialities %}
+                                <option value="{{ speciality.id }}"
+                                        {% if speciality.id|stringformat:"s" == custom_data.custom_speciality_id %}selected{% endif %}>
+                                    {{ speciality.title }} ({{ speciality.code|default_if_none:"" }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="custom_student_fio" class="form-label">Введите ФИО студента</label>
+                        <input type="text" class="form-control" id="custom_student_fio" name="custom_student_fio"
+                               placeholder="Асанов Асан Асанович"
+                               value="{{ custom_data.custom_student_fio|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-6">
                         <label for="custom_transcript_number" class="form-label">№ академической справки</label>
                         <input type="text" class="form-control" id="custom_transcript_number"
                                name="custom_transcript_number"
@@ -52,8 +66,13 @@
                                value="{{ custom_data.custom_transcript_number|default_if_none:'' }}">
                     </div>
 
-                    <div class="my-2 text-center col-md-12">
-                    <button type="submit" class="btn btn-danger">Сохранить</button>
+                    <input type="hidden" name="custom_faculty_title" id="custom_faculty_title"
+                           value="{{ custom_faculty_title|default_if_none:'' }}"/>
+                    <input type="hidden" name="custom_speciality_title" id="custom_speciality_title"
+                           value="{{ custom_speciality_title|default_if_none:'' }}"/>
+
+                    <div class="my-3 text-center col-md-12">
+                        <button type="submit" class="btn btn-danger">Сохранить</button>
                     </div>
                 </div>
 
@@ -70,11 +89,16 @@
                                         {% csrf_token %}
                                         <h5 class="card-title mb-0">{{ student.student_fio }}</h5>
                                         <p class="card-text">
-                                            {{ student.faculty_name }}
+                                            Факультет: {{ student.faculty_name }} <br/>
+                                            Специальность: {{ student.speciality_name }}
                                         </p>
                                         <input type="hidden" value="{{ student.student_id }}" name="student_id">
                                         <input type="hidden" value="{{ student.student_fio }}" name="student_fio">
                                         <input type="hidden" value="{{ student.faculty_id }}" name="faculty_id">
+                                        <input type="hidden" value="{{ student.faculty_name }}" name="faculty_title">
+                                        <input type="hidden" value="{{ student.speciality_name }}"
+                                               name="speciality_title">
+                                        <input type="hidden" value="{{ student.speciality_id }}" name="speciality_id">
                                         <div class="form-row">
                                             <div class="col-md-9">
                                                 <input type="text"
@@ -122,6 +146,35 @@
                 }
             });
 
+            $("#custom_faculty_title").val($("#custom_faculty option:selected").text());
+            $("#custom_faculty").on('change', function () {
+                $("#custom_faculty_title").val($("#custom_faculty option:selected").text());
+                let faculty_id = this.value;
+                let speciality = $("#custom_speciality");
+                speciality.empty();
+                speciality.append("<option selected value=''>------------</option>");
+                $.ajax({
+                    type: "GET",
+                    data: {"faculty_id": faculty_id},
+                    url: "{% url 'specialities-faculty' %}",
+                    success: function (data) {
+                        data.specialities.forEach(function (spec) {
+                            speciality.append($("<option>", {
+                                value: spec.id,
+                                text: spec.title + " (" + spec.code + ")"
+                            }));
+                        });
+                    },
+                    error: function (err) {
+                        alert("Ошибка при получении специальности")
+                    }
+                })
+            });
+
+            $("#custom_speciality_title").val($("#custom_speciality option:selected").text());
+            $("#custom_speciality").on("change", function () {
+                $("#custom_speciality_title").val($("#custom_speciality option:selected").text());
+            });
         });
     </script>
 {% endblock %}

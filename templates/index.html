@@ -14,7 +14,7 @@
                             <a href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
                                 <h6 class="card-title mb-0">{{ faculty.title }} ({{ faculty.short_name }})</h6>
                             </a>
-                            {% trans 'Зарегистрированные справки:' %} {{ faculty.total_documents }} <br/>
+                            {% trans 'Зарегистр. справки:' %} {{ faculty.total_documents }} <br/>
                             {% trans 'Использванные справки:' %} {{ faculty.used_documents }} <br/>
                             {% trans 'Бракованные справки:' %} {{ faculty.defective_documents }} <br/>
                         </div>

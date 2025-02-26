@@ -25,16 +25,20 @@
 
         </div>
         <hr/>
-
-        <ul class="list-group">
+        <div class="row">
             {% for category in category_list %}
-                <li class="list-group-item">
-                    <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
-                        {{ category.title }} - количество листов: {{ category.page_count }}
-                    </a>
-                </li>
+                <div class="col-md-3 mb-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
+                                <h6 class="card-title mb-0">{{ category.title }} - количество
+                                    листов: {{ category.page_count }}</h6>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
+        </div>
 
         <hr/>
         <h4 class="text-center">Список академических справок</h4>
