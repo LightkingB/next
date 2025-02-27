@@ -4,21 +4,25 @@
 
 {% block content %}
     <div class="container">
-        <div class="login-form">
-            <div class="py-2 logo-wrapper text-center">
-                <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" class="mb-2" alt="">
+        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+            <div class="login-form">
+                <div class="py-2 logo-wrapper text-center">
+                    <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" class="mb-2" alt="">
+                </div>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <label for="custom_transcript_number" class="form-label">Введите № выданной академической справки
+                        (полностью*)</label>
+                    <input type="text" class="form-control mb-3" name="transcript_number" id="custom_transcript_number"
+                           placeholder="12345678" required/>
+                    <input type="submit" id="teacher_login" class="btn btn-danger btn-block btn-lg"
+                           value="{% trans 'Поиск' %}">
+                </form>
+                {% include 'utils/_messages.html' %}
             </div>
-            <form action="" method="post">
-                {% csrf_token %}
-                <label for="custom_transcript_number" class="form-label">Введите № академической справки
-                    (полностью*)</label>
-                <input type="text" class="form-control mb-3" name="transcript_number" id="custom_transcript_number"
-                       placeholder="12345678" required/>
-                <input type="submit" id="teacher_login" class="btn btn-danger btn-block btn-lg"
-                       value="{% trans 'Поиск' %}">
-            </form>
-            {% include 'utils/_messages.html' %}
-        </div>
+        {% else %}
+            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+        {% endif %}
     </div>
 
 {% endblock %}

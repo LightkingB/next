@@ -4,87 +4,90 @@
 
 {% block content %}
     <div class="container">
+        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+            <h4 class="mb-0 text-center">{{ faculty.title }}({{ faculty.short_name }})</h4>
+            <hr/>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a class="add_tabledata addBtn btn btn-danger btn-sm"
+                       href="{% url 'index' %}">
+                        <i class="fa fa-arrow-left"></i> {% trans 'Список факультетов' %}
+                    </a>
+                    <a class="add_tabledata addBtn btn btn-success btn-sm mx-2"
+                       href="{% url 'faculty-academic-transcript-report' faculty_id=faculty.id %}">
+                        <i class="fas fa-flag"></i> {% trans 'Отчёт' %}
+                    </a>
+                </div>
 
-        <h2 class="mb-4 text-center">{{ faculty.title }}({{ faculty.short_name }})</h2>
-        <hr/>
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <a class="add_tabledata addBtn btn btn-danger btn-sm"
-                   href="{% url 'index' %}">
-                    <i class="fa fa-arrow-left"></i> {% trans 'Список факультетов' %}
-                </a>
-                <a class="add_tabledata addBtn btn btn-success btn-sm mx-2"
-                   href="{% url 'faculty-academic-transcript-report' faculty_id=faculty.id %}">
-                    <i class="fas fa-flag"></i> {% trans 'Отчёт' %}
-                </a>
+                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadModal">
+                    Справка была повреждена ?
+                </button>
+
             </div>
-
-            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadModal">
-                Справка была повреждена ?
-            </button>
-
-        </div>
-        <hr/>
-        <div class="row">
-            {% for category in category_list %}
-                <div class="col-md-3 mb-2">
-                    <div class="card">
-                        <div class="card-body">
-                            <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
-                                <h6 class="card-title mb-0">{{ category.title }} - количество
-                                    листов: {{ category.page_count }}</h6>
-                            </a>
+            <hr/>
+            <div class="row">
+                {% for category in category_list %}
+                    <div class="col-md-3 mb-2">
+                        <div class="card">
+                            <div class="card-body">
+                                <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
+                                    <h6 class="card-title mb-0">{{ category.title }} - количество
+                                        листов: {{ category.page_count }}</h6>
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
-
-        <hr/>
-        <h4 class="text-center">Список академических справок</h4>
-
-        <hr/>
-        {% include 'utils/_messages.html' %}
-        <div class="table-responsive">
-            <table class="table table-bordered table-sm table-responsive-xl">
-                <thead class="thead-light">
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Категория</th>
-                    <th scope="col">Номер справки</th>
-                    <th scope="col">Повреждена ?</th>
-                </tr>
-                </thead>
-                <tbody class="order">
-                {% for transcript in transcripts %}
-                    <tr class="{% if transcript.is_defective %} error-block {% endif %} {% if transcript.is_used %} success-block {% endif %}">
-
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ transcript.category.title }} (лист: {{ transcript.category.page_count }})</td>
-                        <td>
-                            {{ transcript.transcript_number }}
-                            {% if transcript.is_used %}
-                                <i class="fas fa-check-square"></i>
-                            {% endif %}
-
-                            {% if transcript.is_defective %}
-                                <i class="fas fa-times"></i>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if transcript.is_defective and transcript.files %}
-                                <a href="{{ transcript.files.url }}" target="_blank"><i class="fas fa-file-pdf"></i></a>
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                    </tr>
                 {% endfor %}
-                </tbody>
-            </table>
+            </div>
 
-            {% include "utils/_pagination.html" with page_obj=transcripts %}
-        </div>
+            <hr/>
+            <h4 class="text-center">Список академических справок</h4>
+
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-xl">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Категория</th>
+                        <th scope="col">Номер справки</th>
+                        <th scope="col">Повреждена ?</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for transcript in transcripts %}
+                        <tr class="{% if transcript.is_defective %} error-block {% endif %} {% if transcript.is_used %} success-block {% endif %}">
+
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ transcript.category.title }} (лист: {{ transcript.category.page_count }})</td>
+                            <td>
+                                {{ transcript.transcript_number }}
+                                {% if transcript.is_used %}
+                                    <i class="fas fa-check-square"></i>
+                                {% endif %}
+
+                                {% if transcript.is_defective %}
+                                    <i class="fas fa-times"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if transcript.is_defective and transcript.files %}
+                                    <a href="{{ transcript.files.url }}" target="_blank"><i class="fas fa-file-pdf"></i></a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "utils/_pagination.html" with page_obj=transcripts %}
+            </div>
+        {% else %}
+            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+        {% endif %}
     </div>
 
     <!-- Модальное окно -->
@@ -135,6 +138,7 @@
 {% block scripts %}
     <script type="text/javascript">
         $(document).ready(function () {
+            $('#myedu_id').focus().val('');
 
             $("#uploadForm").submit(function (event) {
                 event.preventDefault();

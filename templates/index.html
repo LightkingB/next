@@ -4,23 +4,51 @@
 
 {% block content %}
     <div class="container">
-        <h3 class="text-center">{% trans 'Выберите факультет:' %}</h3>
-        <hr/>
-        <div class="row">
-            {% for faculty in faculties %}
-                <div class="col-md-3 mb-2">
-                    <div class="card h-100 d-flex flex-column">
-                        <div class="card-body flex-grow-1">
-                            <a href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
-                                <h6 class="card-title mb-0">{{ faculty.title }} ({{ faculty.short_name }})</h6>
-                            </a>
-                            {% trans 'Зарегистр. справки:' %} {{ faculty.total_documents }} <br/>
-                            {% trans 'Использванные справки:' %} {{ faculty.used_documents }} <br/>
-                            {% trans 'Бракованные справки:' %} {{ faculty.defective_documents }} <br/>
-                        </div>
+        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+            {% include 'utils/_messages.html' %}
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="col-md-5">
+                        <label for="transcript_number" class="form-label">Введите № академической справки для
+                            проверки</label>
+                        <input type="text" class="form-control form-control-sm" id="custom_transcript_number"
+                               name="transcript_number" placeholder="12345678"/>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="submit" class="btn btn-sm btn-danger mt-4" value="Поиск"/>
                     </div>
                 </div>
-            {% endfor %}
-        </div>
+            </form>
+
+            <hr/>
+            <h4 class="text-center mb-0">{% trans 'Список факультетов' %}</h4>
+            <hr/>
+            <div class="row">
+                {% for faculty in faculties %}
+                    <div class="col-md-3 mb-2">
+                        <div class="card h-100 d-flex flex-column">
+                            <div class="card-body flex-grow-1">
+                                <a href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
+                                    <h6 class="card-title mb-0">{{ faculty.title }} ({{ faculty.short_name }})</h6>
+                                </a>
+                                {% trans 'Зарегистр. справки:' %} {{ faculty.total_documents }} <br/>
+                                {% trans 'Использванные справки:' %} {{ faculty.used_documents }} <br/>
+                                {% trans 'Бракованные справки:' %} {{ faculty.defective_documents }} <br/>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+        {% endif %}
     </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            $('#custom_transcript_number').focus().val('');
+        });
+    </script>
 {% endblock %}

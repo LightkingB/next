@@ -8,7 +8,7 @@ from django.views.generic import ListView
 
 from bsadmin.consts import API_URL
 from bsadmin.forms import LoginForm, FacultyTranscriptForm, FailFacultyTranscriptForm
-from bsadmin.models import RegistrationTranscript, Speciality
+from bsadmin.models import RegistrationTranscript
 from bsadmin.services import UserService, HttpMyEduServiceAPI
 from utils.filter_pagination import Pagination
 
@@ -95,6 +95,14 @@ def faculty_index(request):
         return redirect("login")
 
     user_service = UserService()
+    if request.method == "POST":
+        transcript_number = request.POST.get("transcript_number", "").replace(" ", "").strip()
+        academic_transcript = user_service.get_active_academic_transcript_by_number(transcript_number)
+        if academic_transcript:
+            messages.success(request, "Академическая справка зарегистрирована в системе. Факультет: " + str(
+                academic_transcript.faculty.title))
+        else:
+            messages.error(request, "Академическая справка не зарегистрирована в системе.")
 
     faculties = user_service.active_faculties_transcripts()
 
@@ -363,7 +371,7 @@ def at_search(request):
 def fail_transcript(request):
     if request.method == "POST":
         user_service = UserService()
-        transcript_number = request.POST.get('transcript_number')
+        transcript_number = request.POST.get("transcript_number", "").replace(" ", "").strip()
         transcript = user_service.get_academic_transcript_by_number(transcript_number)
 
         if transcript:

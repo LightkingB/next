@@ -4,46 +4,49 @@
 
 {% block content %}
     <div class="container">
+        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+            <h4 class="mb-4 text-center">{% trans 'Отчет - факультет' %}: {{ faculty.title }}({{ faculty.short_name }})</h4>
+            <hr/>
+            <a class="add_tabledata addBtn btn btn-danger btn-sm"
+               href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
+                <i class="fa fa-arrow-left"></i> {% trans 'Назад' %}
+            </a>
+            <hr/>
+            <div class="table-responsive">
 
-        <h4 class="mb-4 text-center">{% trans 'Отчет - факультет' %}: {{ faculty.title }}({{ faculty.short_name }})</h4>
-        <hr/>
-        <a class="add_tabledata addBtn btn btn-danger btn-sm"
-           href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
-            <i class="fa fa-arrow-left"></i> {% trans 'Назад' %}
-        </a>
-        <hr/>
-        <div class="table-responsive">
-
-            <table class="table table-bordered table-sm table-responsive-xl">
-                <thead class="thead-light">
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">{% trans '№ академической справки' %}</th>
-                    <th scope="col">{% trans 'ФИО студента' %}</th>
-                    <th scope="col">{% trans 'Факультет' %}</th>
-                    <th scope="col">{% trans 'Специальность' %}</th>
-                </tr>
-                </thead>
-                <tbody class="order">
-                {% for report in regtranscripts %}
-                    <tr data-id="{{ report.id }}">
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ report.faculty_transcript.transcript_number }}</td>
-                        <td>{{ report.student_fio }}</td>
-                        <td>{{ report.faculty_history|default_if_none:"-" }}</td>
-                        <td>{{ report.speciality_history|default_if_none:"-" }}</td>
+                <table class="table table-bordered table-sm table-responsive-xl">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">{% trans '№ академической справки' %}</th>
+                        <th scope="col">{% trans 'ФИО студента' %}</th>
+                        <th scope="col">{% trans 'Факультет' %}</th>
+                        <th scope="col">{% trans 'Специальность' %}</th>
                     </tr>
-                {% empty %}
-                    <tr class="table-warning nosort">
-                        <td colspan="100%" class="text-center">
-                            <small class="text-muted">{% trans 'Пусто' %}</small>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="order">
+                    {% for report in regtranscripts %}
+                        <tr data-id="{{ report.id }}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ report.faculty_transcript.transcript_number }}</td>
+                            <td>{{ report.student_fio }}</td>
+                            <td>{{ report.faculty_history|default_if_none:"-" }}</td>
+                            <td>{{ report.speciality_history|default_if_none:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
 
-        </div>
+            </div>
+        {% else %}
+            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+        {% endif %}
     </div>
 
 {% endblock %}
