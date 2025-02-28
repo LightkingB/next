@@ -366,11 +366,12 @@ def at_search(request):
         if not transcript_number:
             messages.error(request, "Обязательно к заполнению")
         else:
-            is_transcript_number_exist = user_service.search_academic_transcript_number(transcript_number)
-            if is_transcript_number_exist:
-                messages.success(request, "Академическая справка подтверждена Ошским государственным университетом.")
+            reg_transcript_number = user_service.search_academic_transcript_number(transcript_number)
+            if reg_transcript_number:
+                messages.success(request,
+                                 f"Академическая справка подтверждена. Факультет: {reg_transcript_number.faculty_history}. Специальность: {reg_transcript_number.speciality_history}")
             else:
-                messages.error(request, "Академическая справка не выдана Ошским государственным университетом.")
+                messages.error(request, "Академическая справка не выдана.")
 
     context = {
         "navbar": "at-search",

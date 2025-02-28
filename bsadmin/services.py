@@ -238,8 +238,6 @@ class UserService:
 
     @staticmethod
     def search_academic_transcript_number(transcript_number):
-        is_transcript_number_exist = RegistrationTranscript.objects.select_related('faculty_transcript').filter(
-            faculty_transcript__transcript_number__endswith=transcript_number)
-        if is_transcript_number_exist:
-            return True
-        return False
+        reg_transcript_number = RegistrationTranscript.objects.select_related('faculty_transcript').filter(
+            faculty_transcript__transcript_number__endswith=transcript_number).first()
+        return reg_transcript_number
