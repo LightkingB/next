@@ -2,7 +2,10 @@
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="fas fa-arrow-left"></i></a>
+                <a class="page-link" href="?page=
+                        {{ page_obj.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
             </li>
         {% else %}
             <li class="page-item disabled">
@@ -11,29 +14,39 @@
         {% endif %}
 
         {% if page_obj.number|add:'-5' > 1 %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.number|add:'-5' }}">&hellip;</a></li>
+            <li class="page-item"><a class="page-link" href="?page=
+                    {{ page_obj.number|add:'-5' }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">&hellip;</a>
+            </li>
         {% endif %}
 
         {% for i in page_obj.paginator.page_range %}
             {% if page_obj.number == i %}
                 <li class="page-item active" aria-current="page">
-              <span class="page-link">
-                {{ i }}
-                <span class="sr-only">(current)</span>
-              </span>
+                  <span class="page-link">
+                    {{ i }}
+                    <span class="sr-only">(current)</span>
+                  </span>
                 </li>
             {% elif i > page_obj.number|add:'-5' and i < page_obj.number|add:'5' %}
-                <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ i }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ i }}</a>
+                </li>
             {% endif %}
         {% endfor %}
 
-        {% if page_obj.paginator.num_pages > movies.number|add:'5' %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.number|add:'5' }}">&hellip;</a></li>
+        {% if page_obj.paginator.num_pages > page_obj.number|add:'5' %}
+            <li class="page-item"><a class="page-link" href="?page=
+                    {{ page_obj.number|add:'5' }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">&hellip;</a>
+            </li>
         {% endif %}
 
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="fas fa-arrow-right"></i></a>
+                <a class="page-link" href="?page=
+                        {{ page_obj.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </li>
         {% else %}
             <li class="page-item disabled">

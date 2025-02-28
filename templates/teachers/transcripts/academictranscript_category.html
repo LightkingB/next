@@ -52,7 +52,7 @@
                         <th scope="col">#</th>
                         <th scope="col">Категория</th>
                         <th scope="col">
-                            <a href="?sort={% if request.GET.sort == 'is_used' %}-is_used{% else %}is_used{% endif %}">
+                            <a href="?sort={% if request.GET.sort == 'is_used' %}-is_used{% else %}is_used{% endif %}&page={{ request.GET.page|default:"1" }}">
                                 Номер справки
                                 {% if request.GET.sort == 'is_used' %}
                                     <i class="fa fa-sort-up"></i>

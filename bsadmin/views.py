@@ -119,7 +119,9 @@ def faculty_transcript_category(request, faculty_id):
     faculty_detail = user_service.get_faculty_by_id_or_404(faculty_id)
 
     categories = user_service.categories()
-    sort_order = request.GET.get('sort', '-is_used')
+    sort_order = request.GET.get('sort', 'is_used')
+    if sort_order not in ["is_used", "-is_used"]:
+        sort_order = "is_used"
     page_number = request.GET.get('page', None)
     transcripts = user_service.academic_transcripts_by_faculty_id(faculty_id, sort_order)
     pagination_util = Pagination(request, transcripts)
