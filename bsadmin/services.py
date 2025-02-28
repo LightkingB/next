@@ -64,12 +64,12 @@ class UserService:
         return Speciality.objects.filter(faculty_id=faculty_id).values('id', 'title', 'code')
 
     @staticmethod
-    def academic_transcripts_by_faculty_id(faculty_id):
+    def academic_transcripts_by_faculty_id(faculty_id, sort_field):
         return FacultyTranscript.objects.filter(faculty_id=faculty_id).select_related('category').annotate(
             is_used=Exists(
                 RegistrationTranscript.objects.filter(faculty_transcript=OuterRef('pk'))
             )
-        ).order_by('id')
+        ).order_by(sort_field, '-id')
 
     @staticmethod
     def active_faculties_transcripts():

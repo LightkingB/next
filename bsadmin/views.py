@@ -119,9 +119,9 @@ def faculty_transcript_category(request, faculty_id):
     faculty_detail = user_service.get_faculty_by_id_or_404(faculty_id)
 
     categories = user_service.categories()
-
+    sort_order = request.GET.get('sort', '-is_used')
     page_number = request.GET.get('page', None)
-    transcripts = user_service.academic_transcripts_by_faculty_id(faculty_id)
+    transcripts = user_service.academic_transcripts_by_faculty_id(faculty_id, sort_order)
     pagination_util = Pagination(request, transcripts)
 
     context = {
@@ -226,16 +226,18 @@ def registration_academic_transcript_student(request):
 
 
 def handle_manual_entry(request, user_service):
-    student_fio = request.POST.get('custom_student_fio')
-    faculty_id = request.POST.get('custom_faculty_id')
+    student_fio = request.POST.get('custom_student_fio', "")
+    faculty_id = request.POST.get('custom_faculty_id', "")
     faculty_title = request.POST.get('custom_faculty_title', "").strip()
 
-    speciality_id = request.POST.get("custom_speciality_id")
+    speciality_id = request.POST.get("custom_speciality_id", "")
     speciality_title = request.POST.get("custom_speciality_title", "").strip()
 
     transcript_number = request.POST.get('custom_transcript_number', "").replace(" ", "").strip()
 
-    specialities = user_service.active_specialities_by_faculty(faculty_id)
+    specialities = None
+    if faculty_id:
+        specialities = user_service.active_specialities_by_faculty(faculty_id)
 
     custom_data = {
         "custom_student_fio": student_fio,
@@ -246,6 +248,10 @@ def handle_manual_entry(request, user_service):
         "custom_speciality_id": speciality_id,
         "specialities": specialities
     }
+
+    if not student_fio or not faculty_id or not faculty_title or not speciality_id or not speciality_title:
+        messages.error(request, "Заполните обязательные поля.")
+        return None, custom_data, True
 
     faculty_transcript = user_service.get_active_academic_transcript_by_number(transcript_number)
 
@@ -295,6 +301,10 @@ def save_academic_transcript_student(request):
 
     speciality_title = request.POST.get("speciality_title")
     speciality_id = request.POST.get("speciality_id")
+
+    if not student_id or not student_fio or not faculty_id or not faculty_title or not speciality_id or not speciality_title:
+        messages.error(request, "Заполните обязательные поля.")
+        return redirect("academic-transcript-student")
 
     user_service = UserService()
     transcript = user_service.get_active_academic_transcript_by_number(transcript_number)

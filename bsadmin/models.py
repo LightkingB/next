@@ -92,7 +92,7 @@ class FacultyTranscript(models.Model):
         verbose_name_plural = 'Академические справки'
         unique_together = ('transcript_number',)
 
-    transcript_number = models.CharField(max_length=255, unique=True, verbose_name="Уникальный идентификатор")
+    transcript_number = models.CharField(max_length=255, unique=True, verbose_name="Введите № академической справки")
     category = models.ForeignKey(CategoryTranscript, on_delete=models.PROTECT, verbose_name="Категория")
     faculty = models.ForeignKey(Faculty, on_delete=models.PROTECT, verbose_name="Факультет")
     is_defective = models.BooleanField(default=False)
