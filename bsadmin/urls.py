@@ -9,6 +9,8 @@ urlpatterns = [
          name='faculty-transcript-category'),
     path('transcript/<int:faculty_id>/report/', ReportFacultyRegAcademicTranscript.as_view(),
          name='faculty-academic-transcript-report'),
+    path('transcript/faculties/report/', ReportAllFacultyRegAcademicTranscript.as_view(),
+         name='all-faculty-academic-transcript-report'),
     path('transcript/faculty/<int:faculty_id>/category/<category_id>/', registration_academic_transcript_faculty,
          name='academic-transcript-faculty-registration'),
 

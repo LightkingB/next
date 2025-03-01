@@ -237,6 +237,11 @@ class UserService:
             faculty_transcript__faculty_id=faculty_id).order_by('student_fio')
 
     @staticmethod
+    def report_all_faculty_reg_academic_transcript():
+        return RegistrationTranscript.objects.select_related('faculty_transcript', 'faculty').order_by(
+            'faculty_history', 'student_fio')
+
+    @staticmethod
     def search_academic_transcript_number(transcript_number):
         reg_transcript_number = RegistrationTranscript.objects.select_related('faculty_transcript').filter(
             faculty_transcript__transcript_number__endswith=transcript_number).first()

@@ -348,16 +348,35 @@ def save_academic_transcript_student(request):
 class ReportFacultyRegAcademicTranscript(ListView):
     model = RegistrationTranscript
     user_service = UserService()
-    template_name = "teachers/transcripts/academictranscript_report.html"
-    context_object_name = "regtranscripts"
+    template_name = "teachers/transcripts/academictranscript_faculty_report.html"
 
     def get_queryset(self):
         return self.user_service.report_faculty_reg_academic_transcript(self.kwargs.get("faculty_id", None))
 
     def get_context_data(self, **kwargs):
         context = super(ReportFacultyRegAcademicTranscript, self).get_context_data(**kwargs)
+        regtranscripts = self.get_queryset()
+        pagination_util = Pagination(self.request, regtranscripts)
+        page_number = self.request.GET.get('page', None)
+        context['regtranscripts'] = pagination_util.pagination(page_number)
+
         context['navbar'] = 'index'
         context['faculty'] = self.user_service.get_faculty_by_id_or_404(self.kwargs.get("faculty_id", None))
+        return context
+
+
+class ReportAllFacultyRegAcademicTranscript(ListView):
+    model = RegistrationTranscript
+    user_service = UserService()
+    template_name = "teachers/transcripts/academictranscript_all_faculty_report.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(ReportAllFacultyRegAcademicTranscript, self).get_context_data(**kwargs)
+        regtranscripts = self.user_service.report_all_faculty_reg_academic_transcript()
+        pagination_util = Pagination(self.request, regtranscripts)
+        page_number = self.request.GET.get('page', None)
+        context['regtranscripts'] = pagination_util.pagination(page_number)
+        context['navbar'] = 'index'
         return context
 
 

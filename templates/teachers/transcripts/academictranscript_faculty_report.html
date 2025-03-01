@@ -5,7 +5,7 @@
 {% block content %}
     <div class="container">
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <h4 class="mb-4 text-center">{% trans 'Отчет - факультет' %}: {{ faculty.title }}({{ faculty.short_name }})</h4>
+            <h4 class="mb-4 text-center">{% trans 'Отчет академической справки факультета' %} {{ faculty.title }}({{ faculty.short_name }})</h4>
             <hr/>
             <a class="add_tabledata addBtn btn btn-danger btn-sm"
                href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
@@ -42,7 +42,7 @@
                     {% endfor %}
                     </tbody>
                 </table>
-
+                {% include "utils/_pagination.html" with page_obj=regtranscripts %}
             </div>
         {% else %}
             <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
