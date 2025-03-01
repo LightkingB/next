@@ -4,20 +4,26 @@
 
 {% block content %}
     <div class="container">
-        {% if CUSTOM_ROLES.ADMIN in DB_ROLES %}
-            {% include 'utils/_messages.html' %}
-            <form method="post" action="">
-                {% csrf_token %}
+        {% include 'utils/_messages.html' %}
+        <div class="d-flex flex-wrap">
+            <div class="mb-md-0 mb-2">
+                <a href="{% url 'faculty' %}" class="btn btn-sm btn-danger mr-2">
+                    <i class="fa fa-arrow-left"></i> Список факультетов
+                </a>
+            </div>
+            {% if CUSTOM_ROLES.ADMIN in DB_ROLES %}
 
-                <a href="{% url 'faculty' %}" class="btn btn-sm btn-danger"><i class="fa fa-arrow-left"></i> Список
-                    факультетов</a>
-                <button type="submit" class="btn btn-sm btn-danger">{% trans 'Синхронизировать' %}</button>
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">{% trans 'Синхронизировать' %}</button>
+                </form>
 
-            </form>
-            <hr/>
-        {% endif %}
+            {% endif %}
+        </div>
+
+        <hr/>
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <h4 class="my-2">{% trans 'Список специальностей факультета' %} "{{ faculty.title }}"</h4>
+            <h4 class="mb-3">{% trans 'Список специальностей факультета' %} "{{ faculty.title }}"</h4>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>

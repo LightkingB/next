@@ -409,6 +409,7 @@ label {
     padding: 30px 0;
 }
 
+
 .login-form form {
     color: #434343;
     border-radius: 1px;
@@ -471,4 +472,19 @@ label {
 
 #custom_transcript_student {
     display: none;
+}
+
+
+@media (max-width: 768px) {
+    .login-form {
+        width: 100%;
+    }
+
+    .logo-wrapper {
+        width: 100%;
+    }
+
+    .login-form form a {
+        line-height: 15px;
+    }
 }

@@ -6,21 +6,29 @@
     <div class="container">
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
             {% include 'utils/_messages.html' %}
-            <form action="" method="post">
-                {% csrf_token %}
-                <div class="form-row">
-                    <div class="col-md-5">
-                        <label for="transcript_number" class="form-label">Введите № академической справки для
-                            проверки</label>
-                        <input type="text" class="form-control form-control-sm" id="custom_transcript_number"
-                               name="transcript_number" placeholder="12345678"/>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="submit" class="btn btn-sm btn-danger mt-4" value="Поиск"/>
+            <div class="row">
+                <div class="col-md-8">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="col-md-8">
+                                <label for="transcript_number" class="form-label">Введите № академической справки для
+                                    проверки</label>
+                                <input type="text" class="form-control form-control-sm" id="custom_transcript_number"
+                                       name="transcript_number" placeholder="12345678"/>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="submit" class="btn btn-sm btn-danger mt-md-4 mt-2" value="Поиск"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <div class="mt-md-4 text-right">
+                        <a href="" class="btn btn-sm btn-success">Общий отчёт</a>
                     </div>
                 </div>
-            </form>
-
+            </div>
             <hr/>
             <h4 class="text-center mb-0">{% trans 'Список факультетов' %}</h4>
             <hr/>
