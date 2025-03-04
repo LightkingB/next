@@ -390,7 +390,7 @@ def at_search(request):
             reg_transcript_number = user_service.search_academic_transcript_number(transcript_number)
             if reg_transcript_number:
                 messages.success(request,
-                                 f"Академическая справка подтверждена. Факультет: {reg_transcript_number.faculty_history}. Специальность: {reg_transcript_number.speciality_history}")
+                                 f"Академическая справка подтверждена.ФИО: {reg_transcript_number.student_fio} Факультет: {reg_transcript_number.faculty_history}. Специальность: {reg_transcript_number.speciality_history}")
             else:
                 messages.error(request, "Академическая справка не выдана.")
 
