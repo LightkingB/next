@@ -377,6 +377,7 @@ class ReportAllFacultyRegAcademicTranscript(ListView):
         page_number = self.request.GET.get('page', None)
         context['regtranscripts'] = pagination_util.pagination(page_number)
         context['navbar'] = 'index'
+
         return context
 
 
