@@ -22,6 +22,7 @@
                         <th scope="col">{% trans 'ФИО студента' %}</th>
                         <th scope="col">{% trans 'Факультет' %}</th>
                         <th scope="col">{% trans 'Специальность' %}</th>
+                        <th scope="col">{% trans 'Дата получения' %}</th>
                     </tr>
                     </thead>
                     <tbody class="order">
@@ -32,6 +33,7 @@
                             <td>{{ report.student_fio }}</td>
                             <td>{{ report.faculty_history|default_if_none:"-" }}</td>
                             <td>{{ report.speciality_history|default_if_none:"-" }}</td>
+                            <td>{{ report.create_date|date:"d-m-Y" }}</td>
                         </tr>
                     {% empty %}
                         <tr class="table-warning nosort">

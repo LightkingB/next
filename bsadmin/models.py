@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import FileExtensionValidator
@@ -45,6 +47,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class Faculty(models.Model):
+    COLLEGE = "CLE"
+    FFACULTY = "FACT"
+    SCHOOL = "SCH"
+
+    CATEGORIES = (
+        (COLLEGE, "Колледж"),
+        (FFACULTY, "Факультет"),
+        (SCHOOL, "Школа")
+    )
+
     class Meta:
         verbose_name = 'Факультет'
         verbose_name_plural = 'Факультеты'
@@ -53,6 +65,7 @@ class Faculty(models.Model):
     myedu_faculty_id = models.PositiveIntegerField(unique=True, verbose_name="MyEDU Факультет ID")
     short_name = models.CharField(max_length=150, verbose_name="Короткое название")
     visit = models.BooleanField(default=True, verbose_name="Показывать")
+    category = models.CharField(max_length=15, choices=CATEGORIES, default=FFACULTY, null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -75,12 +88,23 @@ class Speciality(models.Model):
 
 
 class CategoryTranscript(models.Model):
+    COLLEGE = "CLE"
+    FFACULTY = "FACT"
+    SCHOOL = "SCH"
+
+    CATEGORIES = (
+        (COLLEGE, "Колледж"),
+        (FFACULTY, "Факультет"),
+        (SCHOOL, "Школа")
+    )
+
     class Meta:
         verbose_name = 'Категория академической справки'
         verbose_name_plural = 'Категории академической справки'
 
     title = models.CharField(max_length=255, verbose_name="Название")
     page_count = models.PositiveIntegerField(default=0, verbose_name="Количество страниц")
+    category = models.CharField(max_length=15, choices=CATEGORIES, default=FFACULTY, null=True, blank=True)
 
     def __str__(self):
         return f'{self.title} - {self.page_count}'
@@ -130,6 +154,7 @@ class RegistrationTranscript(models.Model):
     faculty_history = models.CharField(max_length=255, verbose_name="История факультета", null=True, blank=True)
     speciality = models.ForeignKey(Speciality, on_delete=models.PROTECT, verbose_name="Специальность студента")
     speciality_history = models.CharField(max_length=255, verbose_name="История специальности", null=True, blank=True)
+    create_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.student_uuid} - {self.faculty_transcript.transcript_number}'

@@ -22,21 +22,22 @@
                 <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadModal">
                     Справка была повреждена ?
                 </button>
-
             </div>
             <hr/>
             <div class="row">
                 {% for category in category_list %}
-                    <div class="col-md-3 mb-2">
-                        <div class="card">
-                            <div class="card-body">
-                                <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
-                                    <h6 class="card-title mb-0">{{ category.title }} - количество
-                                        листов: {{ category.page_count }}</h6>
-                                </a>
+                    {% if category.category == faculty.category %}
+                        <div class="col-md-3 mb-2">
+                            <div class="card">
+                                <div class="card-body">
+                                    <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
+                                        <h6 class="card-title mb-0">{{ category.title }} - количество
+                                            листов: {{ category.page_count }}</h6>
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    {% endif %}
                 {% endfor %}
             </div>
 
