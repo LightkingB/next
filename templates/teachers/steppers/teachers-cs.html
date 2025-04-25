@@ -1,0 +1,88 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        <h4 class="text-center mb-0">Модуль#3: {{ title }}</h4>
+        <hr/>
+
+        {% if CUSTOM_ROLES.STTEACHER in DB_ROLES %}
+            <div class="row justify-content-between">
+                <div class="col-md-8">
+                    <form action="" method="get">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <input type="text" name="search" class="form-control form-control-sm mb-2 mb-md-0"
+                                       placeholder="Введите ФИО | уникальный номер"/>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-search"></i> Поиск
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-4 text-right">
+                    <a href="{% url 'stepper:teachers' %}" class="btn btn-danger btn-sm">
+                        MyEDU - должники <i class="fas fa-money-check"></i>
+                    </a>
+                </div>
+            </div>
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">Текущий шаг</th>
+                        <th scope="col">Статус</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for teacher in teachers %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'stepper:teacher-cs-detail' myedu_id=teacher.myedu_id %}">
+                                    {{ teacher.fio }}
+                                </a>
+                            </td>
+                            <td>{{ teacher.faculty_name }}</td>
+                            <td>{{ teacher.spec_name }}</td>
+                            <td>{{ teacher.current_stage|default_if_none:"-" }}</td>
+                            <td class="text-center">
+
+                                {% if teacher.completed_at %}
+                                    <div class="text-success">
+                                         {{ teacher.completed_at|date:"d-m-Y H:i" }} <i class="fas fa-check-square"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="text-primary">
+                                        <i class="fas fa-hourglass-half"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% include "utils/_pagination.html" with page_obj=teachers %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}
+

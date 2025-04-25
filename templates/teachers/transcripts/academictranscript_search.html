@@ -21,7 +21,7 @@
                 {% include 'utils/_messages.html' %}
             </div>
         {% else %}
-            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+           {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 

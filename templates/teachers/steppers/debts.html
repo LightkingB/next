@@ -1,0 +1,68 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        {% if CUSTOM_ROLES.STDEBT in DB_ROLES %}
+            <h3 class="text-center mb-0">({{ employee.template_stage.stage }}) - {% trans 'Список студентов' %}</h3>
+            <hr/>
+            <form action="" method="get">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="search">ФИО / MyEDU ID:</label>
+                        <input type="text" class="form-control form-control-sm" name="search" placeholder="230795"
+                               id="search"/>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fas fa-search"></i> Поиск
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <hr/>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg"
+                       id="table-ajax-facultytranscript">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">{% trans 'ФИО' %}</th>
+                        <th scope="col">{% trans 'Кафедра' %}</th>
+                        <th scope="col">{% trans 'Специальность' %}</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for student in students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'stepper:debts-comment' id=student.current_trajectory_id %}">
+                                    {{ student.student_fio }} ({{ student.myedu_id }})
+                                </a>
+                            </td>
+                            <td>{{ student.myedu_faculty }}</td>
+                            <td>{{ student.myedu_spec }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "utils/_pagination.html" with page_obj=students %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}

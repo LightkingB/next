@@ -6,6 +6,7 @@ from django.http import Http404
 from bsadmin.consts import API_URL
 from bsadmin.models import CustomUser, Faculty, FacultyTranscript, RegistrationTranscript, \
     CategoryTranscript, Speciality
+from utils.convert import to_bool
 
 
 class HttpMyEduServiceAPI:
@@ -40,7 +41,7 @@ class UserService:
                 "last_name": myedu_data['user']['last_name'],
                 "first_name": myedu_data['user']['name'],
                 "fathers_name": myedu_data['user']['father_name'],
-                "is_worker": myedu_data['user']['is_working'],
+                "is_worker": to_bool(myedu_data['user']['is_working']),
             }
         )
         user.set_password(password)
@@ -52,8 +53,15 @@ class UserService:
         return Faculty.objects.filter(visit=True).order_by('title')
 
     @staticmethod
+    def get_first_active_faculty(myedu_faculty_id):
+        return Faculty.objects.filter(myedu_faculty_id=myedu_faculty_id).first()
+
+    @staticmethod
     def active_specialities_by_faculty(faculty_id):
         return Speciality.objects.filter(visit=True, faculty_id=faculty_id).order_by('title')
+
+    def faculty_specialities_with_values(self, faculty_id):
+        return self.active_specialities_by_faculty(faculty_id).values('myedu_spec_id', 'title')
 
     @staticmethod
     def specialities_by_faculty(faculty_id):

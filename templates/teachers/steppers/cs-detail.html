@@ -1,0 +1,283 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
+
+
+{% block content %}
+    {% if student %}
+        <div class="container">
+            <div class="text-center">
+                <h3 class="mb-0 text-primary">{{ student.student_fio }}</h3>
+                {% if student.debt %}
+                    <h5>{% trans 'Долги' %}: {{ student.debt|join_names }}</h5>
+                {% endif %}
+                <h5>Приказ: № {{ student.info }}, дата: {{ student.date_movement }},
+                    статус: {{ student.id_movement_info }}</h5>
+            </div>
+            <hr/>
+            <div class="d-flex justify-content-between flex-wrap">
+                <div class="text-left">
+                    <a href="{% url 'stepper:cs' %}"
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-th-list"></i> {% trans 'Обходные листы' %}
+                    </a>
+                    <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-money-check"></i> {% trans 'MyEDU - должники' %}
+                    </a>
+                    {% if cs_student %}
+                        {% if not cs_student.completed_at %}
+                            <a href="{% url 'stepper:cs-step-undo' cs_id=cs_student.id %}?type=student"
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-angle-double-up"></i> {% trans 'Восстановить' %}
+                            </a>
+
+                            {% if trajectories %}
+                                <button type="button" class="btn btn-sm btn-danger mt-2 mt-md-0" data-toggle="modal"
+                                        data-target="#stepsRemoveModal">
+                                    <i class="fas fa-trash-alt"></i> Удалить все этапы
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                {% if not cs_student %}
+                    <button type="button" class="btn btn-sm btn-success mr-2" data-toggle="modal"
+                            data-target="#requestModal">
+                        <i class="fas fa-paper-plane"></i> Подать заявку
+                    </button>
+                {% endif %}
+
+                {% if not cs_student.type_choices %}
+                    <button type="button" class="btn btn-sm btn-primary mt-2 mt-md-0" data-toggle="modal"
+                            data-target="#orderDoneModal">
+                        <i class="fas fa-user-check"></i> Завершить ?
+                    </button>
+                {% elif cs_student.completed_at %}
+                    <h5 class="text-success">
+                        Завершен <i class="fas fa-check-square"></i> {{ cs_student.completed_at|date:"d-m-Y H:i" }}
+                    </h5>
+                    <a href="{% url 'stepper:cs-force' myedu_id=cs_student.myedu_id %}?type=student"
+                       class="btn btn-danger btn-sm">
+                        <i class="fas fa-fire"></i> {% trans 'Форс-мажор' %}
+                    </a>
+                {% endif %}
+            </div>
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            {% if cs_student and not cs_student.completed_at %}
+                <h4 class="text-center">Обходной лист № {{ cs_student.id }}</h4>
+                <hr/>
+                {% if not trajectories %}
+                    <form method="post" id="trajectory-form">
+                        {% csrf_token %}
+                        <div class="form-group mb-1">
+                            <label>Выберите обязательные этапы:</label>
+                            <div class="stages">
+                                {{ form.stages|join:" " }}
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"
+                                data-target="#confirmModal">
+                            <i class="fas fa-save"></i> {% trans 'Создать траектории' %}
+                        </button>
+
+                    </form>
+                {% endif %}
+                <div class="stage-status">
+                    {% for trajectory in trajectories %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between flex-wrap">
+                                    <h5 class="mb-0">
+                                        <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
+                                    </h5>
+                                    <h5>
+                                        {% if trajectory.completed_at %}
+                                            <span class="text-success">
+                                    {% trans 'Завершен' %} <i class="far fa-check-square"></i> :
+                                    {{ trajectory.completed_at|date:"d.m.Y H:i" }}
+                                     </span>
+                                        {% else %}
+                                            <a class="text-primary"
+                                               href="{% url 'stepper:step-rating' id=cs_student.id trajectory_id=trajectory.id %}?type=student">
+                                                {% trans 'Рейтинг' %}
+                                                {% if trajectory.update_at %}
+                                                    ({{ trajectory.update_at|date:"d.m.Y H:i" }})
+                                                {% endif %}
+                                                <i class="fas fa-arrow-up"></i>
+                                            </a>
+                                        {% endif %}
+                                    </h5>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% with trajectory.stagestatus_set.all as statuses %}
+                                    {% if statuses %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered mb-0">
+                                                <thead>
+                                                <tr>
+                                                    <th>Обработал</th>
+                                                    <th>Комментарий</th>
+                                                    <th>Дата создания</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for status in statuses %}
+                                                    <tr>
+                                                        <td>{{ status.processed_by|default:"—" }}</td>
+                                                        <td>{{ status.comment_text|default:"—" }}</td>
+                                                        <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="4" class="text-center">Статусов пока нет</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="mb-0">Статусов пока нет</p>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="modal fade" id="requestModal" tabindex="-1" role="dialog" aria-labelledby="requestModalLabel"
+             aria-hidden="true">
+
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form action="{% url 'stepper:request-cs' myedu_id=student.student_id %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="orderDoneModalLabel">Процесс потверждения</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+                            <input type="hidden" value="{{ student_data|escape }}" name="student">
+                            Вы действительно хотите подать заявку на создание обходного листа?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Создать</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="orderDoneModal" tabindex="-1" role="dialog" aria-labelledby="orderDoneModalLabel"
+             aria-hidden="true">
+
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form action="{% url 'stepper:order-done' myedu_id=student.student_id %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="orderDoneModalLabel">Процесс потверждения</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+
+                            <input type="hidden" value="{{ student_data|escape }}" name="student">
+                            Вы действительно подтверждаете, что у данного студента нет задолженностей и можно завершить
+                            процесс?
+                            <div class="my-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2" name="spec">
+                                    <label class="form-check-label autoSizingCheck2-label" for="autoSizingCheck2">
+                                        Спец. часть
+                                    </label>
+                                </div>
+                                {#                                <select name="type_choices" required class="form-control">#}
+                                {#                                    <option value="" disabled selected>----------------</option>#}
+                                {#                                    {% for value, label in type_choices %}#}
+                                {#                                        <option value="{{ value }}">{{ label }}</option>#}
+                                {#                                    {% endfor %}#}
+                                {#                                </select>#}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Потверждаю</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if cs_student %}
+            <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmModalLabel">Подтвердить создание</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            Вы уверены, что хотите создать выбранные этапы?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-sm btn-danger" id="submit-form">Да, создать</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="stepsRemoveModal" tabindex="-1" role="dialog"
+                 aria-labelledby="stepsRemoveModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form action="{% url 'stepper:step-remove' cs_student.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmModalLabel">Процесс удаления</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" value="{{ cs_student.id }}">
+                                Вы уверены, что хотите удалить все этапы?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена
+                                </button>
+                                <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <h3 class="text-center">Студент не найден</h3>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {% if cs_student %}
+        <script type="text/javascript">
+            document.getElementById("submit-form").addEventListener("click", function () {
+                document.getElementById("trajectory-form").submit();
+            });
+        </script>
+    {% endif %}
+{% endblock %}

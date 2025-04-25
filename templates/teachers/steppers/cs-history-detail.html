@@ -1,0 +1,74 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        <h3 class="text-center">Обходной лист №: {{ student.id }} - {{ student.student_fio }}</h3>
+        <hr/>
+        <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id %}" class="btn btn-sm btn-warning">
+            <i class="fa fa-arrow-left"></i> {% trans 'Список обходных студента (История)' %}
+        </a>
+        <hr/>
+        <div class="stage-status">
+            {% for trajectory in trajectories %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between flex-wrap">
+                            <h5 class="mb-0">
+                                <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
+                            </h5>
+                            <h5>
+                                {% if trajectory.completed_at %}
+                                    <span class="text-success">
+                                    {% trans 'Завершен' %} <i class="far fa-check-square"></i> :
+                                    {{ trajectory.completed_at|date:"d.m.Y H:i" }}
+                                     </span>
+                                {% else %}
+                                    <span class="text-primary">
+                                     <i class="fas fa-hourglass-start"></i> {% trans 'В процессе' %} :
+                                    {{ trajectory.update_at|date:"d.m.Y H:i" }}
+                                     </span>
+                                {% endif %}
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% with trajectory.stagestatus_set.all as statuses %}
+                            {% if statuses %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead>
+                                        <tr>
+                                            <th>Обработал</th>
+                                            <th>Комментарий</th>
+                                            <th>Дата создания</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for status in statuses %}
+                                            <tr>
+                                                <td>{{ status.processed_by|default:"—" }}</td>
+                                                <td>{{ status.comment_text|default:"—" }}</td>
+                                                <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">Статусов пока нет</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="mb-0">Статусов пока нет</p>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            {% empty %}
+                <h4 class="text-center">Обходной лист закрыт по причине отсутствия задолженностей</h4>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        <div class="text-center">
+            <h4 class="mb-0">Обходной лист № {{ clearance_sheet.id }} - {{ teacher.student_fio }}</h4>
+        </div>
+        <hr/>
+
+        <div class="d-flex justify-content-between flex-wrap">
+            <div class="text-left">
+                <a href="{% url 'stepper:teachers-cs' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-clipboard-list"></i> {% trans 'Обходные листы' %}
+                </a>
+                <a href="{% url 'stepper:teachers' %}" class="btn btn-danger btn-sm">
+                    <i class="fas fa-money-check"></i> {% trans 'MyEDU - должники' %}
+                </a>
+            </div>
+            {% if  clearance_sheet %}
+                {% if  not clearance_sheet.completed_at %}
+                    <a href="{% url 'stepper:cs-step-undo' cs_id=clearance_sheet.id %}?type=teacher"
+                       class="btn btn-success btn-sm">
+                        <i class="fas fa-undo-alt"></i> {% trans 'Восстановить' %}
+                    </a>
+                {% else %}
+                    <h5 class="text-success">
+                        {% trans 'Статус' %} <i class="far fa-check-square"></i> :
+                        {{ clearance_sheet.completed_at|date:"d.m.Y H:i" }}
+                    </h5>
+                {% endif %}
+            {% endif %}
+        </div>
+        <hr class="mb-1"/>
+
+        {% include 'utils/_messages.html' %}
+        {% if teacher %}
+            {% if not clearance_sheet %}
+                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#confirmModal">
+                    <i class="fas fa-save"></i> {% trans 'Создать траектории' %}
+                </button>
+            {% else %}
+                <div class="stage-status">
+                    {% for trajectory in trajectories %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between flex-wrap">
+                                    <h5 class="mb-0">
+                                        <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
+                                    </h5>
+                                    <h5>
+                                        {% if trajectory.completed_at %}
+                                            <span class="text-success">
+                                    {% trans 'Завершен' %} <i class="far fa-check-square"></i> :
+                                    {{ trajectory.completed_at|date:"d.m.Y H:i" }}
+                                     </span>
+                                        {% else %}
+                                            <a class="text-primary"
+                                               href="{% url 'stepper:step-rating' id=clearance_sheet.id trajectory_id=trajectory.id %}?type=teacher">
+                                                {% trans 'Рейтинг' %}
+                                                {% if trajectory.update_at %}
+                                                    ({{ trajectory.update_at|date:"d.m.Y H:i" }})
+                                                {% endif %}
+                                                <i class="fas fa-arrow-up"></i>
+                                            </a>
+                                        {% endif %}
+                                    </h5>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% with trajectory.stagestatus_set.all as statuses %}
+                                    {% if statuses %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered mb-0">
+                                                <thead>
+                                                <tr>
+                                                    <th>Обработал</th>
+                                                    <th>Комментарий</th>
+                                                    <th>Дата создания</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for status in statuses %}
+                                                    <tr>
+                                                        <td>{{ status.processed_by|default:"—" }}</td>
+                                                        <td>{{ status.comment_text|default:"—" }}</td>
+                                                        <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="4" class="text-center">Статусов пока нет</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="mb-0">Статусов пока нет</p>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+
+    <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmModalLabel">Подтвердить создание</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите создать выбранные этапы?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Да, создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="stepsRemoveModal" tabindex="-1" role="dialog" aria-labelledby="stepsRemoveModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmModalLabel">Процесс удаления</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" value="{{ student.id }}">
+                        Вы уверены, что хотите удалить все этапы?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+
+    </script>
+{% endblock %}

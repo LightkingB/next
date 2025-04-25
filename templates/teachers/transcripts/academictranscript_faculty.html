@@ -7,7 +7,7 @@
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
             <div class="mb-2">
                 <a class="add_tabledata addBtn btn btn-danger btn-sm"
-                   href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
+                   href="{% url 'bsadmin:faculty-transcript-category' faculty_id=faculty.id %}">
                     <i class="fa fa-arrow-left"></i> {% trans 'Выбрать другую категорию' %}
                 </a>
             </div>
@@ -30,7 +30,7 @@
                 </form>
             </div>
             <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-xl"
+                <table class="table table-bordered table-sm table-responsive-lg"
                        id="table-ajax-facultytranscript">
                     <thead class="thead-light">
                     <tr>
@@ -44,7 +44,7 @@
                     {% for doc in facultytranscript_list %}
                         <tr data-id="{{ doc.id }}"
                             class="{% if doc.is_defective %} error-block {% endif %} {% if doc.is_used %} success-block {% endif %}">
-                            <td>{{ forloop.counter }}</td>
+                            <td>{{ forloop.counter0|add:facultytranscript_list.start_index }}</td>
 
                             <td>
                                 {{ doc.category.title }}({{ doc.category.page_count }}) - {{ doc.transcript_number }}
@@ -86,7 +86,7 @@
                 {% include "utils/_pagination.html" with page_obj=facultytranscript_list %}
             </div>
         {% else %}
-            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+            {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 

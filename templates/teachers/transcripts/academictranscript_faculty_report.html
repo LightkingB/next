@@ -8,13 +8,13 @@
             <h4 class="mb-4 text-center">{% trans 'Отчет академической справки факультета' %} {{ faculty.title }}({{ faculty.short_name }})</h4>
             <hr/>
             <a class="add_tabledata addBtn btn btn-danger btn-sm"
-               href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
+               href="{% url 'bsadmin:faculty-transcript-category' faculty_id=faculty.id %}">
                 <i class="fa fa-arrow-left"></i> {% trans 'Назад' %}
             </a>
             <hr/>
             <div class="table-responsive">
 
-                <table class="table table-bordered table-sm table-responsive-xl">
+                <table class="table table-bordered table-sm table-responsive-lg">
                     <thead class="thead-light">
                     <tr>
                         <th scope="col">#</th>
@@ -28,7 +28,7 @@
                     <tbody class="order">
                     {% for report in regtranscripts %}
                         <tr data-id="{{ report.id }}">
-                            <td>{{ forloop.counter }}</td>
+                            <td>{{ forloop.counter0|add:regtranscripts.start_index }}</td>
                             <td>{{ report.faculty_transcript.transcript_number }}</td>
                             <td>{{ report.student_fio }}</td>
                             <td>{{ report.faculty_history|default_if_none:"-" }}</td>
@@ -47,7 +47,7 @@
                 {% include "utils/_pagination.html" with page_obj=regtranscripts %}
             </div>
         {% else %}
-            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+            {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 

@@ -4,13 +4,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from bsadmin.views import sign_in_view, sign_out_view
-
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', sign_in_view, name='login'),
-    path('logout/', sign_out_view, name='logout'),
-    path('', include('bsadmin.urls'), name='bsadmin'),
+    path('bsheet/', include('bsadmin.urls'), name='bsheet'),
+    path('stepper/', include('stepper.urls'), name='stepper'),
+    path('integrator/', include('integrator.urls'), name='integrator'),
+    path('', include('student.urls'), name='student'),
 ]
 
 if settings.DEBUG:

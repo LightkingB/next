@@ -1,0 +1,239 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
+
+
+{% block content %}
+    <div class="container-fluid">
+        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
+        <hr/>
+
+        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+            <div class="row">
+                <div class="col-md-9">
+                    <form action="" method="post">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="search">ФИО / MyEDU ID:</label>
+                                <input type="text" class="form-control form-control-sm" name="search"
+                                       placeholder="230795"
+                                       id="search"/>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="faculty">Факультет:</label>
+                                <select id="faculty" class="form-control form-control-sm" name="faculty_id">
+                                    <option value="0" disabled selected>Выберите факультет</option>
+                                    {% for faculty in faculties %}
+                                        <option value="{{ faculty.myedu_faculty_id }}">{{ faculty.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="speciality">Специальность:</label>
+                                <select id="speciality" class="form-control form-control-sm" name="specialty_id">
+                                    <option value="0" disabled selected>Выберите специальность</option>
+                                </select>
+                            </div>
+
+
+                            <div class="col-md-2">
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-search"></i> Поиск
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-3 text-right mt-0 mt-md-4">
+                    <a href="{% url 'stepper:cs' %}" class="btn btn-primary btn-sm">
+                        Обходные листы <i class="fas fa-clipboard-list"></i>
+                    </a>
+                </div>
+            </div>
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">Приказ</th>
+                        <th scope="col">Статус</th>
+                        <th scope="col">Долги</th>
+                        <th scope="col">История</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for student in objects %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}">
+                                    {{ student.student_fio }} ({{ student.student_id }})
+                                </a>
+                            </td>
+                            <td>{{ student.faculty_name }}</td>
+                            <td>{{ student.speciality_name }}</td>
+                            <td>№ {{ student.info }} <br/> Дата: {{ student.date_movement }}</td>
+                            <td>{{ student.id_movement_info }}</td>
+                            <td class="duty">
+                                {% if student.debt %}
+                                    {{ student.debt|join_names }}
+                                {% else %}
+                                    <div class="text-center text-danger">
+                                        <i class="fas fa-minus-circle"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'stepper:cs-history' myedu_id=student.student_id %}"
+                                   class="btn btn-sm btn-danger">
+                                    <i class="fas fa-seedling"></i>
+                                </a>
+                            </td>
+
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "utils/_pagination.html" with page_obj=objects %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+
+    <div class="modal fade" id="clearanceModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">Создание обходного листа</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите создать обходной лист для <strong id="student_fio"></strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button id="create-sheet" class="btn btn-sm btn-danger">Создать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $('#faculty').change(function () {
+                const faculty_id = $(this).val();
+
+                if (faculty_id) {
+                    $.ajax({
+                        url: "{% url 'stepper:load-specialities' %}",
+                        data: {
+                            'faculty_id': faculty_id
+                        },
+                        success: function (data) {
+                            $('#speciality').empty();
+                            $('#speciality').append('<option value="">Выберите специальность</option>');
+                            $.each(data, function (index, item) {
+                                $('#speciality').append('<option value="' + item.myedu_spec_id + '">' + item.title + '</option>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#speciality').empty();
+                    $('#speciality').append('<option value="">Выберите специальность</option>');
+                }
+            });
+
+
+            $(".student-name").on("click", function () {
+                let studentId = $(this).data("id");
+                let studentFio = $(this).data("fio").trim();
+                let faculty = $(this).data("faculty").trim();
+                let facultyId = $(this).data("facultyid");
+                let spec = $(this).data("spec").trim();
+                let specId = $(this).data("specid");
+                let duty = $(this).data("duty").trim();
+
+                $.ajax({
+                    url: "{% url 'stepper:check_clearance_sheet' %}",
+                    type: "GET",
+                    data: {student_id: studentId},
+                    success: function (response) {
+                        if (response.exists) {
+                            window.location.href = `/stepper/student/${response.sheet_id}/detail/`;
+                        } else {
+                            $("#clearance_sheet").show();
+                            $("#student_fio").text(studentFio);
+                            $("#create-sheet")
+                                .data("id", studentId)
+                                .data("facultyid", facultyId)
+                                .data("faculty", faculty)
+                                .data("specid", specId)
+                                .data("spec", spec)
+                                .data("duty", duty);
+                            $("#clearanceModal").modal("show");
+                        }
+                    },
+                    error: function (error) {
+
+                    }
+                });
+            });
+
+
+            $("#create-sheet").on("click", function () {
+                let studentId = $(this).data("id");
+                let facultyId = $(this).data("facultyid");
+                let faculty = $(this).data("faculty");
+                let specId = $(this).data("specid");
+                let spec = $(this).data("spec");
+                let duty = $(this).data("duty");
+
+                $.ajax({
+                    url: "{% url 'stepper:create_clearance_sheet' %}",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        student: studentId,
+                        student_fio: $("#student_fio").text().trim(),
+                        myedu_faculty: faculty,
+                        myedu_faculty_id: facultyId,
+                        myedu_spec: spec,
+                        myedu_spec_id: specId,
+                        duty: duty
+                    }),
+                    success: function (response) {
+                        $("#clearanceModal").modal("hide");
+                        window.location.href = `/stepper/student/${response.sheet_id}/detail/`;
+                    },
+                    error: function (error) {
+
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

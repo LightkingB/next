@@ -2,31 +2,106 @@
 
 <ul>
     {% if request.user.is_authenticated %}
-
-
-        {% if CUSTOM_ROLES.SPEC in DB_ROLES or CUSTOM_ROLES.ADMIN in DB_ROLES %}
+        {% if request.session.access == "bsadmin" %}
             <li class="{% if navbar == 'index' %}active{% endif %}">
-                <a href="{% url 'index' %}"><i class="fas fa-home"></i><span>{% trans 'Регистрация' %}</span></a>
+                <a href="{% url 'bsadmin:index' %}"><i
+                        class="fas fa-home"></i><span>{% trans 'Регистрация' %}</span></a>
             </li>
-            <li class="{% if navbar == 'faculty' %}active{% endif %}">
-                <a href="{% url 'faculty' %}"><i class="fas fa-book"></i><span>{% trans 'Факультеты' %}</span></a>
-            </li>
-            <li class="{% if navbar == 'at-register-student' %}active{% endif %}">
-                <a href="{% url 'academic-transcript-student' %}"><i
-                        class="fas fa-registered"></i><span>{% trans 'Выдача' %}</span></a>
-            </li>
-            <li class="{% if navbar == 'at-search' %}active{% endif %}">
-                <a href="{% url 'at-search' %}"><i class="fas fa-search"></i><span>{% trans 'Поиск' %}</span></a>
-            </li>
+            {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+                <li class="{% if navbar == 'faculty' %}active{% endif %}">
+                    <a href="{% url 'bsadmin:faculty' %}"><i
+                            class="fas fa-cloud-download-alt"></i><span>{% trans 'Факультеты' %}</span></a>
+                </li>
+                <li class="{% if navbar == 'at-register-student' %}active{% endif %}">
+                    <a href="{% url 'bsadmin:academic-transcript-student' %}"><i
+                            class="fas fa-registered"></i><span>{% trans 'Выдача' %}</span></a>
+                </li>
+                <li class="{% if navbar == 'at-search' %}active{% endif %}">
+                    <a href="{% url 'bsadmin:at-search' %}"><i
+                            class="fas fa-search"></i><span>{% trans 'Поиск' %}</span></a>
+                </li>
+            {% endif %}
+        {% elif request.session.access == "stepper" %}
+            {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+                <li class="{% if navbar == 'stepper' %}active{% endif %}">
+                    <a href="{% url 'stepper:index' %}">
+                        <i class="fas fa-money-check"></i><span> {% trans 'Главная' %}</span>
+                    </a>
+                </li>
+                <li class="{% if navbar == 'cs' %}active{% endif %}">
+                    <a href="{% url 'stepper:cs' %}">
+                        <i class="fas fa-th-list"></i><span> {% trans 'Обходной лист' %}</span>
+                    </a>
+                </li>
+                <li class="{% if navbar == 'issuance' %}active{% endif %}">
+                    <a href="{% url 'stepper:cs-issuance' %}">
+                        <i class="fas fa-book"></i><span> {% trans 'Документы' %}</span>
+                    </a>
+                </li>
+                <li class="{% if navbar == 'roles' %}active{% endif %}">
+                    <a href="{% url 'stepper:stage-employee' %}">
+                        <i class="fas fa-link"></i><span> {% trans 'Сотрудники' %}</span>
+                    </a>
+                </li>
+
+            {% elif CUSTOM_ROLES.STDEBT in DB_ROLES %}
+                <li class="{% if navbar == 'stepper' %}active{% endif %}">
+                    <a href="{% url 'stepper:debts' %}">
+                        <i class="far fa-credit-card"></i><span> {% trans 'Студенты' %}</span>
+                    </a>
+                </li>
+            {% elif CUSTOM_ROLES.STSPEC in DB_ROLES %}
+                <li class="{% if navbar == 'spec' %}active{% endif %}">
+                    <a href="{% url 'stepper:spec' %}">
+                        <i class="fas fa-paper-plane"></i><span> {% trans 'Выдача' %}</span>
+                    </a>
+                </li>
+                <li class="{% if navbar == 'spec-history' %}active{% endif %}">
+                    <a href="{% url 'stepper:spec-history' %}">
+                        <i class="fas fa-history"></i><span> {% trans 'История' %}</span>
+                    </a>
+                </li>
+            {% elif CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
+                <li class="{% if navbar == 'archive' %}active{% endif %}">
+                    <a href="{% url 'stepper:archive' %}">
+                        <i class="fas fa-paper-plane"></i><span> {% trans 'Выдача' %}</span>
+                    </a>
+                </li>
+                <li class="{% if navbar == 'archive-history' %}active{% endif %}">
+                    <a href="{% url 'stepper:archive-history' %}">
+                        <i class="fas fa-history"></i><span> {% trans 'История' %}</span>
+                    </a>
+                </li>
+            {% endif %}
+            {#        {% elif request.session.access == "teacher" %}#}
+            {#            {% if CUSTOM_ROLES.STTEACHER in DB_ROLES %}#}
+            {#                <li class="{% if navbar == 'teachers' %}active{% endif %}">#}
+            {#                    <a href="{% url 'stepper:teachers' %}">#}
+            {#                        <i class="fas fa-money-check"></i><span> {% trans 'Главная' %}</span>#}
+            {#                    </a>#}
+            {#                </li>#}
+            {#            {% elif CUSTOM_ROLES.STDEBT in DB_ROLES  %}#}
+            {#                <li class="{% if navbar == 'teachers' %}active{% endif %}">#}
+            {#                    <a href="{% url 'stepper:teacher-debts' %}">#}
+            {#                        <i class="far fa-credit-card"></i><span> {% trans 'Студенты' %}</span>#}
+            {#                    </a>#}
+            {#                </li>#}
+            {#            {% endif %}#}
         {% endif %}
+        <li class="{% if navbar == 'integrator' %}active{% endif %}">
+            <a href="{% url 'integrator:index' %}">
+                <i class="fas fa-project-diagram"></i><span>{% trans 'Модули' %}</span>
+            </a>
+        </li>
         <li>
-            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i><span>{% trans 'Выход' %}</span></a>
+            <a href="{% url 'integrator:next-teacher-logout' %}">
+                <i class="fas fa-sign-out-alt"></i><span>{% trans 'Выход' %}</span>
+            </a>
         </li>
     {% else %}
-        <li>
-            <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i><span>{% trans 'Войти' %}</span></a>
+        <li class="{% if navbar == 'teacher-next-login' %}active{% endif %}">
+            <a href="{% url 'integrator:next-teacher-login' %}"><i
+                    class="fas fa-sign-in-alt"></i><span>{% trans 'Войти' %}</span></a>
         </li>
     {% endif %}
-
-
 </ul>

@@ -1,0 +1,128 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
+
+
+{% block content %}
+    {% if student %}
+        <div class="container">
+            <div class="d-flex justify-content-end flex-wrap">
+                <div class="text-left">
+                    <a href="{% url 'stepper:cs' %}"
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-th-list"></i> {% trans 'Обходные листы' %}
+                    </a>
+                    <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-money-check"></i> {% trans 'MyEDU - должники' %}
+                    </a>
+                </div>
+            </div>
+            <hr/>
+            <div class="text-center">
+                <h3 class="mb-0 text-danger">Форс-Мажор: {{ student.student_fio }}</h3>
+                {% if student.debt %}
+                    <h5 class="text-primary">{% trans 'Долги' %}: {{ student.debt|join_names }}</h5>
+                {% endif %}
+                <h5>Приказ: № {{ student.info }}, дата: {{ student.date_movement }},
+                    статус: {{ student.id_movement_info }}</h5>
+            </div>
+            <hr/>
+            <div class="text-center">
+                {% if not cs_student %}
+                    <button type="button" class="btn btn-success mr-2" data-toggle="modal"
+                            data-target="#requestModal">
+                        <i class="fas fa-paper-plane"></i> Подать заявку
+                    </button>
+                {% endif %}
+            </div>
+            <hr/>
+            {% if not process_cs %}
+
+                {% include 'utils/_messages.html' %}
+                {% if cs_student and not cs_student.completed_at %}
+                    <h4 class="text-center">Обходной лист № {{ cs_student.id }}</h4>
+                    <hr/>
+                    {% if not trajectories %}
+                        <form method="post" id="trajectory-form">
+                            {% csrf_token %}
+                            <div class="form-group mb-1">
+                                <label>Выберите обязательные этапы:</label>
+                                <div class="stages">
+                                    {{ form.stages|join:" " }}
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"
+                                    data-target="#confirmModal">
+                                <i class="fas fa-save"></i> {% trans 'Создать траектории' %}
+                            </button>
+
+                        </form>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                <h4 class="text-center">Обходной лист находится в процессе прохождения</h4>
+            {% endif %}
+        </div>
+        <div class="modal fade" id="requestModal" tabindex="-1" role="dialog" aria-labelledby="requestModalLabel"
+             aria-hidden="true">
+
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="orderDoneModalLabel">Процесс создания</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+                            Вы действительно хотите подать заявку на создание обходного листа?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-sm btn-danger" name="request-order">Создать</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if cs_student %}
+            <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmModalLabel">Подтвердить создание</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            Вы уверены, что хотите создать выбранные этапы?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-sm btn-danger" id="submit-form">Да, создать</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% endif %}
+    {% else %}
+        <h3 class="text-center">Студент не найден</h3>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {% if cs_student %}
+        <script type="text/javascript">
+            document.getElementById("submit-form").addEventListener("click", function () {
+                document.getElementById("trajectory-form").submit();
+            });
+        </script>
+    {% endif %}
+{% endblock %}

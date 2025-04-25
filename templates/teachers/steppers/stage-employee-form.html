@@ -1,0 +1,71 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters crispy_forms_tags %}
+
+{% block head_css_link %}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <h3 class="text-center">{% if is_edit %}Редактировать{% else %}Назначить{% endif %} сотрудника</h3>
+        <hr/>
+        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+            {% include 'utils/_messages.html' %}
+            <form method="post" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_employee">Сотрудник:</label>
+                    {% if is_edit %}
+                        <h4>{{ form.instance.employee.last_name }} {{ form.instance.employee.first_name }} {{ form.instance.employee.fathers_name|default:"" }}
+                            - {{ form.instance.employee.email }}</h4>
+                        <input type="hidden" name="employee" value="{{ form.instance.employee.id }}">
+                    {% else %}
+                        <select name="employee" id="id_employee" class="select2 form-control">
+                            {% for user in form.fields.employee.queryset %}
+                                <option value="{{ user.id }}">
+                                    {{ user.last_name }} {{ user.first_name }} {{ user.fathers_name|default:"" }}
+                                    - {{ user.email }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </div>
+
+                <!-- Шаг -->
+                <div class="form-group">
+                    {{ form.template_stage|as_crispy_field }}
+                </div>
+
+                <!-- Активен -->
+                <div class="form-group form-check">
+                    {{ form.is_active|as_crispy_field }}
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="fas fa-save"></i> {% if is_edit %}Сохранить{% else %}Создать{% endif %}
+                    </button>
+                    <a href="{% url 'stepper:stage-employee' %}" class="btn btn-sm btn-danger">
+                        <i class="fas fa-users"></i> Список сотрудников
+                    </a>
+                </div>
+            </form>
+
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: "classic",
+                width: '100%',
+                placeholder: 'Выберите сотрудника',
+                language: 'ru'
+            });
+        });
+    </script>
+{% endblock %}

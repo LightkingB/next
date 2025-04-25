@@ -8,13 +8,13 @@
             <h4 class="mb-4 text-center">{% trans 'Общий отчет по академическим справкам всех факультетов' %}</h4>
             <hr/>
             <a class="add_tabledata addBtn btn btn-danger btn-sm"
-               href="{% url 'index' %}">
+               href="{% url 'bsadmin:index' %}">
                 <i class="fa fa-arrow-left"></i> {% trans 'Назад' %}
             </a>
             <hr/>
             <div class="table-responsive">
 
-                <table class="table table-bordered table-sm table-responsive-xl">
+                <table class="table table-bordered table-sm table-responsive-lg">
                     <thead class="thead-light">
                     <tr>
                         <th scope="col">#</th>
@@ -47,7 +47,7 @@
                 {% include "utils/_pagination.html" with page_obj=regtranscripts %}
             </div>
         {% else %}
-            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+           {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 

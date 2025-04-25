@@ -1,0 +1,2 @@
+class ClearanceCreationError(Exception):
+    pass

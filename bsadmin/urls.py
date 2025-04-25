@@ -2,15 +2,16 @@ from django.urls import path
 
 from bsadmin.views import *
 
+app_name = 'bsadmin'
 urlpatterns = [
     path('', faculty_index, name='index'),
     path('transcript/search/', at_search, name='at-search'),
     path('transcript/faculty/<int:faculty_id>/category/', faculty_transcript_category,
          name='faculty-transcript-category'),
-    path('transcript/<int:faculty_id>/report/', ReportFacultyRegAcademicTranscript.as_view(),
-         name='faculty-academic-transcript-report'),
-    path('transcript/faculties/report/', ReportAllFacultyRegAcademicTranscript.as_view(),
-         name='all-faculty-academic-transcript-report'),
+    path('transcript/<int:faculty_id>/reports/', ReportFacultyRegAcademicTranscript.as_view(),
+         name='faculty-academic-transcript-reports'),
+    path('transcript/faculties/reports/', ReportAllFacultyRegAcademicTranscript.as_view(),
+         name='all-faculty-academic-transcript-reports'),
     path('transcript/faculty/<int:faculty_id>/category/<category_id>/', registration_academic_transcript_faculty,
          name='academic-transcript-faculty-registration'),
 

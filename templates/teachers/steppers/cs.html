@@ -1,0 +1,122 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
+        <hr/>
+
+        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+            <div class="row justify-content-between">
+                <div class="col-md-8">
+                    <form action="" method="get">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <input type="text" name="search" class="form-control form-control-sm mb-2 mb-md-0"
+                                       placeholder="Введите ФИО | уникальный номер"/>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-search"></i> Поиск
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-4 text-right">
+                    <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-money-check"></i> MyEDU - должники
+                    </a>
+                    {% if not history %}
+                        <a href="{% url 'stepper:cs-done' %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-history"></i> История
+                        </a>
+                    {% else %}
+                        <a href="{% url 'stepper:cs' %}"
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-th-list"></i> {% trans 'Обходные листы' %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">Об. лист №</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        {% if not history %}
+                            <th scope="col">Текущий шаг</th>
+                        {% else %}
+                            <th scope="col">Направление</th>
+                            <th scope="col">Статус (время)</th>
+                        {% endif %}
+                        <th scope="col">История</th>
+                        <th scope="col">Отчёт</th>
+
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for student in students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            {% if not history %}
+                                <td>
+                                    <a href="{% url 'stepper:cs-detail' myedu_id=student.myedu_id %}">
+                                        {{ student.fio }} ({{ student.myedu_id }})
+                                    </a>
+                                </td>
+                                <td>{{ student.id }}</td>
+                                <td>{{ student.faculty_name }}</td>
+                                <td>{{ student.spec_name }}</td>
+                                <td>{{ student.current_stage|default_if_none:"-" }}</td>
+                            {% else %}
+                                <td>
+                                    <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id %}">
+                                        {{ student.student_fio }} ({{ student.myedu_id }})
+                                    </a>
+                                </td>
+                                <td>{{ student.id }}</td>
+                                <td>{{ student.myedu_faculty }}</td>
+                                <td>{{ student.myedu_spec }}</td>
+                                <td>{{ student.get_type_choices_display }}</td>
+                                <td class="text-success">{{ student.completed_at|date:"d-m-Y H:i" }} <i
+                                        class="fas fa-check-square"></i></td>
+                            {% endif %}
+                            <td class="text-center">
+                                <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id %}"
+                                   class="btn btn-sm btn-danger">
+                                    <i class="fas fa-seedling"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'stepper:cs-report' cs_id=student.id %}" class="btn btn-sm btn-primary"
+                                   target="_blank">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% include "utils/_pagination.html" with page_obj=students %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}
+

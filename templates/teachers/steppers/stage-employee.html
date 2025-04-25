@@ -1,0 +1,81 @@
+{% extends 'admin_base.html' %}
+{% load static i18n crispy_forms_tags %}
+
+
+{% block content %}
+    <div class="container">
+        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+            <h3 class="text-center mb-0"> {% trans 'Список сотрудников с указанием ролей' %}</h3>
+            <hr/>
+            <div class="row">
+                <div class="col-md-10">
+                    <form action="" method="get">
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form.fio|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.template_stage|as_crispy_field }}
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-search"></i> Поиск
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-2 text-right mt-0 mt-md-4">
+                    <a href="{% url 'stepper:stage-employee-create' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-save"></i> Добавить
+                    </a>
+                </div>
+            </div>
+            <hr/>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg"
+                       id="table-ajax-facultytranscript">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">{% trans 'ФИО' %}</th>
+                        <th scope="col">{% trans 'Роль' %}</th>
+                        <th scope="col">{% trans 'Операции' %}</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for obj in employees %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                {{ obj.employee.full_name }} ({{ obj.employee.email }})
+                            </td>
+                            <td>{{ obj.template_stage.stage.name }}</td>
+                            <td>
+                                <a href="{% url 'stepper:stage-employee-update' pk=obj.id %}"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-user-edit"></i> Редактировать
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "utils/_pagination.html" with page_obj=employees %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}

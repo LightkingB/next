@@ -1,0 +1,301 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
+
+{% block content %}
+    <div class="container">
+        <h4 class="text-center mb-0">Модуль#2: Список студентов по AVN</h4>
+        <hr/>
+        {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="mb-2 mb-md-0">
+                            <a href="{% url 'stepper:spec' %}" class="btn btn-sm btn-primary">
+                                <i class="fa fa-arrow-left"></i> Список студентов MyEDU
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-md-flex justify-content-end">
+                            <input type="text"
+                                   class="form-control form-control-sm mr-2 mb-2 mb-md-0"
+                                   name="fio"
+                                   placeholder="Асанов Асан" id="search" style="max-width: 250px;"/>
+                            <button type="submit" class="btn btn-sm btn-danger" name="search">
+                                <i class="fas fa-search"></i> Поиск
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <hr/>
+
+            {% include 'utils/_messages.html' %}
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="faculty">Факультет:</label>
+                            <select id="faculty" class="form-control form-control-sm" name="faculty_id" required>
+                                <option value="0" disabled selected>Выберите факультет</option>
+                                {% for faculty in faculties %}
+                                    <option value="{{ faculty.myedu_faculty_id }}">{{ faculty.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="speciality">Специальность:</label>
+                            <select id="speciality" class="form-control form-control-sm" name="specialty_id" required>
+                                <option value="0" disabled selected>Выберите специальность</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>ФИО</label>
+                            <input type="text" name="fio" class="form-control form-control-sm" required
+                                   value="{{ form.fio.value|default:'' }}" placeholder="Асанов Асан Асанович">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Паспортные данные</label>
+                            <input type="text" name="inn" class="form-control form-control-sm"
+                                   value="{{ form.inn.value|default:'' }}" placeholder="12345678901234">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Примечание (если есть)</label>
+                            <input type="text" name="note" class="form-control form-control-sm"
+                                   value="{{ form.note.value|default:'' }}" placeholder="Доверенность № ...">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Телефон</label>
+                            <input type="text" name="phone" class="form-control form-control-sm"
+                                   placeholder="0555 55 55 55" required
+                                   value="{{ form.phone.value|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Рег. номер</label>
+                            <input type="text" name="reg_number" class="form-control form-control-sm"
+                                   value="{{ form.reg_number.value|default:'' }}" placeholder="12345678901234">
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Номер документа</label>
+                            <input type="text" name="doc_number" class="form-control form-control-sm"
+                                   value="{{ form.doc_number.value|default:'' }}" placeholder="12345678">
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Дата выдачи</label>
+                            <input type="date" name="date_issue" class="form-control form-control-sm" required
+                                   value="{{ form.date_issue.value|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-sm btn-danger mt-md-4 mt-0" data-toggle="modal"
+                                    data-target="#cameraModal">
+                                <i class="fas fa-camera"></i> Камера
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" name="signature" id="photo">
+                <div class="text-center">
+                    <button type="submit" class="btn btn-sm btn-primary" name="create">
+                        <i class="fas fa-save"></i> Сохранить
+                    </button>
+                </div>
+            </form>
+            <hr/>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">Телефон</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">Диплом</th>
+                        <th scope="col">Фото</th>
+                        <th scope="col">Примечание</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for student in students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ student.fio }}</td>
+                            <td>{{ student.phone|default:"-" }}</td>
+                            <td>{{ student.faculty.short_name }}</td>
+                            <td>{{ student.speciality.short_name|default:"-" }}</td>
+                            <td> {{ student.doc_number }} </td>
+
+                            <td>
+                                {% if student.signature %}
+                                    <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#imageModal"
+                                            data-image="{{ student.signature.url }}">
+                                        <i class="fas fa-camera-retro"></i>
+                                    </button>
+                                {% else %}
+                                    <div class="text-danger">
+                                        <i class="fas fa-times-circle"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ student.note|default:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "utils/_pagination.html" with page_obj=students %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+
+    <div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cameraModalLabel">Сделать фото</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="camera">
+                        <div class="camera-ring"></div>
+                    </div>
+                    <button type="button" class="btn btn-danger mt-3" onclick="takeSnapshot()">
+                        <i class="fas fa-camera"></i> Снять
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Фотография</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="imageModalContent" src="" class="img-fluid" style="display:none;"/>
+                    <p id="noImageText" style="display:none;">Фотография не предоставлена</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block head_js_link %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        Webcam.set({
+            width: 360,
+            height: 290,
+            image_format: 'jpeg',
+            jpeg_quality: 90
+        });
+
+        $('#faculty').change(function () {
+            const faculty_id = $(this).val();
+
+            if (faculty_id) {
+                $.ajax({
+                    url: "{% url 'stepper:load-specialities' %}",
+                    data: {
+                        'faculty_id': faculty_id
+                    },
+                    success: function (data) {
+                        $('#speciality').empty();
+                        $('#speciality').append('<option value="">Выберите специальность</option>');
+                        $.each(data, function (index, item) {
+                            $('#speciality').append('<option value="' + item.myedu_spec_id + '">' + item.title + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#speciality').empty();
+                $('#speciality').append('<option value="">Выберите специальность</option>');
+            }
+        });
+
+        $('#cameraModal').on('shown.bs.modal', function () {
+            Webcam.attach('#camera');
+        });
+
+        $('#cameraModal').on('hidden.bs.modal', function () {
+            Webcam.reset();
+        });
+
+        function takeSnapshot() {
+            Webcam.snap(function (dataUri) {
+                document.getElementById('photo').value = dataUri;
+                $('#cameraModal').modal('hide');
+            });
+        }
+
+
+        $('#imageModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var imagePath = button.data('image');
+
+            var modal = $(this);
+            var imgElement = modal.find('#imageModalContent');
+            var noImageText = modal.find('#noImageText');
+
+            if (imagePath) {
+                imgElement.attr('src', imagePath).show();
+                noImageText.hide();
+            } else {
+                imgElement.hide();
+                noImageText.show();
+            }
+        });
+
+    </script>
+{% endblock %}

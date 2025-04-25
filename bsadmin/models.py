@@ -1,12 +1,12 @@
-from datetime import datetime
-
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 from bsadmin.manager import CustomUserManager
-from utils.validator import validate_file_size
+from utils.validator import validate_file_size, delete_file
 
 
 class Role(models.Model):
@@ -44,6 +44,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name} {self.fathers_name}"
 
 
 class Faculty(models.Model):
@@ -158,3 +162,9 @@ class RegistrationTranscript(models.Model):
 
     def __str__(self):
         return f'{self.student_uuid} - {self.faculty_transcript.transcript_number}'
+
+
+@receiver(post_delete, sender=FacultyTranscript)
+def delete_faculty_transcript_file(sender, instance, *args, **kwargs):
+    if instance.files:
+        delete_file(instance.files.path)

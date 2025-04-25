@@ -1,0 +1,252 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
+
+{% block content %}
+    <div class="container">
+
+        <h4 class="text-center mb-0">Модуль#2: {{ student.student_fio }}</h4>
+        <p class="mb-0 text-primary text-center">({{ student.myedu_faculty }} - {{ student.myedu_spec }})</p>
+        <hr/>
+        {% if CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
+            <div class="d-flex mb-2 mb-md-0 justify-content-between">
+                <a href="{% url 'stepper:archive-history' %}" class="btn btn-sm btn-warning">
+                    <i class="fas fa-history"></i> Открыть историю
+                </a>
+                <a href="{% url 'stepper:archive' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-globe-asia"></i> Список студентов по MyEDU
+                </a>
+                <a href="{% url 'stepper:archive-avn' %}" class="btn btn-sm btn-success">
+                    <i class="fas fa-users"></i> Список студентов по AVN
+                </a>
+            </div>
+            <hr/>
+            {% if has_active_cs %}
+                <div class="alert alert-danger" role="alert">
+                    Процесс выдачи обходного листа остается незавершенным; требуется его завершение. Есть непогашенные
+                    задолженности.
+                </div>
+            {% else %}
+                {% include 'utils/_messages.html' %}
+                {% if not issuance %}
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Документ №</label>
+                                    <input type="text" name="doc_number" class="form-control form-control-sm" required
+                                           value="{{ form.doc_number.value|default:'' }}" placeholder="0000012345">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label>Примечание (если есть)</label>
+                                    <input type="text" name="note" class="form-control form-control-sm"
+                                           value="{{ form.note.value|default:'' }}" placeholder="123456789">
+                                </div>
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-sm btn-danger mt-md-4 mt-0" data-toggle="modal"
+                                            data-target="#cameraModal">
+                                        <i class="fas fa-camera"></i> Камера
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="signature" id="photo">
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fas fa-save"></i> Сохранить
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            {% endif %}
+            <hr/>
+            {% if issuance %}
+                <div class="card mb-3" style="max-width: 540px;">
+                    <div class="row no-gutters">
+                        <div class="col-md-4">
+                            {% if  issuance.signature %}
+                                <img src="{{ issuance.signature.url }}" class="card-img" alt="...">
+                            {% else %}
+                                <img src="{% static 'img/No-photo-m.png' %}" class="card-img" alt="...">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    Обходной лист №: {{ student.id }}
+                                </h5>
+                                <h6 class="card-text">
+                                    № справки: {{ issuance.id }}<br/>
+                                    Регистрационный №: {{ issuance.reg_number }}<br/>
+                                    Диплом №: {{ issuance.doc_number }}<br/>
+                                    Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
+                                    Статус: Выдан {% if issuance.type_choices == "received" %} однократно {% else %}
+                                    более одного раза {% endif %} <br/>
+                                    Примечание: {{ issuance.note|date:"-" }}
+                                </h6>
+                                {#                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal"#}
+                                {#                                        data-target="#doubleCS">#}
+                                {#                                    <i class="fas fa-question-circle"></i> Выдать дубликат#}
+                                {#                                </button>#}
+
+                                {#                                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"#}
+                                {#                                        data-target="#removeCS">#}
+                                {#                                    <i class="fas fa-trash-alt"></i> Удалить#}
+                                {#                                </button>#}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+
+            {% endif %}
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cameraModalLabel">Сделать фото</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="camera">
+                        <div class="camera-ring"></div>
+                    </div>
+                    <button type="button" class="btn btn-danger mt-3" onclick="takeSnapshot()">
+                        <i class="fas fa-camera"></i> Снять
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Фотография</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="imageModalContent" src="" class="img-fluid" style="display:none;"/>
+                    <p id="noImageText" style="display:none;">Фотография не предоставлена</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="doubleCS" tabindex="-1" aria-labelledby="doubleCSLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{% url 'stepper:spec-part-double' id=student.id myedu_id=student.myedu_id %}"
+                      method="post">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="doubleCSLabel">Дубликат диплома</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Вы действительно хотите выдать дубликат диплома?</h6>
+                        <input placeholder="Причина..." type="text" name="history" class="form-control" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-sm btn-primary">Уверен(-а)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="removeCS" tabindex="-1" aria-labelledby="removeCSCSLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{% url 'stepper:archive-part-remove' id=student.id myedu_id=student.myedu_id %}"
+                      method="post">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="removeCSCSLabel">Процесс удаления</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Вы действительно хотите удалить?</h6>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i> Удалить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block head_js_link %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        Webcam.set({
+            width: 360,
+            height: 290,
+            image_format: 'jpeg',
+            jpeg_quality: 90
+        });
+
+        $('#cameraModal').on('shown.bs.modal', function () {
+            Webcam.attach('#camera');
+        });
+
+        $('#cameraModal').on('hidden.bs.modal', function () {
+            Webcam.reset();
+        });
+
+        function takeSnapshot() {
+            Webcam.snap(function (dataUri) {
+                document.getElementById('photo').value = dataUri;
+                $('#cameraModal').modal('hide');
+            });
+        }
+
+
+        $('#imageModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var imagePath = button.data('image');
+
+            var modal = $(this);
+            var imgElement = modal.find('#imageModalContent');
+            var noImageText = modal.find('#noImageText');
+
+            if (imagePath) {
+                imgElement.attr('src', imagePath).show();
+                noImageText.hide();
+            } else {
+                imgElement.hide();
+                noImageText.show();
+            }
+        });
+
+    </script>
+{% endblock %}

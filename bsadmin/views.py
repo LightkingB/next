@@ -1,54 +1,16 @@
 import requests
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView
 
 from bsadmin.consts import API_URL
-from bsadmin.forms import LoginForm, FacultyTranscriptForm, FailFacultyTranscriptForm
+from bsadmin.forms import FacultyTranscriptForm, FailFacultyTranscriptForm
 from bsadmin.models import RegistrationTranscript
-from bsadmin.services import UserService, HttpMyEduServiceAPI
+from bsadmin.services import UserService
+from utils.errors import handle_error
 from utils.filter_pagination import Pagination
-
-
-def sign_in_view(request):
-    user_service = UserService()
-    if request.user.is_authenticated:
-        return redirect("index")
-
-    if request.method == "POST":
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data.get('email', None)
-            password = form.cleaned_data.get('password', None)
-            user = authenticate(email=email, password=password)
-
-            if user is None:
-                myedu_data, success = HttpMyEduServiceAPI.get_myedu_data(email, password)
-                if success:
-                    user = user_service.update_or_create_user(email, password, myedu_data)
-                else:
-                    return _handle_error(
-                        request,
-                        {"form": form},
-                        template_name="teachers/profile/login.html",
-                        message="Проверьте правильность данных и повторите попытку."
-                    )
-
-            request.session['user_id'] = user.id
-            login(request, user)
-            return redirect("index")
-
-    return render(request, "teachers/profile/login.html", {"form": LoginForm()})
-
-
-def sign_out_view(request):
-    if request.session.get('user_data', None):
-        del request.session['user_data']
-    logout(request)
-    return redirect("index")
 
 
 def faculty(request):
@@ -59,41 +21,46 @@ def faculty(request):
         faculties, error = user_service.fetch_and_update_faculties()
         if error:
             context.update({"error": error})
-            return _handle_error(
+            return handle_error(
                 request,
                 context,
-                template_name="teachers/faculty.html",
+                template_name="teachers/base/faculty.html",
                 message=error
             )
         messages.success(request, "Данные успешно синхронизированы!")
-        return redirect("faculty")
-    return render(request, "teachers/faculty.html", context)
+        return redirect("bsadmin:faculty")
+    return render(request, "teachers/base/faculty.html", context)
 
 
 def speciality(request, faculty_id):
     user_service = UserService()
     faculty_detail = user_service.get_faculty_by_id_or_404(faculty_id)
     specialities = user_service.active_specialities_by_faculty(faculty_id)
-    context = {"navbar": "faculty", "specialities": specialities, "faculty": faculty_detail}
+    context = {
+        "navbar": "faculty",
+        "specialities": specialities,
+        "faculty": faculty_detail,
+        "access": "bsadmin"
+    }
     if request.method == 'POST':
         specialities, error = user_service.fetch_and_update_specialities_by_faculty(faculty_detail)
         if error:
             context.update({"error": error})
-            return _handle_error(
+            return handle_error(
                 request,
                 context,
-                template_name="teachers/speciality.html",
+                template_name="teachers/base/speciality.html",
                 message=error
             )
         messages.success(request, "Данные успешно синхронизированы!")
-        return redirect("speciality", faculty_id=faculty_id)
-    return render(request, "teachers/speciality.html", context)
+        return redirect("bsadmin:speciality", faculty_id=faculty_id)
+    return render(request, "teachers/base/speciality.html", context)
 
 
 def faculty_index(request):
     if not request.user.is_authenticated:
-        return redirect("login")
-
+        return redirect("integrator:next-teacher-login")
+    request.session['access'] = 'bsadmin'
     user_service = UserService()
     if request.method == "POST":
         transcript_number = request.POST.get("transcript_number", "").replace(" ", "").strip()
@@ -110,7 +77,7 @@ def faculty_index(request):
         "navbar": "index",
         "faculties": faculties
     }
-    return render(request, "index.html", context)
+    return render(request, "teachers/transcripts/index.html", context)
 
 
 def faculty_transcript_category(request, faculty_id):
@@ -291,7 +258,7 @@ def handle_student_search(request):
 def save_academic_transcript_student(request):
     if request.method != "POST":
         messages.error(request, "Этот метод не поддерживается")
-        return redirect("academic-transcript-student")
+        return redirect("bsadmin:academic-transcript-student")
 
     transcript_number = request.POST.get("transcript_number", "").replace(" ", "").strip()
 
@@ -306,28 +273,28 @@ def save_academic_transcript_student(request):
 
     if not student_id or not student_fio or not faculty_id or not faculty_title or not speciality_id or not speciality_title:
         messages.error(request, "Заполните обязательные поля.")
-        return redirect("academic-transcript-student")
+        return redirect("bsadmin:academic-transcript-student")
 
     user_service = UserService()
     transcript = user_service.get_active_academic_transcript_by_number(transcript_number)
 
     if not transcript:
         messages.error(request, "Этот номер не найден!")
-        return redirect("academic-transcript-student")
+        return redirect("bsadmin:academic-transcript-student")
 
     faculty_detail = user_service.get_faculty_by_myedu_faculty_id_or_none(faculty_id)
     if not faculty_detail:
         messages.error(request, "Факультет не найден!")
-        return redirect("academic-transcript-student")
+        return redirect("bsadmin:academic-transcript-student")
 
     speciality_detail = user_service.get_spec_by_myedu_spec_id_or_none(speciality_id)
     if not speciality_detail:
         messages.error(request, "Специальность не найдена!")
-        return redirect("academic-transcript-student")
+        return redirect("bsadmin:academic-transcript-student")
 
     if user_service.is_reg_academic_transcript_for_student(transcript.id):
         messages.error(request, "Этот номер уже зарегистрирован!")
-        return redirect("academic-transcript-student")
+        return redirect("bsadmin:academic-transcript-student")
     try:
         RegistrationTranscript.objects.create(
             faculty_transcript_id=transcript.id,
@@ -342,7 +309,7 @@ def save_academic_transcript_student(request):
     except Exception as _:
         messages.error(request, "Повторите попытку...")
 
-    return redirect("academic-transcript-student")
+    return redirect("bsadmin:academic-transcript-student")
 
 
 class ReportFacultyRegAcademicTranscript(ListView):
@@ -433,8 +400,3 @@ def specialities_by_faculty(request):
     faculty_id = request.GET.get("faculty_id", 0)
     specialities = user_service.specialities_values_by_faculty(faculty_id)
     return JsonResponse({"specialities": list(specialities)}, status=200)
-
-
-def _handle_error(request, context, template_name, message=None):
-    messages.error(request, message)
-    return render(request, template_name, context)

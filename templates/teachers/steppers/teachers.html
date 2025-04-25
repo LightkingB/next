@@ -1,0 +1,84 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
+
+
+{% block content %}
+    <div class="container">
+        <h4 class="text-center mb-0">Модуль#3: {{ title }}</h4>
+        <hr/>
+        {% if CUSTOM_ROLES.STTEACHER in DB_ROLES %}
+            <div class="row">
+                <div class="col-md-8">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-5">
+                                <label for="search">ФИО / MyEDU ID:</label>
+                                <input type="text" class="form-control form-control-sm" name="search"
+                                       placeholder="230795"
+                                       id="search"/>
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="mt-2 mt-md-4">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-search"></i> Поиск
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-4 text-right mt-0 mt-md-4">
+                    <a href="{% url 'stepper:teachers-cs' %}" class="btn btn-primary btn-sm">
+                        Обходные листы <i class="fas fa-clipboard-list"></i>
+                    </a>
+                </div>
+            </div>
+
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">Операции</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for teacher in objects %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'stepper:teacher-cs-detail' myedu_id=teacher.student_id %}">
+                                    {{ teacher.student_fio }}
+                                </a>
+                            </td>
+                            <td>{{ teacher.faculty_name }}</td>
+                            <td>{{ teacher.speciality_name }}</td>
+                            <td>
+
+                            </td>
+
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "utils/_pagination.html" with page_obj=objects %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}

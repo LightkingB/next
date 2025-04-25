@@ -1,0 +1,122 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        {% if CUSTOM_ROLES.STDEBT in DB_ROLES %}
+            <h3 class="text-center mb-0">{{ trajectory.clearance_sheet.student_fio }}</h3>
+            <hr/>
+
+            <div class="row">
+                <div class="col-md-4">
+                    {% include 'utils/_messages.html' %}
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-1">
+                            <label for="comment" class="form-label">
+                                Введите комментарий
+                            </label>
+                            <textarea class="form-control form-control-sm" name="comment_text" id="comment"
+                                      required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="disabledFieldsetCheck" name="end">
+                                <label class="form-check-label" for="disabledFieldsetCheck">
+                                    Завершить (без долгов)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-2 d-flex">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                Комментировать
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-8">
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm table-responsive-lg"
+                               id="table-ajax-facultytranscript">
+                            <thead class="thead-light">
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">{% trans 'Комментарий' %}</th>
+                                <th scope="col">{% trans 'Дата создания' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody class="order">
+                            {% for comment in comments %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ comment.comment_text }}</td>
+                                    <td>{{ comment.created_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr class="table-warning nosort">
+                                    <td colspan="100%" class="text-center">
+                                        <small class="text-muted">{% trans 'Пусто' %}</small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Подтверждение</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Вы подтверждаете, что студент не имеет задолженностей и процесс можно завершить?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" id="modalCancel" data-dismiss="modal">Отмена
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success" id="modalConfirm">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            let confirmed = false;
+
+            $("#disabledFieldsetCheck").change(function () {
+                if ($(this).prop("checked")) {
+                    confirmed = false;
+                    $("#confirmationModal").modal("show");
+                }
+            });
+
+            $("#modalConfirm").click(function () {
+                confirmed = true;
+                $("#confirmationModal").modal("hide");
+            });
+
+            $("#confirmationModal").on("hidden.bs.modal", function () {
+                if (!confirmed) {
+                    $("#disabledFieldsetCheck").prop("checked", false);
+                }
+            });
+        });
+    </script>
+{% endblock %}

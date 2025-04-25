@@ -4,6 +4,8 @@
 
 {% block content %}
     <div class="container">
+        <h4 class="text-center mb-0">Модуль#1: Академическая справка</h4>
+        <hr/>
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
             {% include 'utils/_messages.html' %}
             <div class="row">
@@ -25,7 +27,8 @@
                 </div>
                 <div class="col-md-4">
                     <div class="mt-md-4 text-right">
-                        <a href="{% url 'all-faculty-academic-transcript-report' %}" class="btn btn-sm btn-success">Общий
+                        <a href="{% url 'bsadmin:all-faculty-academic-transcript-reports' %}"
+                           class="btn btn-sm btn-success">Общий
                             отчёт</a>
                     </div>
                 </div>
@@ -38,7 +41,7 @@
                     <div class="col-md-3 mb-2">
                         <div class="card h-100 d-flex flex-column">
                             <div class="card-body flex-grow-1">
-                                <a href="{% url 'faculty-transcript-category' faculty_id=faculty.id %}">
+                                <a href="{% url 'bsadmin:faculty-transcript-category' faculty_id=faculty.id %}">
                                     <h6 class="card-title mb-0">{{ faculty.title }} ({{ faculty.short_name }})</h6>
                                 </a>
                                 {% trans 'Зарегистр. справки:' %} {{ faculty.total_documents }} <br/>
@@ -50,7 +53,7 @@
                 {% endfor %}
             </div>
         {% else %}
-            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+            {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 {% endblock %}

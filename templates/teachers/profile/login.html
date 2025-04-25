@@ -9,7 +9,7 @@
             <div class="py-2 logo-wrapper text-center">
                 <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" class="mb-2" alt="">
             </div>
-            <form action="{% url 'login' %}" method="post">
+            <form action="{% url 'integrator:next-teacher-login' %}" method="post">
                 {% csrf_token %}
 
                 {{ form.as_p }}

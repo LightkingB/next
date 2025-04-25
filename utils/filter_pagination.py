@@ -18,6 +18,6 @@ class Pagination:
         paginator = Paginator(self.queryset, default_count_info)
         return self._get_paginator_page(paginator, page_number)
 
-    def pagination_with_filters(self, filtered_obj, page_number, default_count_info=100):
-        paginator = Paginator(filtered_obj.qs, default_count_info)
+    def pagination_with_filters(self, page_number, default_count_info=100):
+        paginator = Paginator(self.queryset.qs, default_count_info)
         return self._get_paginator_page(paginator, page_number)

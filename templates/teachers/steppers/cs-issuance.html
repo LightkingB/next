@@ -1,0 +1,156 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
+        <hr/>
+
+        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+            <div class="row justify-content-between">
+                <div class="col-md-5">
+                    <form action="" method="get">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <input type="number" name="search" class="form-control form-control-sm mb-2 mb-md-0"
+                                       placeholder="Введите номер справки"/>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-search"></i> Поиск
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-7 text-right">
+                    <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-money-check"></i> MyEDU - должники
+                    </a>
+
+                    <a href="{% url 'stepper:cs-done' %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-history"></i> История
+                    </a>
+
+                    <a href="{% url 'stepper:cs' %}"
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-th-list"></i> {% trans 'Обходные листы' %}
+                    </a>
+
+                </div>
+            </div>
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg">
+                    <thead class="thead-light">
+                    <tr>
+
+                        <th scope="col">№ справки</th>
+                        <th scope="col">Документ</th>
+                        <th scope="col">Об. лист №</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">MyEDU / AVN</th>
+                        <th scope="col">Дата создания</th>
+                        <th scope="col">Операции</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for doc in issuance %}
+                        <tr id="row-{{ doc.id }}">
+                            <td class="text-center">{{ doc.id }}</td>
+                            <td>{{ doc.doc_number }}</td>
+                            <td>{{ doc.cs_id|default:"-" }}</td>
+                            <td>{{ doc.faculty.title|default:"-" }}</td>
+                            <td>{{ doc.speciality.title|default:"-" }}</td>
+                            <td>
+                                {% if doc.student == 0 %}
+                                    AVN
+                                {% else %}
+                                    MyEDU
+                                {% endif %}
+                            </td>
+                            <td>{{ doc.created_at|date:"d/m/Y H:i" }} </td>
+                            <td class="text-center">
+                                <button class="btn btn-danger btn-sm btn-issuance-delete"
+                                        data-id="{{ doc.id }}"
+                                        data-number="{{ doc.doc_number }}"
+                                        data-toggle="modal"
+                                        data-target="#deleteModal">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% include "utils/_pagination.html" with page_obj=issuance %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтвердите удаление</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить документ № <strong id="docNumber"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="confirmDelete">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        let deleteDocId = null;
+
+        $(document).on('click', '.btn-issuance-delete', function () {
+            deleteDocId = $(this).data('id');
+            const docNumber = $(this).data('number');
+            $('#docNumber').text(docNumber);
+        });
+
+        $('#confirmDelete').on('click', function () {
+            if (deleteDocId) {
+                $.ajax({
+                    url: '{% url "stepper:issuance-delete" %}',
+                    type: 'POST',
+                    data: {
+                        'id': deleteDocId,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        $('#deleteModal').modal('hide');
+                        $('#row-' + deleteDocId).remove();
+                    },
+                    error: function () {
+                        alert('Ошибка при удалении документа.');
+                    }
+                });
+            }
+        });
+    </script>
+
+{% endblock %}

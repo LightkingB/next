@@ -10,11 +10,11 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <a class="add_tabledata addBtn btn btn-danger btn-sm"
-                       href="{% url 'index' %}">
+                       href="{% url 'bsadmin:index' %}">
                         <i class="fa fa-arrow-left"></i> {% trans 'Список факультетов' %}
                     </a>
                     <a class="add_tabledata addBtn btn btn-success btn-sm mx-2"
-                       href="{% url 'faculty-academic-transcript-report' faculty_id=faculty.id %}">
+                       href="{% url 'bsadmin:faculty-academic-transcript-reports' faculty_id=faculty.id %}">
                         <i class="fas fa-flag"></i> {% trans 'Отчёт' %}
                     </a>
                 </div>
@@ -30,7 +30,7 @@
                         <div class="col-md-3 mb-2">
                             <div class="card">
                                 <div class="card-body">
-                                    <a href="{% url 'academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
+                                    <a href="{% url 'bsadmin:academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}">
                                         <h6 class="card-title mb-0">{{ category.title }} - количество
                                             листов: {{ category.page_count }}</h6>
                                     </a>
@@ -47,7 +47,7 @@
             <hr/>
             {% include 'utils/_messages.html' %}
             <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-xl">
+                <table class="table table-bordered table-sm table-responsive-lg">
                     <thead class="thead-light">
                     <tr>
                         <th scope="col">#</th>
@@ -71,8 +71,7 @@
                     <tbody class="order">
                     {% for transcript in transcripts %}
                         <tr class="{% if transcript.is_defective %} error-block {% endif %} {% if transcript.is_used %} success-block {% endif %}">
-
-                            <td>{{ forloop.counter }}</td>
+                            <td>{{ forloop.counter0|add:transcripts.start_index }}</td>
                             <td>{{ transcript.category.title }} (лист: {{ transcript.category.page_count }})</td>
                             <td>
                                 {{ transcript.transcript_number }}
@@ -99,7 +98,7 @@
                 {% include "utils/_pagination.html" with page_obj=transcripts %}
             </div>
         {% else %}
-            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+            {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 
@@ -118,7 +117,7 @@
                     {% csrf_token %}
                     <div class="modal-body">
                         <div class="form-group">
-                            <label for="transcript_number">Уникальный номер справки</label>
+                            <label for="transcript_number">Введите № академической справки*</label>
                             <input type="text" class="form-control form-control-sm" id="transcript_number"
                                    name="transcript_number"
                                    required>
@@ -167,7 +166,7 @@
                 $("#not-found-text").text("");
 
                 $.ajax({
-                    url: "{% url 'fail_transcript' %}",
+                    url: "{% url 'bsadmin:fail_transcript' %}",
                     type: "POST",
                     data: formData,
                     processData: false,

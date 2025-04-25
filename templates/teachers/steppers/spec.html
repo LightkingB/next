@@ -1,0 +1,120 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters crispy_forms_tags %}
+
+{% block content %}
+    <div class="container">
+        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
+        <hr/>
+        <div class="d-flex justify-content-between">
+            {% if history %}
+                <a href="{% url 'stepper:spec' %}" class="btn btn-sm btn-primary">
+                    <i class="fa fa-arrow-left"></i> Назад
+                </a>
+            {% else %}
+                <a href="{% url 'stepper:spec-history' %}" class="btn btn-sm btn-warning">
+                    <i class="fas fa-history"></i> Открыть историю
+                </a>
+            {% endif %}
+            <a href="{% url 'stepper:spec-avn' %}" class="btn btn-sm btn-success">
+                <i class="fas fa-users"></i> Список студентов по AVN
+            </a>
+        </div>
+        <hr/>
+        {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
+            {% include 'utils/_messages.html' %}
+            <form action="" method="get">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="search">ФИО / MyEDU ID / Обх. №:</label>
+                        <input type="text"
+                               class="form-control form-control-sm"
+                               name="search"
+                               placeholder="230795"
+                               id="search"
+                               value="{{ request.GET.search }}"
+                        />
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fas fa-search"></i> Поиск
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <hr/>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-lg">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">№ Обх. листа</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">№ справки</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for student in objects %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url  'stepper:spec-part' id=student.id myedu_id=student.myedu_id %}">
+                                    {{ student.student_fio }} ({{ student.myedu_id }})
+                                </a>
+                            </td>
+                            <td>{{ student.id }}</td>
+                            <td>{{ student.myedu_faculty }}</td>
+                            <td>{{ student.myedu_spec }}</td>
+                            <td>{{ student.issuance_id|default:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include "utils/_pagination.html" with page_obj=objects %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#faculty').change(function () {
+                const faculty_id = $(this).val();
+
+                if (faculty_id) {
+                    $.ajax({
+                        url: "{% url 'stepper:load-specialities' %}",
+                        data: {
+                            'faculty_id': faculty_id
+                        },
+                        success: function (data) {
+                            $('#speciality').empty();
+                            $('#speciality').append('<option value="">Выберите специальность</option>');
+                            $.each(data, function (index, item) {
+                                $('#speciality').append('<option value="' + item.myedu_spec_id + '">' + item.title + '</option>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#speciality').empty();
+                    $('#speciality').append('<option value="">Выберите специальность</option>');
+                }
+            });
+        });
+    </script>
+{% endblock %}

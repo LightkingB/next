@@ -1,0 +1,113 @@
+{% extends 'students/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+    <div class="container">
+        {% if has_cs %}
+            <div class="alert alert-success fade show" role="alert">
+                <h4> Ваш обходной лист пока не завершён – процесс продолжается.</h4>
+            </div>
+        {% endif %}
+        {% if not request.user.is_worker %}
+            <div class="text-center mb-4">
+                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#requestCS">
+                    Подать заявку
+                </button>
+            </div>
+        {% endif %}
+        <hr/>
+        <h3 class="text-center">История моих обходных листов</h3>
+        <hr/>
+        {% if cs_list %}
+            <div class="row">
+                {% for cs in cs_list %}
+                    <div class="col-md-4">
+                        <div class="card">
+                            <h4 class="card-header mb-0 d-flex justify-content-between align-items-center">
+                                <span>Обходной лист №: {{ cs.id }} </span>
+                            </h4>
+                            <div class="card-body">
+                                <h5 class="card-title d-flex justify-content-between align-items-center">
+                                    <span>
+                                    {% trans 'Статус' %}:
+                                        {% if cs.completed_at %}
+                                            <span class="text-success">
+                                            {% trans 'Завершен' %} <i class="far fa-check-square"></i>
+                                            {{ trajectory.completed_at|date:"d.m.Y H:i" }}
+                                        </span>
+                                        {% else %}
+                                            <span class="text-primary">
+                                            {% trans 'В процессе' %} <i class="fas fa-hourglass-start"></i>
+                                        </span>
+                                        {% endif %}
+                                    </span>
+                                    <a href="{% url 'students:cs-history' cs_id=cs.id %}"
+                                       class="btn btn-sm btn-danger">
+                                        <i class="fas fa-info-circle"></i> {% trans 'Детально' %}
+                                    </a>
+                                </h5>
+                                <div class="card-text mb-0">
+                                    <ul class="list-group">
+                                        {% for trajectory in cs.trajectory_set.all %}
+                                            <li class="list-group-item">
+                                                {{ trajectory.template_stage.stage.name }} -
+                                                {% if trajectory.completed_at %}
+                                                    {{ trajectory.assigned_by.email }}
+                                                    <span class="text-success"><i
+                                                            class="fas fa-check-square"></i></span>
+                                                {% else %}
+                                                    <span class="text-primary"><i
+                                                            class="fas fa-hourglass-start"></i></span>
+                                                {% endif %}
+                                            </li>
+                                        {% empty %}
+                                            <li class="list-group-item">
+                                                {% trans 'Траектории пока не заданы' %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="width: 20rem">
+                <h5 class="card-header mb-0 d-flex justify-content-between align-items-center">
+                    <span>Обходной лист</span>
+                </h5>
+                <div class="card-body">
+                    <div class="card-text">
+                        Нет активной траектории. Возможно, она будет сформирована позже.
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="requestCS" tabindex="-1" aria-labelledby="requestCSModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="requestCSModalLabel">Процесс подачи заявки</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Вы действительно хотите создать заявку?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Подтвердить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

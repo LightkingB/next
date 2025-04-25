@@ -29,7 +29,7 @@
                         <tr>
                             <th scope="row">{{ forloop.counter }}</th>
                             <td>
-                                <a href="{% url 'speciality' faculty_id=faculty.id %}">
+                                <a href="{% url 'bsadmin:speciality' faculty_id=faculty.id %}">
                                     {{ faculty.title }}
                                 </a>
                             </td>
@@ -44,7 +44,7 @@
                 </table>
             </div>
         {% else %}
-            <h4 class="text-center">{% trans 'Доступ закрыт' %}</h4>
+           {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 {% endblock %}

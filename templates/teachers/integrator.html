@@ -1,0 +1,86 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Академическая справка</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+                            <a href="{% url 'bsadmin:index' %}" class="btn btn-sm btn-danger">
+                                Перейти <i class="fa fa-arrow-right"></i>
+                            </a>
+                        {% else %}
+                            <h5 class="text-center">{% trans 'Нет доступа' %}</h5>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Обходной лист</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+                            <a href="{% url 'stepper:index' %}" class="btn btn-sm btn-danger">
+                                Перейти <i class="fa fa-arrow-right"></i>
+                            </a>
+                        {% elif CUSTOM_ROLES.STDEBT in DB_ROLES %}
+                            <a href="{% url 'stepper:debts' %}" class="btn btn-sm btn-danger">
+                                Перейти <i class="fa fa-arrow-right"></i>
+                            </a>
+                        {% elif CUSTOM_ROLES.STSPEC in DB_ROLES %}
+                            <a href="{% url 'stepper:spec' %}" class="btn btn-sm btn-danger">
+                                Перейти <i class="fa fa-arrow-right"></i>
+                            </a>
+                        {% elif CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
+                            <a href="{% url 'stepper:archive' %}" class="btn btn-sm btn-danger">
+                                Перейти <i class="fa fa-arrow-right"></i>
+                            </a>
+                        {% else %}
+                            <h5 class="text-center">{% trans 'Нет доступа' %}</h5>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {#            <div class="col-md-6 mb-2">#}
+            {#                <div class="card">#}
+            {#                    <div class="card-header">#}
+            {#                        <h5 class="card-title mb-0">Преподаватель (Обход. лист)</h5>#}
+            {#                    </div>#}
+            {#                    <div class="card-body">#}
+            {#                        {% if CUSTOM_ROLES.STTEACHER in DB_ROLES %}#}
+            {#                            <a href="{% url 'stepper:teachers' %}" class="btn btn-sm btn-danger">#}
+            {#                                Перейти <i class="fa fa-arrow-right"></i>#}
+            {#                            </a>#}
+            {#                        {% elif CUSTOM_ROLES.STLIB in DB_ROLES or CUSTOM_ROLES.STECONOM in DB_ROLES or CUSTOM_ROLES.STACNT in DB_ROLES %}#}
+            {#                            <a href="{% url 'stepper:teacher-debts' %}" class="btn btn-sm btn-danger">#}
+            {#                                Перейти <i class="fa fa-arrow-right"></i>#}
+            {#                            </a>#}
+            {#                        {% else %}#}
+            {#                            <h5 class="text-center">{% trans 'Нет доступа' %}</h5>#}
+            {#                        {% endif %}#}
+            {#                    </div>#}
+            {#                </div>#}
+            {#            </div>#}
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Мои данные</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="{% url 'students:index' %}" class="btn btn-sm btn-danger">
+                            Перейти <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

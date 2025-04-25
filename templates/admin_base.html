@@ -7,8 +7,11 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title> {% block title %} {% trans 'Отдел качеств' %} {% endblock %}</title>
+    <title> {% block title %} {% trans 'Обходной лист | ОшГУ' %} {% endblock %}</title>
 
+    <link rel="icon" type="image/png" href="https://oshsu.kg/main/images/logo/white-logo.svg"/>
+
+    {% block head_css_link %}{% endblock %}
     {% include "component/header.html" %}
     {% block css %} {% endblock %}
 
@@ -40,6 +43,7 @@
         </div>
     </div>
 </div>
+{% block head_js_link %}{% endblock %}
 {% include 'component/footer.html' %}
 <script type="text/javascript">
     $(document).ready(function () {

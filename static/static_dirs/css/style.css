@@ -480,11 +480,119 @@ label {
         width: 100%;
     }
 
+    .logo-wrapper img {
+        width: 75%;
+    }
+
     .logo-wrapper {
         width: 100%;
     }
 
     .login-form form a {
         line-height: 15px;
+    }
+}
+
+.duty {
+    width: 222px;
+}
+
+.student-name {
+    cursor: pointer;
+}
+
+.stage-status .card-body {
+    padding: 0.5rem;
+}
+
+.stages input {
+    margin-top: 0;
+}
+
+.stages label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 25px;
+}
+
+
+.modal-header {
+    border-bottom: none;
+}
+
+.modal-body {
+    text-align: center;
+    padding: 30px;
+    background-color: #f1f1f1;
+    border-radius: 15px;
+}
+
+#camera {
+    position: relative;
+    width: 390px !important;
+    height: 300px !important;
+    margin: auto;
+    background-color: #eee;
+    border-radius: 10px;
+    border: 5px solid #A00E07;
+}
+
+#camera canvas {
+    border-radius: 10px;
+
+}
+
+.modal-title {
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.camera-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    border: 5px solid #A00E07;
+    box-shadow: 0 0 20px #A00E07;
+    animation: pulse 1.5s infinite;
+}
+
+table thead tr th {
+    vertical-align: middle !important;
+    text-align: center;
+}
+
+.card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#autoSizingCheck2 {
+    height: 25px;
+    width: 25px;
+}
+
+.autoSizingCheck2-label {
+    font-size: 22px;
+    margin-left: 10px;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
     }
 }

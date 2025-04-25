@@ -1,0 +1,72 @@
+{% extends 'students/base.html' %}
+{% load static i18n %}
+
+
+{% block content %}
+    <div class="login-form">
+        {% include 'utils/_messages.html' %}
+        <div class="py-2 logo-wrapper text-center">
+            <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" class="mb-2" alt="">
+        </div>
+        <form action="" method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+            <div class="agreement-wrapper mb-2 mt-3">
+                <input type="checkbox" id="agreement"/>
+                <a href="#agreement" data-toggle="modal" data-target="#agreementModalScrollable">
+                    Пользовательское соглашение
+                </a>
+            </div>
+            <input type="submit" id="teacher_login" class="btn btn-danger btn-block btn-lg"
+                   value="{% trans 'Войти' %}" disabled>
+        </form>
+
+    </div>
+    <div class="modal fade" id="agreementModalScrollable" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="exampleModalScrollableTitle">Пользовательское соглашение!</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body student-login-agree">
+                    <h4>Я ознакомлен(а) с тем, что: </h4>
+                    <ol>
+                        <li>согласие на обработку персональных данных действует с даты подписания настоящего
+                            согласия
+                            в течение всего срока предоставления мне государственной (муниципальной) услуги и
+                            хранения
+                            данных об оказанной услуге в соответствии с законодательством Кыргызской Республики;
+                        </li>
+                        <li>
+                            согласие на обработку персональных данных может быть отозвано на основании письменного
+                            заявления в произвольной форме;
+                        </li>
+                        <li>
+                            в случае отзыва согласия на обработку персональных данных обработка моих персональных
+                            данных полностью или частично может быть продолжена в соответствии со статьями 5 и 15
+                            Закона Кыргызской Республики "Об информации персонального характера".
+                        </li>
+                    </ol>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Согласен(-на)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        var checker = document.getElementById('agreement');
+        var sendbtn = document.getElementById('teacher_login');
+        checker.onchange = function () {
+            sendbtn.disabled = !this.checked;
+        };
+    </script>
+{% endblock %}
