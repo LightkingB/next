@@ -12,16 +12,16 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from bsadmin.consts import STADMIN
-from bsadmin.models import CustomUser
+from bsadmin.models import CustomUser, Faculty, Speciality
 from stepper.choices import TypeChoices
 from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS
 from stepper.decorators import with_stepper
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError
 from stepper.filters import StageEmployeeStudentFilter, CSFilter
-from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm
+from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm, DiplomaForm
 from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep, StageEmployee, Issuance, \
-    IssuanceHistory
+    IssuanceHistory, Diploma
 from utils.filter_pagination import Pagination
 
 
@@ -35,7 +35,9 @@ def route(request):
 
 
 @with_stepper
-def base_students_view(request, url, template_name, navbar, page_title, extra_context=None):
+def cs_index(request):
+    request.session['access'] = 'stepper'
+
     if not request.user.is_authenticated:
         return redirect("integrator:next-teacher-login")
 
@@ -43,9 +45,19 @@ def base_students_view(request, url, template_name, navbar, page_title, extra_co
         search = request.POST.get("search", "")
         faculty_id = request.POST.get("faculty_id", 0)
         specialty_id = request.POST.get("specialty_id", 0)
-        students_qs = request.stepper.get_stepper_data_from_api(url, search, faculty_id, specialty_id)
+        students_qs = request.stepper.get_stepper_data_from_api(STUDENT_STEPPER_URL, search, faculty_id, specialty_id)
     else:
-        students_qs = request.stepper.get_stepper_data_from_api(url)
+        students_qs = request.stepper.get_stepper_data_from_api(STUDENT_STEPPER_URL)
+
+    student_ids = [str(student["student_id"]) for student in students_qs]
+
+    existing_ids = set(
+        ClearanceSheet.objects.filter(myedu_id__in=student_ids)
+        .values_list('myedu_id', flat=True)
+    )
+    for student in students_qs:
+        student["exist"] = str(student["student_id"]) in existing_ids
+
     paginator = Pagination(request, students_qs or [])
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
@@ -53,29 +65,14 @@ def base_students_view(request, url, template_name, navbar, page_title, extra_co
     faculties = request.bs.active_faculties()
 
     context = {
-        "title": page_title,
-        "navbar": navbar,
+        "title": "Студенты с задолженностью по данным MyEDU",
+        "navbar": "stepper",
         "objects": students,
-        "faculties": faculties
+        "faculties": faculties,
+        "success": True
     }
-    if extra_context:
-        context.update(extra_context)
 
-    if navbar == "stepper":
-        request.session['access'] = 'stepper'
-        context["success"] = True
-
-    return render(request, template_name, context)
-
-
-def cs_index(request):
-    return base_students_view(
-        request=request,
-        url=STUDENT_STEPPER_URL,
-        template_name="teachers/steppers/index.html",
-        navbar="stepper",
-        page_title="Студенты с задолженностью по данным MyEDU"
-    )
+    return render(request, "teachers/steppers/index.html", context)
 
 
 def spec(request):
@@ -91,7 +88,7 @@ def spec(request):
 
     qs = ClearanceSheet.objects.annotate(
         has_spec=Exists(issuance_subquery)
-    ).filter(has_spec=False, completed_at__isnull=False).order_by('-id')
+    ).filter(has_spec=False, completed_at__isnull=False, type_choices=TypeChoices.SPEC).order_by('-id')
 
     filterset = CSFilter(request.GET or None, queryset=qs)
 
@@ -106,6 +103,71 @@ def spec(request):
         "form": filterset.form,
     }
     return render(request, "teachers/steppers/spec.html", context)
+
+
+@with_stepper
+def spec_students(request):
+    search = None
+    faculty_id = request.session.get("faculty_id", 0)
+    specialty_id = request.session.get("specialty_id", 0)
+
+    if request.method == "POST":
+        search = request.POST.get("search", "")
+        faculty_id = request.POST.get("faculty_id")
+        specialty_id = request.POST.get("specialty_id")
+
+        request.session["faculty_id"] = faculty_id
+        request.session["specialty_id"] = specialty_id
+
+    students_qs = request.stepper.get_stepper_data_from_api(
+        STUDENT_STEPPER_URL, search, faculty_id, specialty_id
+    )
+
+    paginator = Pagination(request, students_qs or [])
+    page_number = request.GET.get('page', 1)
+    students_paginator = paginator.pagination(page_number)
+
+    student_ids = [str(item['student_id']) for item in students_paginator]
+
+    existing_diplomas = set(
+        Diploma.objects.filter(student__in=student_ids).values_list('student', flat=True)
+    )
+
+    students = []
+    for item in students_paginator:
+        student_copy = item.copy()
+        student_copy['exists'] = str(item['student_id']) in existing_diplomas
+        students.append(student_copy)
+
+    context = {
+        "title": "Студенты без задолженности по данным MyEDU",
+        "navbar": "spec-students",
+        "objects": students,
+        "faculties": request.bs.active_faculties(),
+    }
+
+    return render(request, "teachers/steppers/spec-students.html", context)
+
+
+@with_stepper
+def spec_diploma(request):
+    students_qs = Diploma.objects.all().select_related('faculty', 'speciality', 'edu_year').order_by('-id')
+
+    search = request.GET.get("search")
+    if search:
+        students_qs = students_qs.filter(student=search)
+
+    paginator = Pagination(request, students_qs or [])
+    page_number = request.GET.get('page', 1)
+    students = paginator.pagination(page_number)
+
+    context = {
+        "title": "Список зарегистрированных дипломов",
+        "navbar": "spec-students",
+        "students": students
+    }
+
+    return render(request, "teachers/steppers/spec-diploma.html", context)
 
 
 def archive(request):
@@ -235,7 +297,7 @@ def spec_avn(request):
     faculties = request.bs.active_faculties()
     context = {
         "form": form,
-        "navbar": "spec",
+        "navbar": "spec-avn",
         "students": students,
         "faculties": faculties
     }
@@ -314,12 +376,14 @@ def spec_part(request, id, myedu_id):
         form = IssuanceForm()
 
     issuance = Issuance.objects.filter(student=myedu_id, type_choices=Issuance.SPEC).first()
+    diploma = Diploma.objects.filter(student=myedu_id, sync=False).first()
     context = {
         "navbar": "spec",
         "has_active_cs": has_active_cs,
         "form": form,
         "student": student,
-        "issuance": issuance
+        "issuance": issuance,
+        "diploma": diploma
     }
     return render(request, "teachers/steppers/spec-part.html", context)
 
@@ -393,10 +457,6 @@ def spec_part_remove(request, id, myedu_id):
             issuance = Issuance.objects.select_for_update().filter(student=myedu_id, type_choices=Issuance.SPEC).first()
 
             with transaction.atomic():
-                if student:
-                    student.done = False
-                    student.save()
-
                 if issuance:
                     IssuanceHistory.objects.filter(student=myedu_id, type_choices=Issuance.SPEC, cs=student.id).delete()
                     issuance.delete()
@@ -410,6 +470,39 @@ def spec_part_remove(request, id, myedu_id):
 
 
 @with_stepper
+def spec_sync(request, id, myedu_id):
+    if request.method == "POST":
+        try:
+            diploma = Diploma.objects.filter(student=myedu_id, sync=False).first()
+            issuance = Issuance.objects.filter(student=myedu_id, type_choices=Issuance.SPEC).first()
+
+            with transaction.atomic():
+                if not issuance and diploma:
+                    print("yes")
+                    Issuance.objects.create(
+                        student=diploma.student,
+                        cs_id=id,
+                        doc_number=diploma.doc_number,
+                        reg_number=diploma.reg_number,
+                        faculty=diploma.faculty,
+                        speciality=diploma.speciality,
+                        date_issue=diploma.date_issue,
+                        employee=request.user,
+                        type_choices=Issuance.SPEC
+                    )
+                    diploma.sync = True
+                    diploma.save()
+                    messages.success(request, "Информация о дипломе успешно синхронизирована")
+                else:
+                    messages.success(request, "Данные не найдены")
+        except DatabaseError as e:
+            print(e)
+            messages.error(request, "Ошибка при синхронизации")
+
+    return redirect("stepper:spec-part", id=id, myedu_id=myedu_id)
+
+
+@with_stepper
 def archive_part_remove(request, id, myedu_id):
     if request.method == "POST":
         try:
@@ -418,10 +511,6 @@ def archive_part_remove(request, id, myedu_id):
                                                                    type_choices=Issuance.OTHER).first()
 
             with transaction.atomic():
-                if student:
-                    student.done = False
-                    student.save()
-
                 if issuance:
                     IssuanceHistory.objects.filter(student=myedu_id, type_choices=Issuance.OTHER,
                                                    cs=student.id).delete()
@@ -584,6 +673,11 @@ def cs_issuance_delete(request):
 def cs_report(request, cs_id):
     clearance_sheet = get_object_or_404(ClearanceSheet, id=cs_id)
 
+    student = next(
+        iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=clearance_sheet.myedu_id)),
+        None
+    )
+
     latest_status_qs = StageStatus.objects.filter(
         trajectory=OuterRef('pk')
     ).order_by('-created_at')
@@ -591,7 +685,7 @@ def cs_report(request, cs_id):
     trajectories = (
         Trajectory.objects
         .filter(clearance_sheet=clearance_sheet)
-        .select_related('template_stage', 'template_stage__stage')
+        .select_related('template_stage', 'template_stage__stage', 'assigned_by')
         .annotate(
             last_comment=Subquery(
                 latest_status_qs.values('comment_text')[:1]
@@ -619,7 +713,8 @@ def cs_report(request, cs_id):
 
     context = {
         "title": "История - Перечень завершенных обходных листов",
-        "student": clearance_sheet,
+        "student": student,
+        "cs": clearance_sheet,
         "trajectories": trajectories,
         "navbar": "cs",
     }
@@ -1076,3 +1171,32 @@ def teacher_debt_comments(request, id):
         "form": form
     }
     return render(request, "teachers/steppers/debts-comment.html", context)
+
+
+def diploma_create_ajax(request):
+    student_id = request.GET.get('student_id') or request.POST.get('student_id')
+    faculty_id = request.GET.get('faculty_id') or request.POST.get('faculty_id')
+    speciality_id = request.GET.get('speciality_id') or request.POST.get('speciality_id')
+
+    if request.method == 'POST':
+        form = DiplomaForm(request.POST)
+        faculty = Faculty.objects.filter(myedu_faculty_id=faculty_id).first()
+        speciality = Speciality.objects.filter(myedu_spec_id=speciality_id).first()
+        if form.is_valid():
+            diploma = form.save(commit=False)
+            diploma.student = student_id
+            diploma.faculty = faculty
+            diploma.speciality = speciality
+
+            diploma.save()
+
+            return JsonResponse({'success': True})
+        else:
+            form_html = render(request, 'teachers/steppers/partials/partial_diploma_form.html',
+                               {'form': form}).content.decode('utf-8')
+            return JsonResponse({'success': False, 'form_html': form_html})
+    else:
+        form = DiplomaForm()
+        form_html = render(request, 'teachers/steppers/partials/partial_diploma_form.html',
+                           {'form': form}).content.decode('utf-8')
+        return JsonResponse({'form_html': form_html})

@@ -61,6 +61,16 @@
                         <i class="fas fa-history"></i><span> {% trans 'История' %}</span>
                     </a>
                 </li>
+                <li class="{% if navbar == 'spec-students' %}active{% endif %}">
+                    <a href="{% url 'stepper:spec-students' %}">
+                        <i class="fas fa-id-card"></i><span> {% trans 'Регистрация' %}</span>
+                    </a>
+                </li>
+                <li class="{% if navbar == 'spec-avn' %}active{% endif %}">
+                    <a href="{% url 'stepper:spec-avn' %}">
+                        <i class="fas fa-file-download"></i><span> {% trans 'АВН' %}</span>
+                    </a>
+                </li>
             {% elif CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
                 <li class="{% if navbar == 'archive' %}active{% endif %}">
                     <a href="{% url 'stepper:archive' %}">

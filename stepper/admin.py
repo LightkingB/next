@@ -16,7 +16,9 @@ class TemplateStepAdmin(admin.ModelAdmin):
     list_editable = ('order', 'role',)
 
 
+admin.site.register(EduYear)
 admin.site.register(StageEmployee)
+admin.site.register(Diploma)
 admin.site.register(ClearanceSheet)
 admin.site.register(Trajectory)
 admin.site.register(StageStatus)

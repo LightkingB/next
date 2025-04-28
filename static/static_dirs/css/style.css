@@ -525,7 +525,7 @@ label {
     text-align: center;
     padding: 30px;
     background-color: #f1f1f1;
-    border-radius: 15px;
+    /*border-radius: 15px;*/
 }
 
 #camera {
@@ -580,6 +580,11 @@ table thead tr th {
 .autoSizingCheck2-label {
     font-size: 22px;
     margin-left: 10px;
+}
+
+.signature {
+    padding-top: 100px;
+    padding-bottom: 50px;
 }
 
 @keyframes pulse {

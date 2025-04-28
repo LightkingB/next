@@ -2,7 +2,7 @@ from django import forms
 
 from bsadmin.consts import STDEBT
 from bsadmin.models import CustomUser, Role
-from stepper.models import StageStatus, Issuance, TemplateStep, StageEmployee
+from stepper.models import StageStatus, Issuance, TemplateStep, StageEmployee, Diploma
 
 
 class StudentTrajectoryForm(forms.Form):
@@ -65,3 +65,41 @@ class StageEmployeeForm(forms.ModelForm):
             instance.save()
 
         return instance
+
+
+class DiplomaForm(forms.ModelForm):
+    class Meta:
+        model = Diploma
+        fields = (
+            'doc_number', 'reg_number', 'edu_year', 'date_issue', 'gak_date'
+        )
+
+        widgets = {
+            'doc_number': forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": '123456789',
+                    "autofocus": "autofocus",
+                    "oninvalid": "this.setCustomValidity('Пожалуйста, заполните!')",
+                    "oninput": "setCustomValidity('')"
+                }),
+            'reg_number': forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": '123456789',
+                    "autofocus": "autofocus",
+                    "oninvalid": "this.setCustomValidity('Пожалуйста, заполните!')",
+                    "oninput": "setCustomValidity('')"
+                }),
+            'edu_year': forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": '123456789',
+                    "autofocus": "autofocus",
+                    "oninvalid": "this.setCustomValidity('Пожалуйста, заполните!')",
+                    "oninput": "setCustomValidity('')"
+                }),
+            'date_issue': forms.DateInput(attrs={'type': 'date', "class": "form-control"}),
+            'gak_date': forms.DateInput(attrs={'type': 'date', "class": "form-control"}),
+
+        }

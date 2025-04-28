@@ -4,77 +4,97 @@
 
 {% block content %}
     <div class="container">
-        <h3 class="text-center">{% trans 'Обходной лист' %}
-            № {{ student.id }} - {% trans 'Отчёт' %}: {{ student.student_fio }}</h3>
-        <hr/>
-        <div class="text-right">
-            <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">
-                MyEDU - должники <i class="fas fa-money-check"></i>
-            </a>
-            <a href="{% url 'stepper:cs' %}" class="btn btn-primary btn-sm">
-                Обходные листы <i class="fas fa-clipboard-list"></i>
-            </a>
-            <a href="{% url 'stepper:cs-done' %}" class="btn btn-warning btn-sm">
-                <i class="fas fa-history"></i> История
-            </a>
-        </div>
-        <hr/>
+        {#        <h3 class="text-center">{% trans 'Обходной лист' %}#}
+        {#            № {{ student.id }} - {% trans 'Отчёт' %}: {{ student.student_fio }}</h3>#}
+        {#        <hr/>#}
+        {#        <div class="text-right">#}
+        {#            <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">#}
+        {#                MyEDU - должники <i class="fas fa-money-check"></i>#}
+        {#            </a>#}
+        {#            <a href="{% url 'stepper:cs' %}" class="btn btn-primary btn-sm">#}
+        {#                Обходные листы <i class="fas fa-clipboard-list"></i>#}
+        {#            </a>#}
+        {#            <a href="{% url 'stepper:cs-done' %}" class="btn btn-warning btn-sm">#}
+        {#                <i class="fas fa-history"></i> История#}
+        {#            </a>#}
+        {#        </div>#}
+        {#        <hr/>#}
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6">
+                <div class="text-center mb-2">
+                    <h4 class="font-weight-bold">Обходной лист</h4>
+                    <h6 class="text-uppercase font-weight-bold">ошский государственный университет</h6>
+                    <h6 class="font-weight-bold">{{ student.faculty_name }}</h6>
+                    <h6 class="font-weight-bold">{{ student.speciality_name }}</h6>
+                </div>
+                <address class="mb-4">
+                    <div class="row">
+                        <div class="col-md-6 text-right">Форма обучения:</div>
+                        <div class="col-md-6 text-left font-weight-bold"></div>
 
-        {% if trajectories %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-lg">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Сотрудник</th>
-                        <th scope="col">Этап</th>
-                        <th scope="col">Дата обработки</th>
-                        <th scope="col">Примечание</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for trajectory in trajectories %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
+                        <div class="col-md-6 text-right">Форма оплаты:</div>
+                        <div class="col-md-6 text-left font-weight-bold"></div>
 
-                            <td>{{ trajectory.last_processed_by_name|default:"-" }}</td>
-                            <td>{{ trajectory.template_stage.stage.name }}</td>
-                            <td>
-                                {% if trajectory.completed_at %}
-                                    {{ trajectory.completed_at|date:"d/m/Y H:i" }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if trajectory.completed_at %}
-                                    {{ trajectory.last_comment|default:"-" }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="card" style="width: 20rem">
-                <h5 class="card-header mb-0 d-flex justify-content-between align-items-center">
-                    <span>Обходной лист</span>
-                </h5>
-                <div class="card-body">
-                    <div class="card-text">
-                        Траектория еще не создана. Ожидаем дальнейших действий.
+                        <div class="col-md-6 text-right">Обходной лист №:</div>
+                        <div class="col-md-6 text-left font-weight-bold">{{ cs.id }}</div>
+
+                        <div class="col-md-6 text-right">Шифр студента:</div>
+                        <div class="col-md-6 text-left font-weight-bold">{{ cs.myedu_id }}</div>
                     </div>
+                </address>
+
+
+                <div class="text-center mb-3">
+                    <h4 class="font-weight-bold">{{ student.student_fio }}</h4>
                 </div>
             </div>
-        {% endif %}
+            <div class="col-md-3"></div>
+        </div>
+        <div class="">
+            {% if trajectories %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm table-responsive-md">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Подразделение</th>
+                            <th scope="col">Примечания</th>
+                            <th scope="col">ФИО</th>
+                            <th scope="col">Подпись, дата</th>
+                        </tr>
+                        </thead>
+                        <tbody class="order">
+                        {% for trajectory in trajectories %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ trajectory.template_stage.stage.name }}</td>
+                                <td>
+                                    {% if trajectory.completed_at %}
+                                        Согласовано
+                                    {% endif %}
+                                </td>
+                                <td>{{ trajectory.assigned_by.full_name|default:"-" }}</td>
+                                <td>
+                                    {{ trajectory.completed_at|date:"d/m/Y H:i"|default:"-" }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr class="table-warning nosort">
+                                <td colspan="100%" class="text-center">
+                                    <small class="text-muted">{% trans 'Пусто' %}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="signature text-center">
+            Оператор единого окна: Азимов Амантур Дастанбекович "Подпись"
+            {{ cs.completed_at|date:"d/m/Y H:i"|default:"-" }}
+        </div>
     </div>
 {% endblock %}

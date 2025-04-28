@@ -1,0 +1,84 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
+
+{% block content %}
+    <div class="container">
+        <h4 class="text-center mb-0">{{ title }}</h4>
+
+        <hr/>
+        {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
+
+            <form action="" method="get">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="search">MyEDU ID:</label>
+                        <input type="text" class="form-control form-control-sm" name="search" placeholder="230795"
+                               id="search"/>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fas fa-search"></i> Поиск
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <hr/>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-md">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">MyEDU ID</th>
+                        <th scope="col">Диплом №</th>
+                        <th scope="col">Рег №</th>
+                        <th scope="col">Дата выдачи</th>
+                        <th scope="col">Учебный год</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">Синхронизация</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for student in students %}
+                        <tr id="student-row-{{ student.student_id }}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ student.student }}</td>
+                            <td>{{ student.doc_number }}</td>
+                            <td>{{ student.reg_number|default:"-" }}</td>
+                            <td>{{ student.date_issue|date:"d/m/Y"|default:"-" }}</td>
+                            <td>{{ student.edu_year.title }}</td>
+                            <td>{{ student.faculty.title|default:"-" }}</td>
+                            <td>{{ student.speciality.title|default:"-" }}</td>
+                            <td>
+                                {% if student.sync %}
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="text-danger">
+                                        <i class="fas fa-times-circle"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% include "utils/_pagination.html" with page_obj=students %}
+
+            </div>
+
+        {% endif %}
+    </div>
+
+{% endblock %}
+

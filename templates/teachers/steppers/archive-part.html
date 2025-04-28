@@ -85,7 +85,7 @@
                                     Регистрационный №: {{ issuance.reg_number }}<br/>
                                     Диплом №: {{ issuance.doc_number }}<br/>
                                     Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
-                                    Статус: Выдан {% if issuance.type_choices == "received" %} однократно {% else %}
+                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
                                     более одного раза {% endif %} <br/>
                                     Примечание: {{ issuance.note|date:"-" }}
                                 </h6>

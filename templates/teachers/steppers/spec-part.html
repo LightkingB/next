@@ -8,19 +8,6 @@
         <p class="mb-0 text-primary text-center">({{ student.myedu_faculty }} - {{ student.myedu_spec }})</p>
         <hr/>
         {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
-            <div class="d-flex mb-2 mb-md-0 justify-content-between">
-                <a href="{% url 'stepper:spec-history' %}" class="btn btn-sm btn-warning">
-                    <i class="fas fa-history"></i> Открыть историю
-                </a>
-                <a href="{% url 'stepper:spec' %}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-globe-asia"></i> Список студентов по MyEDU
-                </a>
-                <a href="{% url 'stepper:spec-avn' %}" class="btn btn-sm btn-success">
-                    <i class="fas fa-users"></i> Список студентов по AVN
-                </a>
-            </div>
-            <hr/>
-
             {% if has_active_cs %}
                 <div class="alert alert-danger" role="alert">
                     Процесс выдачи обходного листа остается незавершенным; требуется его завершение. Есть непогашенные
@@ -75,6 +62,12 @@
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <i class="fas fa-save"></i> Сохранить
                             </button>
+                            {% if diploma %}
+                                <button type="button" class="btn btn-sm btn-success" data-toggle="modal"
+                                        data-target="#syncs">
+                                    <i class="fas fa-burn"></i> Синхронизировать
+                                </button>
+                            {% endif %}
                         </div>
                     </form>
                 {% endif %}
@@ -100,7 +93,7 @@
                                     Регистрационный №: {{ issuance.reg_number }}<br/>
                                     Диплом №: {{ issuance.doc_number }}<br/>
                                     Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
-                                    Статус: Выдан {% if issuance.type_choices == "received" %} однократно {% else %}
+                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
                                     более одного раза {% endif %}<br/>
                                     Примечание: {{ issuance.note|date:"-" }}
                                 </h6>
@@ -184,6 +177,34 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
                         <button type="submit" class="btn btn-sm btn-primary">Уверен(-а)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="syncs" tabindex="-1" aria-labelledby="syncs_label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{% url 'stepper:spec-sync' id=student.id myedu_id=student.myedu_id %}"
+                      method="post">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="syncs_label">Синхронизация диплома</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Вы действительно хотите синхронизировать диплом?</h6>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+
+                        <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-burn"></i>
+                            Синхронизировать
+                        </button>
+
                     </div>
                 </form>
             </div>

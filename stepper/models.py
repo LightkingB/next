@@ -12,6 +12,19 @@ from stepper.choices import CategoriesChoices, TypeChoices, StatusChoices
 from utils.validator import delete_file, validate_file_size
 
 
+class EduYear(models.Model):
+    """Учебный год """
+    title = models.CharField(max_length=100, verbose_name="Название")
+    active = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = _("Учебный год")
+        verbose_name_plural = _("Учебные года")
+
+    def __str__(self):
+        return self.title
+
+
 class Stage(models.Model):
     """Этап обходного листа, который студент должен пройти."""
 
@@ -82,8 +95,8 @@ class ClearanceSheet(models.Model):
     SPEC = TypeChoices.SPEC
     OTHER = TypeChoices.OTHER
 
-    myedu_id = models.PositiveIntegerField(verbose_name=_("Студент"),
-                                           help_text=_("Студент, которому принадлежит обходной лист."))
+    myedu_id = models.CharField(max_length=255, verbose_name=_("Студент"),
+                                help_text=_("Студент, которому принадлежит обходной лист."))
     student_fio = models.CharField(max_length=255, verbose_name=_("ФИО"), null=True, blank=True)
     myedu_faculty_id = models.PositiveIntegerField(verbose_name=_("Факультет ID"), null=True, blank=True)
     myedu_faculty = models.CharField(max_length=255, verbose_name=_("Факультет"), null=True, blank=True)
@@ -170,8 +183,8 @@ class Issuance(models.Model):
     SPEC = TypeChoices.SPEC
     OTHER = TypeChoices.OTHER
 
-    student = models.PositiveIntegerField(verbose_name=_("Студент"),
-                                          help_text=_("Студент, которому принадлежит обходной лист."))
+    student = models.CharField(max_length=255, verbose_name=_("Студент"),
+                               help_text=_("Студент, которому принадлежит обходной лист."))
     cs = models.ForeignKey(ClearanceSheet, on_delete=models.SET_NULL, verbose_name=_("Обходной лист"), null=True,
                            blank=True)
     faculty = models.ForeignKey(Faculty, on_delete=models.PROTECT, verbose_name="Факультет студента", null=True,
@@ -208,7 +221,7 @@ class Issuance(models.Model):
         verbose_name_plural = _("Выдача обходных листов")
 
     def __str__(self):
-        return f"{self.student}"
+        return self.student
 
 
 class IssuanceHistory(models.Model):
@@ -217,8 +230,8 @@ class IssuanceHistory(models.Model):
     SPEC = TypeChoices.SPEC
     OTHER = TypeChoices.OTHER
 
-    student = models.PositiveIntegerField(verbose_name=_("Студент"),
-                                          help_text=_("Студент, которому принадлежит обходной лист."))
+    student = models.CharField(max_length=255, verbose_name=_("Студент"),
+                               help_text=_("Студент, которому принадлежит обходной лист."))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата создания"),
                                       help_text=_("Дата создания обходного листа"))
     cs = models.PositiveIntegerField(verbose_name=_("Обходной лист"), default=0)
@@ -232,6 +245,32 @@ class IssuanceHistory(models.Model):
 
     def __str__(self):
         return f"{self.student} - {self.history}"
+
+
+class Diploma(models.Model):
+    """ Диплом """
+
+    class Meta:
+        verbose_name = _("Диплом")
+        verbose_name_plural = _("Дипломы")
+
+    student = models.CharField(max_length=255, verbose_name=_("Студент"),
+                               help_text=_("Студент, которому принадлежит диплом."))
+    faculty = models.ForeignKey(Faculty, on_delete=models.PROTECT, verbose_name="Факультет студента", null=True,
+                                blank=True)
+    speciality = models.ForeignKey(Speciality, on_delete=models.PROTECT, verbose_name="Специальность студента",
+                                   null=True,
+                                   blank=True)
+    doc_number = models.CharField(max_length=255, verbose_name=_("Дипломный номер"))
+    reg_number = models.CharField(max_length=255, verbose_name=_("Регистрационный номер"), null=True, blank=True)
+    gak_date = models.DateField(verbose_name=_("Дата ГАК"), null=True, blank=True)
+    date_issue = models.DateField(verbose_name=_("Дата выдачи"), help_text=_("Дата выдачи обходного листа"), null=True,
+                                  blank=True)
+    sync = models.BooleanField(default=False, verbose_name=_("Синхронизировался"))
+    edu_year = models.ForeignKey(EduYear, on_delete=models.PROTECT, verbose_name=_("Учебный год"))
+
+    def __str__(self):
+        return f"{self.student} - {self.doc_number}"
 
 
 @receiver(post_delete, sender=Issuance)

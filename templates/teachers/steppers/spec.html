@@ -5,21 +5,6 @@
     <div class="container">
         <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
         <hr/>
-        <div class="d-flex justify-content-between">
-            {% if history %}
-                <a href="{% url 'stepper:spec' %}" class="btn btn-sm btn-primary">
-                    <i class="fa fa-arrow-left"></i> Назад
-                </a>
-            {% else %}
-                <a href="{% url 'stepper:spec-history' %}" class="btn btn-sm btn-warning">
-                    <i class="fas fa-history"></i> Открыть историю
-                </a>
-            {% endif %}
-            <a href="{% url 'stepper:spec-avn' %}" class="btn btn-sm btn-success">
-                <i class="fas fa-users"></i> Список студентов по AVN
-            </a>
-        </div>
-        <hr/>
         {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
             {% include 'utils/_messages.html' %}
             <form action="" method="get">
@@ -47,7 +32,7 @@
             <hr/>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-lg">
+                <table class="table table-bordered table-sm table-responsive-md">
                     <thead class="thead-light">
                     <tr>
                         <th scope="col">#</th>

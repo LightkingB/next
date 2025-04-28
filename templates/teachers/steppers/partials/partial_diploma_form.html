@@ -1,0 +1,16 @@
+{% csrf_token %}
+
+{% for field in form %}
+    <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+            <div class="invalid-feedback" style="display: block;">
+                {{ field.errors|striptags }}
+            </div>
+            <script>
+                document.getElementById('{{ field.id_for_label }}').classList.add('is-invalid');
+            </script>
+        {% endif %}
+    </div>
+{% endfor %}

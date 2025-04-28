@@ -47,7 +47,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def full_name(self):
-        return f"{self.first_name} {self.last_name} {self.fathers_name}"
+        if self.fathers_name:
+            return f"{self.first_name} {self.last_name} {self.fathers_name}"
+        return f"{self.first_name} {self.last_name}"
 
 
 class Faculty(models.Model):

@@ -26,9 +26,12 @@ urlpatterns = [
     path('cs/<int:cs_id>/history/detail/', cs_history_detail, name='cs-history-detail'),
 
     path('spec/', spec, name='spec'),
+    path('spec/students/', spec_students, name='spec-students'),
+    path('spec/diploma/', spec_diploma, name='spec-diploma'),
     path('spec/history/', spec_history, name='spec-history'),
     path('spec/avn/', spec_avn, name='spec-avn'),
     path('spec/<int:id>/<int:myedu_id>/student/', spec_part, name='spec-part'),
+    path('spec/<int:id>/<int:myedu_id>/sync/', spec_sync, name='spec-sync'),
     path('spec/<int:id>/<int:myedu_id>/student/double', spec_part_double, name='spec-part-double'),
     path('spec/<int:id>/<int:myedu_id>/student/remove/', spec_part_remove, name='spec-part-remove'),
 
@@ -45,6 +48,7 @@ urlpatterns = [
     path("api/create_clearance_sheet/", create_clearance_sheet, name="create_clearance_sheet"),
 
     path("api/specailities/", load_specialities, name="load-specialities"),
+    path("api/create-diploma/", diploma_create_ajax, name="create-diploma"),
 
     path('api/issuance-delete/', cs_issuance_delete, name='issuance-delete'),
 
