@@ -45,6 +45,7 @@
                         <th scope="col">{% trans 'ФИО' %}</th>
                         <th scope="col">{% trans 'Роль' %}</th>
                         <th scope="col">{% trans 'Операции' %}</th>
+                        <th scope="col">{% trans 'Активный' %}</th>
                     </tr>
                     </thead>
                     <tbody class="order">
@@ -60,6 +61,17 @@
                                    class="btn btn-sm btn-primary">
                                     <i class="fas fa-user-edit"></i> Редактировать
                                 </a>
+                            </td>
+                            <td>
+                                {% if obj.is_active %}
+                                    <div class="text-center text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center text-danger">
+                                        <i class="fas fa-minus-circle"></i>
+                                    </div>
+                                {% endif %}
                             </td>
                         </tr>
                     {% empty %}

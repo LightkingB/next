@@ -25,12 +25,12 @@
             {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
                 <li class="{% if navbar == 'stepper' %}active{% endif %}">
                     <a href="{% url 'stepper:index' %}">
-                        <i class="fas fa-money-check"></i><span> {% trans 'Главная' %}</span>
+                        <i class="fas fa-money-check"></i><span> {% trans 'MyEDU' %}</span>
                     </a>
                 </li>
                 <li class="{% if navbar == 'cs' %}active{% endif %}">
                     <a href="{% url 'stepper:cs' %}">
-                        <i class="fas fa-th-list"></i><span> {% trans 'Обходной лист' %}</span>
+                        <i class="fas fa-tasks"></i><span> {% trans 'Обходные' %}</span>
                     </a>
                 </li>
                 <li class="{% if navbar == 'issuance' %}active{% endif %}">

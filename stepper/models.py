@@ -61,7 +61,7 @@ class TemplateStep(models.Model):
         verbose_name_plural = _("Шаблоны")
 
     def __str__(self):
-        return f"{self.stage} - {self.category}"
+        return f"{self.stage}"
 
 
 class StageEmployee(models.Model):

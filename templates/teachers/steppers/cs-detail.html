@@ -4,150 +4,178 @@
 
 {% block content %}
     {% if student %}
-        <div class="container">
-            <div class="text-center">
-                <h3 class="mb-0 text-primary">{{ student.student_fio }}</h3>
-                {% if student.debt %}
-                    <h5>{% trans 'Долги' %}: {{ student.debt|join_names }}</h5>
-                {% endif %}
-                <h5>Приказ: № {{ student.info }}, дата: {{ student.date_movement }},
-                    статус: {{ student.id_movement_info }}</h5>
-            </div>
-            <hr/>
-            <div class="d-flex justify-content-between flex-wrap">
-                <div class="text-left">
-                    <a href="{% url 'stepper:cs' %}"
-                       class="btn btn-primary btn-sm">
-                        <i class="fas fa-th-list"></i> {% trans 'Обходные листы' %}
-                    </a>
-                    <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">
-                        <i class="fas fa-money-check"></i> {% trans 'MyEDU - должники' %}
-                    </a>
-                    {% if cs_student %}
-                        {% if not cs_student.completed_at %}
-                            <a href="{% url 'stepper:cs-step-undo' cs_id=cs_student.id %}?type=student"
-                               class="btn btn-success btn-sm">
-                                <i class="fas fa-angle-double-up"></i> {% trans 'Восстановить' %}
-                            </a>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-center flex-wrap">
+                        <div class="text-left">
 
-                            {% if trajectories %}
-                                <button type="button" class="btn btn-sm btn-danger mt-2 mt-md-0" data-toggle="modal"
-                                        data-target="#stepsRemoveModal">
-                                    <i class="fas fa-trash-alt"></i> Удалить все этапы
-                                </button>
+                            {% if cs_student %}
+                                {% if not cs_student.completed_at %}
+                                    <a href="{% url 'stepper:cs-step-undo' cs_id=cs_student.id %}?type=student"
+                                       class="btn btn-success btn-sm">
+                                        <i class="fas fa-angle-double-up"></i> {% trans 'Восстановить' %}
+                                    </a>
+
+                                    {% if trajectories %}
+                                        <button type="button" class="btn btn-sm btn-danger mt-2 mt-md-0"
+                                                data-toggle="modal"
+                                                data-target="#stepsRemoveModal">
+                                            <i class="fas fa-trash-alt"></i> Удалить все этапы
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
-                    {% endif %}
-                </div>
-
-                {% if not cs_student %}
-                    <button type="button" class="btn btn-sm btn-success mr-2" data-toggle="modal"
-                            data-target="#requestModal">
-                        <i class="fas fa-paper-plane"></i> Подать заявку
-                    </button>
-                {% endif %}
-
-                {% if not cs_student.type_choices %}
-                    <button type="button" class="btn btn-sm btn-primary mt-2 mt-md-0" data-toggle="modal"
-                            data-target="#orderDoneModal">
-                        <i class="fas fa-user-check"></i> Завершить ?
-                    </button>
-                {% elif cs_student.completed_at %}
-                    <h5 class="text-success">
-                        Завершен <i class="fas fa-check-square"></i> {{ cs_student.completed_at|date:"d-m-Y H:i" }}
-                    </h5>
-                    <a href="{% url 'stepper:cs-force' myedu_id=cs_student.myedu_id %}?type=student"
-                       class="btn btn-danger btn-sm">
-                        <i class="fas fa-fire"></i> {% trans 'Форс-мажор' %}
-                    </a>
-                {% endif %}
-            </div>
-            <hr/>
-            {% include 'utils/_messages.html' %}
-            {% if cs_student and not cs_student.completed_at %}
-                <h4 class="text-center">Обходной лист № {{ cs_student.id }}</h4>
-                <hr/>
-                {% if not trajectories %}
-                    <form method="post" id="trajectory-form">
-                        {% csrf_token %}
-                        <div class="form-group mb-1">
-                            <label>Выберите обязательные этапы:</label>
-                            <div class="stages">
-                                {{ form.stages|join:" " }}
-                            </div>
                         </div>
+                        {% if not cs_student %}
+                            <button type="button" class="btn btn-sm btn-success mr-2" data-toggle="modal"
+                                    data-target="#requestModal">
+                                <i class="fas fa-paper-plane"></i> Подать заявку
+                            </button>
+                        {% endif %}
 
-                        <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"
-                                data-target="#confirmModal">
-                            <i class="fas fa-save"></i> {% trans 'Создать траектории' %}
-                        </button>
+                        {% if not cs_student.type_choices %}
+                            <button type="button" class="btn btn-sm btn-primary mt-2 mt-md-0 ml-2" data-toggle="modal"
+                                    data-target="#orderDoneModal">
+                                <i class="fas fa-user-check"></i> Завершить ?
+                            </button>
+                        {% elif cs_student.completed_at %}
+                            <h5 class="text-success">
+                                Завершен <i
+                                    class="fas fa-check-square"></i> {{ cs_student.completed_at|date:"d-m-Y H:i" }}
+                            </h5>
+                            <a href="{% url 'stepper:cs-force' myedu_id=cs_student.myedu_id %}?type=student"
+                               class="btn btn-danger btn-sm">
+                                <i class="fas fa-fire"></i> {% trans 'Форс-мажор' %}
+                            </a>
+                        {% endif %}
+                    </div>
+                    <hr/>
+                    {% include 'utils/_messages.html' %}
+                    {% if cs_student %}
+                        <h4 class="text-center">Обходной лист № {{ cs_student.id }}</h4>
+                        <hr/>
+                        {% if not trajectories %}
+                            <div class="text-center">
+                                <form method="post" id="trajectory-form">
+                                    {% csrf_token %}
+                                    <div class="form-group mb-1">
+                                        <label>Выберите обязательные этапы:</label>
+                                        <div class="stages">
+                                            {{ form.stages|join:" " }}
+                                        </div>
+                                    </div>
 
-                    </form>
-                {% endif %}
-                <div class="stage-status">
-                    {% for trajectory in trajectories %}
-                        <div class="card mt-3">
-                            <div class="card-header">
-                                <div class="d-flex justify-content-between flex-wrap">
-                                    <h5 class="mb-0">
-                                        <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
-                                    </h5>
-                                    <h5>
-                                        {% if trajectory.completed_at %}
-                                            <span class="text-success">
+                                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"
+                                            data-target="#confirmModal">
+                                        <i class="fas fa-save"></i> {% trans 'Создать траектории' %}
+                                    </button>
+                                </form>
+                            </div>
+                        {% endif %}
+                        <div class="stage-status">
+                            {% for trajectory in trajectories %}
+                                <div class="card mt-3">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between flex-wrap">
+                                            <h5 class="mb-0">
+                                                <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
+                                            </h5>
+                                            <h5>
+                                                {% if trajectory.completed_at %}
+                                                    <span class="text-success">
                                     {% trans 'Завершен' %} <i class="far fa-check-square"></i> :
                                     {{ trajectory.completed_at|date:"d.m.Y H:i" }}
                                      </span>
-                                        {% else %}
-                                            <a class="text-primary"
-                                               href="{% url 'stepper:step-rating' id=cs_student.id trajectory_id=trajectory.id %}?type=student">
-                                                {% trans 'Рейтинг' %}
-                                                {% if trajectory.update_at %}
-                                                    ({{ trajectory.update_at|date:"d.m.Y H:i" }})
+                                                {% else %}
+                                                    <a class="text-primary"
+                                                       href="{% url 'stepper:step-rating' id=cs_student.id trajectory_id=trajectory.id %}?type=student">
+                                                        {% trans 'Рейтинг' %}
+                                                        {% if trajectory.update_at %}
+                                                            ({{ trajectory.update_at|date:"d.m.Y H:i" }})
+                                                        {% endif %}
+                                                        <i class="fas fa-arrow-up"></i>
+                                                    </a>
                                                 {% endif %}
-                                                <i class="fas fa-arrow-up"></i>
-                                            </a>
-                                        {% endif %}
-                                    </h5>
+                                            </h5>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        {% with trajectory.stagestatus_set.all as statuses %}
+                                            {% if statuses %}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered mb-0">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Обработал</th>
+                                                            <th>Комментарий</th>
+                                                            <th>Дата создания</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        {% for status in statuses %}
+                                                            <tr>
+                                                                <td>{{ status.processed_by|default:"—" }}</td>
+                                                                <td>{{ status.comment_text|default:"—" }}</td>
+                                                                <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
+                                                            </tr>
+                                                        {% empty %}
+                                                            <tr>
+                                                                <td colspan="4" class="text-center">Статусов пока нет
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            {% else %}
+                                                <p class="mb-0">Статусов пока нет</p>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success mb-3 text-center">
+                        <div class="card-header bg-transparent border-success">
+                            <h4 class="mb-0 text-primary text-center">{{ student.student_fio }}</h4>
+                        </div>
+                        <div class="card-body text-left">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-group">
+                                        <li class="list-group-item"><b> Приказ:</b> № {{ student.info }}</li>
+                                        <li class="list-group-item"><b>Дата:</b> {{ student.date_movement }}</li>
+                                        <li class="list-group-item"><b>Статус:</b> {{ student.id_movement_info }}</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-group">
+                                        <li class="list-group-item"><b> Форма обучения:</b> {{ student.edu_form }}</li>
+                                        <li class="list-group-item"><b>Форма оплаты:</b> {{ student.date_movement }}</li>
+                                    </ul>
+
                                 </div>
                             </div>
-                            <div class="card-body">
-                                {% with trajectory.stagestatus_set.all as statuses %}
-                                    {% if statuses %}
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-bordered mb-0">
-                                                <thead>
-                                                <tr>
-                                                    <th>Обработал</th>
-                                                    <th>Комментарий</th>
-                                                    <th>Дата создания</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                {% for status in statuses %}
-                                                    <tr>
-                                                        <td>{{ status.processed_by|default:"—" }}</td>
-                                                        <td>{{ status.comment_text|default:"—" }}</td>
-                                                        <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
-                                                    </tr>
-                                                {% empty %}
-                                                    <tr>
-                                                        <td colspan="4" class="text-center">Статусов пока нет</td>
-                                                    </tr>
-                                                {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    {% else %}
-                                        <p class="mb-0">Статусов пока нет</p>
-                                    {% endif %}
-                                {% endwith %}
-                            </div>
                         </div>
-                    {% endfor %}
+                        <div class="card-footer bg-transparent border-success">
+                            {% if student.debt %}
+                                <h6 class="text-danger mb-0">{% trans 'Задолженность' %}: {{ student.debt|join_names }}</h6>
+                            {% else %}
+                                <h6 class="text-success mb-0">{% trans 'Без задолженности' %}</h6>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-            {% endif %}
+
+            </div>
+
+
         </div>
+
         <div class="modal fade" id="requestModal" tabindex="-1" role="dialog" aria-labelledby="requestModalLabel"
              aria-hidden="true">
 

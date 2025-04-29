@@ -4,7 +4,7 @@
 
 {% block content %}
     <div class="container">
-        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
+        <h4 class="text-center mb-0">{{ title }}</h4>
         <hr/>
 
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
@@ -25,12 +25,9 @@
                     </form>
                 </div>
                 <div class="col-md-4 text-right">
-                    <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">
-                        <i class="fas fa-money-check"></i> MyEDU - должники
-                    </a>
                     {% if not history %}
-                        <a href="{% url 'stepper:cs-done' %}" class="btn btn-warning btn-sm">
-                            <i class="fas fa-history"></i> История
+                        <a href="{% url 'stepper:cs-done' %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-check-square"></i> {% trans 'Завершенные' %}
                         </a>
                     {% else %}
                         <a href="{% url 'stepper:cs' %}"
@@ -96,8 +93,7 @@
                                 </a>
                             </td>
                             <td class="text-center">
-                                <a href="{% url 'stepper:cs-report' cs_id=student.id %}" class="btn btn-sm btn-primary"
-                                   target="_blank">
+                                <a href="{% url 'stepper:cs-report' cs_id=student.id %}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>

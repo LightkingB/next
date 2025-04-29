@@ -9,7 +9,7 @@
 
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
             <div class="row">
-                <div class="col-md-9">
+                <div class="col-md-8">
                     <form action="" method="post">
                         {% csrf_token %}
 
@@ -47,10 +47,8 @@
                         </div>
                     </form>
                 </div>
-                <div class="col-md-3 text-right mt-0 mt-md-4">
-                    <a href="{% url 'stepper:cs' %}" class="btn btn-primary btn-sm">
-                        Обходные листы <i class="fas fa-clipboard-list"></i>
-                    </a>
+                <div class="col-md-4 text-right mt-0 mt-md-4">
+
                 </div>
             </div>
             <hr/>
@@ -67,7 +65,7 @@
                         <th scope="col">Приказ</th>
                         <th scope="col">Статус</th>
                         <th scope="col">Долги</th>
-                        <th scope="col">История</th>
+
                     </tr>
                     </thead>
                     <tbody class="order">
@@ -86,7 +84,7 @@
                                     </div>
                                 {% else %}
                                     <div class="text-danger">
-                                        <i class="fas fa-times-circle"></i>
+                                        <i class="fas fa-minus-circle"></i>
                                     </div>
                                 {% endif %}
                             </td>
@@ -96,20 +94,15 @@
                             <td>{{ student.id_movement_info }}</td>
                             <td class="duty">
                                 {% if student.debt %}
-                                    {{ student.debt|join_names }}
+                                    <div class="text-danger">
+                                        {{ student.debt|join_names }}
+                                    </div>
                                 {% else %}
-                                    <div class="text-center text-danger">
-                                        <i class="fas fa-minus-circle"></i>
+                                    <div class="text-center text-success">
+                                        Без долгов <i class="fas fa-check-circle"></i>
                                     </div>
                                 {% endif %}
                             </td>
-                            <td class="text-center">
-                                <a href="{% url 'stepper:cs-history' myedu_id=student.student_id %}"
-                                   class="btn btn-sm btn-danger">
-                                    <i class="fas fa-seedling"></i>
-                                </a>
-                            </td>
-
                         </tr>
                     {% empty %}
                         <tr class="table-warning nosort">

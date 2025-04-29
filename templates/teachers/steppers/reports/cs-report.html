@@ -31,10 +31,10 @@
                 <address class="mb-4">
                     <div class="row">
                         <div class="col-md-6 text-right">Форма обучения:</div>
-                        <div class="col-md-6 text-left font-weight-bold"></div>
+                        <div class="col-md-6 text-left font-weight-bold">{{ student.edu_form }}</div>
 
                         <div class="col-md-6 text-right">Форма оплаты:</div>
-                        <div class="col-md-6 text-left font-weight-bold"></div>
+                        <div class="col-md-6 text-left font-weight-bold">{{ student.payment_form }}</div>
 
                         <div class="col-md-6 text-right">Обходной лист №:</div>
                         <div class="col-md-6 text-left font-weight-bold">{{ cs.id }}</div>
@@ -74,7 +74,7 @@
                                         Согласовано
                                     {% endif %}
                                 </td>
-                                <td>{{ trajectory.assigned_by.full_name|default:"-" }}</td>
+                                <td>{{ trajectory.last_processed_by_name|default:"-" }}</td>
                                 <td>
                                     {{ trajectory.completed_at|date:"d/m/Y H:i"|default:"-" }}
                                 </td>

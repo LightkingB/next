@@ -65,7 +65,7 @@ def cs_index(request):
     faculties = request.bs.active_faculties()
 
     context = {
-        "title": "Студенты с задолженностью по данным MyEDU",
+        "title": "Студенты с задолженностями по данным MyEDU",
         "navbar": "stepper",
         "objects": students,
         "faculties": faculties,
@@ -757,11 +757,14 @@ def cs_history(request, myedu_id):
         iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
         None
     )
-    cs_list = request.stepper.cs_history(myedu_id)
+    order = student.get("info") if student else None
+    cs_student = ClearanceSheet.objects.filter(myedu_id=myedu_id, order=order).order_by('-issued_at').first()
+    trajectories = request.stepper.cs_history_detail(cs_student)
     context = {
         "title": "История обходных листов",
         "navbar": "cs",
-        "cs_list": cs_list,
+        "trajectories": trajectories,
+        "cs_student": cs_student,
         "student": student
     }
     return render(request, "teachers/steppers/cs-history.html", context)

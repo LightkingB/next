@@ -4,87 +4,76 @@
 
 {% block content %}
     <div class="container">
-        <h3 class="text-center">{% trans 'История' %}: {{ student.student_fio }}</h3>
+        <h4 class="text-center text-primary">{% trans 'Запись пройденных маршрутов' %}: {{ student.student_fio }}</h4>
         <hr/>
-        <div class="text-right">
-            <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">
-                MyEDU - должники <i class="fas fa-money-check"></i>
-            </a>
-            <a href="{% url 'stepper:cs' %}" class="btn btn-primary btn-sm">
-                Обходные листы <i class="fas fa-clipboard-list"></i>
-            </a>
-            <a href="{% url 'stepper:cs-done' %}" class="btn btn-warning btn-sm">
-                <i class="fas fa-history"></i> История
-            </a>
-        </div>
-        <hr/>
-        {% if cs_list %}
-            <div class="row">
-                {% for cs in cs_list %}
-                    <div class="col-md-4">
-                        <div class="card">
-                            <h5 class="card-header mb-0 d-flex justify-content-between align-items-center">
-                                <span>#Лист №: {{ cs.id }} </span>
-                                <a href="{% url 'stepper:cs-history-detail' cs_id=cs.id %}"
-                                   class="btn btn-sm btn-danger">
-                                    <i class="fas fa-info-circle"></i> {% trans 'Детально' %}
-                                </a>
+        <div class="stage-status">
+            {% for trajectory in trajectories %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between flex-wrap">
+                            <h5 class="mb-0">
+                                <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
                             </h5>
-                            <div class="card-body">
-                                <h5 class="card-title "> {% trans 'Статус' %}:
-                                    {% if cs.completed_at %}
-                                        <span class="text-success">
-                                    {% trans 'Завершен' %} <i class="far fa-check-square"></i>
+                            <h5>
+                                {% if trajectory.completed_at %}
+                                    <span class="text-success">
+                                    {% trans 'Завершен' %} <i class="far fa-check-square"></i> :
                                     {{ trajectory.completed_at|date:"d.m.Y H:i" }}
-                                </span>
-                                    {% else %}
-                                        <span class="text-primary">
-                                    {% trans 'В процессе' %} <i class="fas fa-hourglass-start"></i>
-                                </span>
-                                    {% endif %}
-                                </h5>
-                                <div class="card-text mb-0">
-                                    <ul class="list-group">
-                                        {% for trajectory in cs.trajectory_set.all %}
-                                            <li class="list-group-item">
-                                                {{ trajectory.template_stage.stage.name }} -
-                                                {% if trajectory.completed_at %}
-                                                    {{ trajectory.assigned_by.email }}
-                                                    <span class="text-success"><i
-                                                            class="fas fa-check-square"></i></span>
-                                                {% else %}
-                                                    <span class="text-primary"><i
-                                                            class="fas fa-hourglass-start"></i></span>
-                                                {% endif %}
-                                            </li>
-                                        {% empty %}
-                                            {% if not cs.completed_at %}
-                                                <li class="list-group-item">
-                                                    <a href="{% url 'stepper:cs-detail' myedu_id=cs.myedu_id %}"
-                                                       class="text-danger">
-                                                        {% trans 'Назначьте траектории' %}
-                                                    </a>
-                                                </li>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
+                                     </span>
+                                {% endif %}
+                            </h5>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="card" style="width: 20rem">
-                <h5 class="card-header mb-0 d-flex justify-content-between align-items-center">
-                    <span>Обходной лист</span>
-                </h5>
-                <div class="card-body">
-                    <div class="card-text">
-                        Траектория еще не создана. Ожидаем дальнейших действий.
+                    <div class="card-body">
+                        {% with trajectory.stagestatus_set.all as statuses %}
+                            {% if statuses %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead>
+                                        <tr>
+                                            <th>Обработал</th>
+                                            <th>Комментарий</th>
+                                            <th>Дата создания</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for status in statuses %}
+                                            <tr>
+                                                <td>{{ status.processed_by|default:"—" }}</td>
+                                                <td>{{ status.comment_text|default:"—" }}</td>
+                                                <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">Статусов пока нет
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="mb-0">Статусов пока нет</p>
+                            {% endif %}
+                        {% endwith %}
                     </div>
                 </div>
-            </div>
-        {% endif %}
+            {% empty %}
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="card text-center" style="width: 20em">
+                        <div class="card-header">
+                            <h5> Нет доступных траекторий</h5>
+                        </div>
+                        <div class="card-body">
+                            <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}" class="text-danger">
+                                <h5 class="card-title">
+                                    Назначить траектории
+                                </h5>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}
