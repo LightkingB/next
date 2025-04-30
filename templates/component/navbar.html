@@ -33,6 +33,11 @@
                         <i class="fas fa-tasks"></i><span> {% trans 'Обходные' %}</span>
                     </a>
                 </li>
+                <li class="{% if navbar == 'cs-done' %}active{% endif %}">
+                    <a href="{% url 'stepper:cs-done' %}">
+                        <i class="fas fa-check-square"></i><span>{% trans 'Завершенные' %}</span>
+                    </a>
+                </li>
                 <li class="{% if navbar == 'issuance' %}active{% endif %}">
                     <a href="{% url 'stepper:cs-issuance' %}">
                         <i class="fas fa-book"></i><span> {% trans 'Документы' %}</span>

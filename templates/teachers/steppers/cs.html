@@ -1,5 +1,5 @@
 {% extends 'admin_base.html' %}
-{% load static i18n %}
+{% load static i18n custom_filters %}
 
 
 {% block content %}
@@ -9,7 +9,7 @@
 
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
             <div class="row justify-content-between">
-                <div class="col-md-8">
+                <div class="col-md-7">
                     <form action="" method="get">
                         <div class="row">
                             <div class="col-md-5">
@@ -24,17 +24,24 @@
                         </div>
                     </form>
                 </div>
-                <div class="col-md-4 text-right">
-                    {% if not history %}
-                        <a href="{% url 'stepper:cs-done' %}" class="btn btn-success btn-sm">
-                            <i class="fas fa-check-square"></i> {% trans 'Завершенные' %}
-                        </a>
-                    {% else %}
-                        <a href="{% url 'stepper:cs' %}"
-                           class="btn btn-primary btn-sm">
-                            <i class="fas fa-th-list"></i> {% trans 'Обходные листы' %}
-                        </a>
-                    {% endif %}
+                <div class="col-md-5 text-right">
+                    <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                        {% if not history %}
+                            <a type="button" href="{% url 'stepper:cs' %}"
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-globe-europe"></i> Все
+                            </a>
+                        {% endif %}
+                        {% for stage in stages %}
+                            {% get_stage_button_class forloop.counter as stage_classes %}
+
+                            <a type="button" href="{% url 'stepper:cs-stage' stage=stage.stage.id %}"
+                               class="btn btn-sm {{ stage_classes.btn_class }}">
+                                <i class="{{ stage_classes.icon_class }}"></i> {{ stage.stage.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+
                 </div>
             </div>
             <hr/>

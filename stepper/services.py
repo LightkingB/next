@@ -203,6 +203,46 @@ class StepperService:
         return students
 
     @staticmethod
+    def get_open_clearance_sheets_with_stage_filter(stage_id, search_query=None):
+        unfinished_previous = Trajectory.objects.filter(
+            clearance_sheet=OuterRef('clearance_sheet'),
+            template_stage__order__lt=OuterRef('template_stage__order'),
+            completed_at__isnull=True
+        )
+
+        current_trajectories = (
+            Trajectory.objects
+            .filter(
+                template_stage_id=stage_id,
+                completed_at__isnull=True,
+                clearance_sheet__completed_at=None,
+                clearance_sheet__category=ClearanceSheet.STUDENT,
+            )
+            .annotate(has_unfinished_previous=Exists(unfinished_previous))
+            .filter(has_unfinished_previous=False)
+            .select_related("clearance_sheet", "template_stage")
+        )
+
+        if search_query:
+            current_trajectories = current_trajectories.filter(
+                Q(clearance_sheet__student_fio__icontains=search_query) |
+                Q(clearance_sheet__myedu_id__icontains=search_query)
+            )
+
+        return [
+            {
+                "id": t.clearance_sheet.id,
+                "fio": t.clearance_sheet.student_fio,
+                "faculty_name": t.clearance_sheet.myedu_faculty,
+                "spec_name": t.clearance_sheet.myedu_spec,
+                "current_stage": t.template_stage,
+                "myedu_id": t.clearance_sheet.myedu_id,
+                "completed_at": t.clearance_sheet.completed_at
+            }
+            for t in current_trajectories
+        ]
+
+    @staticmethod
     def get_cs_by_id(cs_id):
         try:
             return ClearanceSheet.objects.get(id=cs_id)

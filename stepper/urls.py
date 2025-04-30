@@ -20,6 +20,7 @@ urlpatterns = [
     path('cs/', cs, name='cs'),
     path('cs/done/', cs_done, name='cs-done'),
     path('cs/issuance/', cs_issuance, name='cs-issuance'),
+    path('cs/<int:stage>/stage/', cs_debt_stage, name='cs-stage'),
     path('cs/<int:cs_id>/report/', cs_report, name='cs-report'),
     path('cs/<int:cs_id>/step/undo/', cs_step_undo, name='cs-step-undo'),
     path('cs/<int:myedu_id>/history/', cs_history, name='cs-history'),

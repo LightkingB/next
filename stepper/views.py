@@ -611,10 +611,13 @@ def cs(request):
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
 
+    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT).select_related('stage')
+
     context = {
         "title": "Перечень сформированных обходных листов",
         "students": students,
-        "navbar": "cs"
+        "navbar": "cs",
+        "stages": stages
     }
     return render(request, "teachers/steppers/cs.html", context)
 
@@ -631,8 +634,28 @@ def cs_done(request):
     context = {
         "title": "История - Перечень завершенных обходных листов",
         "students": students,
-        "navbar": "cs",
+        "navbar": "cs-done",
         "history": True
+    }
+    return render(request, "teachers/steppers/cs.html", context)
+
+
+@with_stepper
+def cs_debt_stage(request, stage):
+    search_query = request.GET.get('search')
+    students_qs = request.stepper.get_open_clearance_sheets_with_stage_filter(stage, search_query)
+
+    paginator = Pagination(request, students_qs)
+    page_number = request.GET.get('page', 1)
+    students = paginator.pagination(page_number)
+
+    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT).select_related('stage')
+
+    context = {
+        "title": "Перечень сформированных обходных листов",
+        "students": students,
+        "navbar": "cs",
+        "stages": stages
     }
     return render(request, "teachers/steppers/cs.html", context)
 
