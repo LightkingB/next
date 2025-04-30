@@ -649,7 +649,7 @@ def cs_debt_stage(request, stage):
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
 
-    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT).select_related('stage')
+    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0).select_related('stage')
 
     context = {
         "title": "Перечень сформированных обходных листов",
