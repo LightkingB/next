@@ -9,14 +9,14 @@
 
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
             <div class="row justify-content-between">
-                <div class="col-md-7">
+                <div class="col-md-6">
                     <form action="" method="get">
                         <div class="row">
-                            <div class="col-md-5">
+                            <div class="col-md-8">
                                 <input type="text" name="search" class="form-control form-control-sm mb-2 mb-md-0"
                                        placeholder="Введите ФИО | уникальный номер"/>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <button type="submit" class="btn btn-sm btn-danger">
                                     <i class="fas fa-search"></i> Поиск
                                 </button>
@@ -24,7 +24,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="col-md-5 text-right">
+                <div class="col-md-6 text-right">
                     <div class="btn-group" role="group" aria-label="Basic mixed styles example">
                         {% if not history %}
                             <a type="button" href="{% url 'stepper:cs' %}"
