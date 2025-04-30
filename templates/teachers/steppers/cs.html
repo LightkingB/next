@@ -5,6 +5,9 @@
 {% block content %}
     <div class="container">
         <h4 class="text-center mb-0">{{ title }}</h4>
+        {% if stage %}
+            <h5 class="text-primary text-center">Текущий шаг: {{ current_stage.stage }}</h5>
+        {% endif %}
         <hr/>
 
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}

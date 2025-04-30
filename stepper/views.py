@@ -651,10 +651,14 @@ def cs_debt_stage(request, stage):
 
     stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0).select_related('stage')
 
+    current_stage = TemplateStep.objects.filter(id=stage).select_related('stage').first()
+
     context = {
         "title": "Перечень сформированных обходных листов",
         "students": students,
         "navbar": "cs",
+        "stage": True,
+        "current_stage": current_stage,
         "stages": stages
     }
     return render(request, "teachers/steppers/cs.html", context)
