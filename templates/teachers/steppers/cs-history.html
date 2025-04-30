@@ -59,18 +59,28 @@
                     </div>
                 </div>
             {% empty %}
+
                 <div class="d-flex justify-content-center align-items-center">
                     <div class="card text-center" style="width: 20em">
-                        <div class="card-header">
-                            <h5> Нет доступных траекторий</h5>
-                        </div>
-                        <div class="card-body">
-                            <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}" class="text-danger">
-                                <h5 class="card-title">
-                                    Назначить траектории
-                                </h5>
-                            </a>
-                        </div>
+                        {% if not cs_student.completed_at %}
+                            <div class="card-header">
+                                <h5> Нет доступных траекторий</h5>
+                            </div>
+                            <div class="card-body">
+                                <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}" class="text-danger">
+                                    <h5 class="card-title">
+                                        Назначить траектории
+                                    </h5>
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="card-header">
+                                <h5>Обходной лист успешно завершен</h5>
+                            </div>
+                            <div class="card-body">
+                                Дата завершения: {{ cs_student.completed_at|date:'d/m/Y H:i' }}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             {% endfor %}
