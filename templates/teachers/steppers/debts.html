@@ -5,25 +5,47 @@
 {% block content %}
     <div class="container">
         {% if CUSTOM_ROLES.STDEBT in DB_ROLES %}
-            <h3 class="text-center mb-0">({{ employee.template_stage.stage }}) - {% trans 'Список студентов' %}</h3>
-            <hr/>
-            <form action="" method="get">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label for="search">ФИО / MyEDU ID:</label>
-                        <input type="text" class="form-control form-control-sm" name="search" placeholder="230795"
-                               id="search"/>
-                    </div>
+            {% if history %}
+                <h3 class="text-center text-success">
+                    История студентов, уже прошедших этапы обходного листа
+                </h3>
+            {% else %}
+                <h3 class="text-center text-primary">
+                    Студенты, проходящие этапы обходного листа
+                </h3>
+                <h4 class="text-center text-danger mb-0">Текущий этап ({{ employee.template_stage.stage }})</h4>
+            {% endif %}
 
-                    <div class="col-md-2">
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-sm btn-danger">
-                                <i class="fas fa-search"></i> Поиск
-                            </button>
+            <hr/>
+            <div class="row">
+                <div class="col-md-8">
+                    <form action="" method="get">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="search">ФИО / MyEDU ID:</label>
+                                <input type="text" class="form-control form-control-sm" name="search"
+                                       placeholder="230795"
+                                       id="search"/>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-search"></i> Поиск
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
-            </form>
+                <div class="col-md-4 text-right">
+
+                    {#                        <a href="{% url 'stepper:debts-history' %}" class="btn btn-sm btn-warning mt-0 mt-md-4">#}
+                    {#                            <i class="fas fa-history"></i> {% trans 'История' %}#}
+                    {#                        </a>#}
+                </div>
+            </div>
+
             <hr/>
 
             <div class="table-responsive">
@@ -42,9 +64,16 @@
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td>
-                                <a href="{% url 'stepper:debts-comment' id=student.current_trajectory_id %}">
-                                    {{ student.student_fio }} ({{ student.myedu_id }})
-                                </a>
+                                {% if history %}
+                                    <a href="{% url 'stepper:debts-comment-history' id=student.current_trajectory_id %}">
+                                        {{ student.student_fio }} ({{ student.myedu_id }})
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'stepper:debts-comment' id=student.current_trajectory_id %}">
+                                        {{ student.student_fio }} ({{ student.myedu_id }})
+                                    </a>
+                                {% endif %}
+
                             </td>
                             <td>{{ student.myedu_faculty }}</td>
                             <td>{{ student.myedu_spec }}</td>

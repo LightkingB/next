@@ -54,7 +54,7 @@
                     </ol>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Согласен(-на)</button>
+                    <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal" id="acceptAgreement">Согласен(-на)</button>
                 </div>
             </div>
         </div>
@@ -65,8 +65,15 @@
     <script type="text/javascript">
         var checker = document.getElementById('agreement');
         var sendbtn = document.getElementById('teacher_login');
+        var acceptBtn = document.getElementById('acceptAgreement');
+
         checker.onchange = function () {
             sendbtn.disabled = !this.checked;
+        };
+
+        acceptBtn.onclick = function () {
+            checker.checked = true;
+            sendbtn.disabled = false;
         };
     </script>
 {% endblock %}

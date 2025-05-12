@@ -1008,21 +1008,21 @@ def step_rating(request, id, trajectory_id):
 def debts(request):
     request.session['access'] = 'stepper'
     employee = request.stepper.get_employee_for_user(request.user, TemplateStep.STUDENT)
-    students_with_stlib = []
+    students_qs = []
 
     search_query = request.GET.get('search')
 
     if employee:
-        students_with_stlib = request.stepper.get_cs_employees_by_category(
+        students_qs = request.stepper.get_cs_employees_by_category(
             employee.template_stage,
             category=TemplateStep.STUDENT
         )
         if search_query:
-            students_with_stlib = students_with_stlib.filter(
+            students_qs = students_qs.filter(
                 Q(student_fio__icontains=search_query) | Q(myedu_id__icontains=search_query)
             )
 
-    paginator = Pagination(request, students_with_stlib)
+    paginator = Pagination(request, students_qs)
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
 
@@ -1035,11 +1035,45 @@ def debts(request):
 
 
 @with_stepper
+def debts_history(request):
+    request.session['access'] = 'stepper'
+    employee = request.stepper.get_employee_for_user(request.user, TemplateStep.STUDENT)
+    students_qs = []
+
+    search_query = request.GET.get('search')
+
+    if employee:
+        students_qs = request.stepper.get_cs_history_employees_by_category(
+            employee.template_stage
+        )
+        if search_query:
+            students_qs = students_qs.filter(
+                Q(student_fio__icontains=search_query) | Q(myedu_id__icontains=search_query)
+            )
+
+    paginator = Pagination(request, students_qs)
+    page_number = request.GET.get('page', 1)
+    students = paginator.pagination(page_number)
+
+    context = {
+        "navbar": "stepper-history",
+        "history": True,
+        "students": students,
+        "employee": employee
+    }
+    return render(request, "teachers/steppers/debts.html", context)
+
+
+@with_stepper
 def debts_comment(request, id):
     trajectory = get_object_or_404(
         Trajectory.objects.select_related('clearance_sheet'),
         id=id
     )
+    student = next(
+        iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL,
+                                                       search=trajectory.clearance_sheet.myedu_id)),
+        None)
     form = StageStatusForm(request.POST or None)
 
     if request.method == "POST":
@@ -1064,7 +1098,31 @@ def debts_comment(request, id):
         "navbar": "stepper",
         "trajectory": trajectory,
         "comments": StageStatus.objects.filter(trajectory=trajectory),
-        "form": form
+        "form": form,
+        "student": student
+    }
+    return render(request, "teachers/steppers/debts-comment.html", context)
+
+
+@with_stepper
+def debts_comment_history(request, id):
+    trajectory = get_object_or_404(
+        Trajectory.objects.select_related('clearance_sheet'),
+        id=id
+    )
+    student = next(
+        iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL,
+                                                       search=trajectory.clearance_sheet.myedu_id)),
+        None)
+    form = StageStatusForm(request.POST or None)
+
+    context = {
+        "navbar": "stepper-history",
+        "history": True,
+        "trajectory": trajectory,
+        "comments": StageStatus.objects.filter(trajectory=trajectory),
+        "form": form,
+        "student": student
     }
     return render(request, "teachers/steppers/debts-comment.html", context)
 

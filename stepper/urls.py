@@ -43,7 +43,9 @@ urlpatterns = [
     path('archive/<int:id>/<int:myedu_id>/student/remove/', archive_part_remove, name='archive-part-remove'),
 
     path('debts/', debts, name='debts'),
+    path('debts/history/', debts_history, name='debts-history'),
     path('debts/<int:id>/comment/', debts_comment, name='debts-comment'),
+    path('debts/<int:id>/comment/history/', debts_comment_history, name='debts-comment-history'),
 
     path("api/check_clearance_sheet/", check_clearance_sheet, name="check_clearance_sheet"),
     path("api/create_clearance_sheet/", create_clearance_sheet, name="create_clearance_sheet"),

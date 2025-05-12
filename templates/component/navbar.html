@@ -55,6 +55,11 @@
                         <i class="far fa-credit-card"></i><span> {% trans 'Студенты' %}</span>
                     </a>
                 </li>
+                <li class="{% if navbar == 'stepper-history' %}active{% endif %}">
+                    <a href="{% url 'stepper:debts-history' %}">
+                        <i class="fas fa-history"></i><span>{% trans 'История' %}</span>
+                    </a>
+                </li>
             {% elif CUSTOM_ROLES.STSPEC in DB_ROLES %}
                 <li class="{% if navbar == 'spec' %}active{% endif %}">
                     <a href="{% url 'stepper:spec' %}">

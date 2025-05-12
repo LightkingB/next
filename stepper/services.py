@@ -3,7 +3,7 @@ from datetime import datetime
 import requests
 from django.contrib import messages
 from django.db import transaction, IntegrityError
-from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists
+from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery
 from django.db.models.functions import RowNumber
 from django.http import Http404
 from django.utils.timezone import make_aware
@@ -359,6 +359,28 @@ class StepperService:
         )
 
         return employees
+
+    @staticmethod
+    def get_cs_history_employees_by_category(employee_stage):
+        latest_status_comment = StageStatus.objects.filter(
+            trajectory=OuterRef("trajectory__id")
+        ).order_by("-created_at")
+
+        processed_employees = (
+            ClearanceSheet.objects
+            .filter(
+                trajectory__template_stage=employee_stage,
+                trajectory__completed_at__isnull=False
+            )
+            .annotate(
+                current_trajectory_id=F("trajectory__id"),
+                status=F("trajectory__completed_at"),
+                last_comment=Subquery(latest_status_comment.values("comment_text")[:1]),
+                last_commented_at=Subquery(latest_status_comment.values("created_at")[:1])
+            )
+            .order_by("-trajectory__completed_at")
+        )
+        return processed_employees
 
     @staticmethod
     def save_stage_status(form, trajectory, user, end_flag):
