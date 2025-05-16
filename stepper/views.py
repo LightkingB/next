@@ -3,8 +3,10 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.db import transaction, DatabaseError
-from django.db.models import Q, OuterRef, Exists, Subquery, F, Value, CharField
+from django.db.models import OuterRef, Subquery, Exists, Window, F
+from django.db.models import Q, Value, CharField
 from django.db.models.functions import Concat
+from django.db.models.functions import RowNumber
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import make_aware
@@ -87,8 +89,18 @@ def spec(request):
     )
 
     qs = ClearanceSheet.objects.annotate(
-        has_spec=Exists(issuance_subquery)
-    ).filter(has_spec=False, completed_at__isnull=False, type_choices=TypeChoices.SPEC).order_by('-id')
+        has_spec=Exists(issuance_subquery),
+        row_number=Window(
+            expression=RowNumber(),
+            partition_by=[F('myedu_id')],
+            order_by=F('id').desc()
+        )
+    ).filter(
+        has_spec=False,
+        completed_at__isnull=False,
+        row_number=1,
+        type_choices=TypeChoices.SPEC
+    ).order_by('-id')
 
     filterset = CSFilter(request.GET or None, queryset=qs)
 
@@ -181,11 +193,20 @@ def archive(request):
         cs_id=OuterRef('id')
     )
 
-    qs = ClearanceSheet.objects.annotate(
-        has_archive=Exists(issuance_subquery)
-    ).filter(has_archive=False, completed_at__isnull=False).order_by('-id')
+    annotated_qs = ClearanceSheet.objects.annotate(
+        has_archive=Exists(issuance_subquery),
+        row_number=Window(
+            expression=RowNumber(),
+            partition_by=[F('myedu_id')],
+            order_by=F('id').desc()
+        )
+    ).filter(
+        has_archive=False,
+        completed_at__isnull=False,
+        row_number=1
+    ).order_by('-id')
 
-    filterset = CSFilter(request.GET or None, queryset=qs)
+    filterset = CSFilter(request.GET or None, queryset=annotated_qs)
 
     paginator = Pagination(request, filterset)
     page_number = request.GET.get('page', 1)
