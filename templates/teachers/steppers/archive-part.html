@@ -8,18 +8,7 @@
         <p class="mb-0 text-primary text-center">({{ student.myedu_faculty }} - {{ student.myedu_spec }})</p>
         <hr/>
         {% if CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
-            <div class="d-flex mb-2 mb-md-0 justify-content-between">
-                <a href="{% url 'stepper:archive-history' %}" class="btn btn-sm btn-warning">
-                    <i class="fas fa-history"></i> Открыть историю
-                </a>
-                <a href="{% url 'stepper:archive' %}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-globe-asia"></i> Список студентов по MyEDU
-                </a>
-                <a href="{% url 'stepper:archive-avn' %}" class="btn btn-sm btn-success">
-                    <i class="fas fa-users"></i> Список студентов по AVN
-                </a>
-            </div>
-            <hr/>
+
             {% if has_active_cs %}
                 <div class="alert alert-danger" role="alert">
                     Процесс выдачи обходного листа остается незавершенным; требуется его завершение. Есть непогашенные

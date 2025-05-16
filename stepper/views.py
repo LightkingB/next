@@ -341,7 +341,7 @@ def archive_avn(request):
     faculties = request.bs.active_faculties()
     context = {
         "form": form,
-        "navbar": "archive",
+        "navbar": "archive-avn",
         "students": students,
         "faculties": faculties
     }
@@ -478,7 +478,6 @@ def spec_sync(request, id, myedu_id):
 
             with transaction.atomic():
                 if not issuance and diploma:
-                    print("yes")
                     Issuance.objects.create(
                         student=diploma.student,
                         cs_id=id,
@@ -496,7 +495,6 @@ def spec_sync(request, id, myedu_id):
                 else:
                     messages.success(request, "Данные не найдены")
         except DatabaseError as e:
-            print(e)
             messages.error(request, "Ошибка при синхронизации")
 
     return redirect("stepper:spec-part", id=id, myedu_id=myedu_id)
@@ -759,6 +757,7 @@ def cs_step_undo(request, cs_id):
         STUDENT_CS: lambda: redirect('stepper:cs-detail', myedu_id=clearance_sheet.myedu_id),
         TEACHER_CS: lambda: redirect('stepper:teacher-cs-detail', myedu_id=clearance_sheet.myedu_id),
     }
+
     navbar_map = {
         STUDENT_CS: 'stepper',
         TEACHER_CS: 'teachers',
@@ -789,7 +788,7 @@ def cs_history(request, myedu_id):
     trajectories = request.stepper.cs_history_detail(cs_student)
     context = {
         "title": "История обходных листов",
-        "navbar": "cs",
+        "navbar": "cs-done",
         "trajectories": trajectories,
         "cs_student": cs_student,
         "student": student

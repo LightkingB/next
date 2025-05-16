@@ -30,7 +30,7 @@
                 </li>
                 <li class="{% if navbar == 'cs' %}active{% endif %}">
                     <a href="{% url 'stepper:cs' %}">
-                        <i class="fas fa-tasks"></i><span> {% trans 'Обходные' %}</span>
+                        <i class="fas fa-tasks"></i><span> {% trans 'Активные' %}</span>
                     </a>
                 </li>
                 <li class="{% if navbar == 'cs-done' %}active{% endif %}">
@@ -73,7 +73,7 @@
                 </li>
                 <li class="{% if navbar == 'spec-students' %}active{% endif %}">
                     <a href="{% url 'stepper:spec-students' %}">
-                        <i class="fas fa-id-card"></i><span> {% trans 'Регистрация' %}</span>
+                        <i class="fas fa-id-card"></i><span> {% trans 'Дипломы' %}</span>
                     </a>
                 </li>
                 <li class="{% if navbar == 'spec-avn' %}active{% endif %}">
@@ -90,6 +90,11 @@
                 <li class="{% if navbar == 'archive-history' %}active{% endif %}">
                     <a href="{% url 'stepper:archive-history' %}">
                         <i class="fas fa-history"></i><span> {% trans 'История' %}</span>
+                    </a>
+                </li>
+                <li class="{% if navbar == 'archive-avn' %}active{% endif %}">
+                    <a href="{% url 'stepper:archive-avn' %}">
+                        <i class="fas fa-archive"></i><span>{% trans 'АВН' %}</span>
                     </a>
                 </li>
             {% endif %}
