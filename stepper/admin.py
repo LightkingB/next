@@ -51,6 +51,8 @@ class DiplomaAdmin(admin.ModelAdmin):
 @admin.register(ClearanceSheet)
 class TemplateStepAdmin(admin.ModelAdmin):
     list_display = ('student_fio', 'last_active')
+    search_fields = ('student_fio',)
+    list_filter = ('last_active',)
 
 
 @admin.register(StageStatus)
