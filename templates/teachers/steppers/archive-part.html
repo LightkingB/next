@@ -71,11 +71,11 @@
                                 </h5>
                                 <h6 class="card-text">
                                     № справки: {{ issuance.id }}<br/>
-                                    Регистрационный №: {{ issuance.reg_number }}<br/>
+{#                                    Регистрационный №: {{ issuance.reg_number }}<br/>#}
                                     Диплом №: {{ issuance.doc_number }}<br/>
                                     Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
-                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
-                                    более одного раза {% endif %} <br/>
+{#                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}#}
+{#                                    более одного раза {% endif %} <br/>#}
                                     Примечание: {{ issuance.note|date:"-" }}
                                 </h6>
                                 {#                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal"#}

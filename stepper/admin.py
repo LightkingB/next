@@ -19,7 +19,13 @@ class TemplateStepAdmin(admin.ModelAdmin):
 admin.site.register(EduYear)
 admin.site.register(StageEmployee)
 admin.site.register(Diploma)
-admin.site.register(ClearanceSheet)
+
+
+@admin.register(ClearanceSheet)
+class TemplateStepAdmin(admin.ModelAdmin):
+    list_display = ('student_fio', 'last_active')
+
+
 admin.site.register(Trajectory)
 admin.site.register(StageStatus)
 admin.site.register(Issuance)

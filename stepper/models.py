@@ -115,6 +115,7 @@ class ClearanceSheet(models.Model):
                                     blank=True)
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Дата завершения"),
                                         help_text=_("Дата завершения обходного листа."))
+    last_active = models.BooleanField(default=True, verbose_name=_("Последний активный обходной"))
 
     def update_completed_at(self):
         has_null_trajectories = self.trajectory_set.filter(completed_at__isnull=True)

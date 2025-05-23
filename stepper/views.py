@@ -98,6 +98,7 @@ def spec(request):
     ).filter(
         has_spec=False,
         completed_at__isnull=False,
+        last_active=True,
         row_number=1,
         type_choices=TypeChoices.SPEC
     ).order_by('-id')
@@ -203,6 +204,7 @@ def archive(request):
     ).filter(
         has_archive=False,
         completed_at__isnull=False,
+        last_active=True,
         row_number=1
     ).order_by('-id')
 
@@ -396,7 +398,7 @@ def spec_part(request, id, myedu_id):
     else:
         form = IssuanceForm()
 
-    issuance = Issuance.objects.filter(student=myedu_id, type_choices=Issuance.SPEC).first()
+    issuance = Issuance.objects.filter(cs_id=id, student=myedu_id, type_choices=Issuance.SPEC).first()
     diploma = Diploma.objects.filter(student=myedu_id, sync=False).first()
     context = {
         "navbar": "spec",
@@ -436,9 +438,9 @@ def archive_part(request, id, myedu_id):
     else:
         form = IssuanceForm()
 
-    issuance = Issuance.objects.filter(student=myedu_id, type_choices=Issuance.OTHER).first()
+    issuance = Issuance.objects.filter(cs_id=id, student=myedu_id, type_choices=Issuance.OTHER).first()
     context = {
-        "navbar": "archive",
+        "navbar": "archive-history",
         "has_active_cs": has_active_cs,
         "form": form,
         "student": student,
@@ -881,18 +883,24 @@ def cs_force(request, myedu_id):
     form = StudentTrajectoryForm()
     if request.method == "POST":
         if "request-order" in request.POST:
-            cs_student = ClearanceSheet.objects.create(
-                myedu_id=myedu_id,
-                student_fio=student.get('student_fio', ''),
-                myedu_faculty_id=student.get('faculty_id', 0),
-                myedu_faculty=student.get('faculty_name', ''),
-                myedu_spec_id=student.get('speciality_id', 0),
-                myedu_spec=student.get('speciality_name', ''),
-                order_status=student.get('id_movement_info', ''),
-                order=student.get('info', ''),
-                order_date=student.get('date_movement', '')
-            )
-            return redirect("stepper:cs-detail", myedu_id=cs_student.myedu_id)
+            with transaction.atomic():
+                clearance_sheets_to_update = ClearanceSheet.objects.filter(
+                    myedu_id=myedu_id
+                )
+                clearance_sheets_to_update.update(last_active=False)
+                cs_student = ClearanceSheet.objects.create(
+                    myedu_id=myedu_id,
+                    student_fio=student.get('student_fio', ''),
+                    myedu_faculty_id=student.get('faculty_id', 0),
+                    myedu_faculty=student.get('faculty_name', ''),
+                    myedu_spec_id=student.get('speciality_id', 0),
+                    myedu_spec=student.get('speciality_name', ''),
+                    order_status=student.get('id_movement_info', ''),
+                    order=student.get('info', ''),
+                    order_date=student.get('date_movement', '')
+                )
+
+                return redirect("stepper:cs-detail", myedu_id=cs_student.myedu_id)
         else:
             form = StudentTrajectoryForm(request.POST)
             if form.is_valid():

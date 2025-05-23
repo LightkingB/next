@@ -34,10 +34,10 @@
                 <table class="table table-bordered table-sm table-responsive-md">
                     <thead class="thead-light">
                     <tr>
-
                         <th scope="col">№ справки</th>
                         <th scope="col">Документ</th>
                         <th scope="col">Об. лист №</th>
+                        <th scope="col">Категория</th>
                         <th scope="col">Факультет</th>
                         <th scope="col">Специальность</th>
                         <th scope="col">MyEDU / AVN</th>
@@ -51,6 +51,13 @@
                             <td class="text-center">{{ doc.id }}</td>
                             <td>{{ doc.doc_number }}</td>
                             <td>{{ doc.cs_id|default:"-" }}</td>
+                            <td>
+                                {% if doc.type_choices == 'speciality' %}
+                                    Спец. часть
+                                {% else %}
+                                    Архив / Отдел кадров
+                                {% endif %}
+                            </td>
                             <td>{{ doc.faculty.title|default:"-" }}</td>
                             <td>{{ doc.speciality.title|default:"-" }}</td>
                             <td>
