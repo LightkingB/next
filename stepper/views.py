@@ -39,6 +39,7 @@ def route(request):
 @with_stepper
 def cs_index(request):
     request.session['access'] = 'stepper'
+    request.session['cs-nav'] = 'stepper'
 
     if not request.user.is_authenticated:
         return redirect("integrator:next-teacher-login")
@@ -79,6 +80,7 @@ def cs_index(request):
 
 def spec(request):
     request.session['access'] = 'stepper'
+    request.session['nav-spec'] = 'spec'
     if not request.user.is_authenticated:
         return redirect("integrator:next-teacher-login")
 
@@ -224,6 +226,7 @@ def archive(request):
 
 
 def spec_history(request):
+    request.session['nav-spec'] = 'spec-history'
     issuance_subquery = Issuance.objects.filter(
         student=OuterRef('myedu_id'),
         type_choices=TypeChoices.SPEC,
@@ -373,6 +376,7 @@ def archive_avn(request):
 
 @with_stepper
 def spec_part(request, id, myedu_id):
+    nav = request.session.get("nav-spec", "spec")
     has_active_cs = request.stepper.has_active_cs(myedu_id)
 
     student = get_object_or_404(ClearanceSheet, myedu_id=myedu_id, id=id)
@@ -401,7 +405,7 @@ def spec_part(request, id, myedu_id):
     issuance = Issuance.objects.filter(cs_id=id, student=myedu_id, type_choices=Issuance.SPEC).first()
     diploma = Diploma.objects.filter(student=myedu_id, sync=False).first()
     context = {
-        "navbar": "spec",
+        "navbar": nav,
         "has_active_cs": has_active_cs,
         "form": form,
         "student": student,
@@ -625,6 +629,7 @@ def create_clearance_sheet(request):
 
 @with_stepper
 def cs(request):
+    request.session['cs-nav'] = 'cs'
     search_query = request.GET.get('search')
     students_qs = request.stepper.get_open_clearance_sheets_with_stage(search_query, type_param=STUDENT_CS)
 
@@ -834,6 +839,7 @@ def cs_history_detail(request, cs_id):
 
 @with_stepper
 def cs_detail(request, myedu_id):
+    nav = request.session.get("cs-nav", "stepper")
     student = next(
         iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
         None
@@ -862,7 +868,7 @@ def cs_detail(request, myedu_id):
         "cs_student": cs_student,
         "form": form,
         "trajectories": trajectories,
-        "navbar": "stepper",
+        "navbar": nav,
         "type_choices": TypeChoices.choices,
     }
     return render(request, "teachers/steppers/cs-detail.html", context)
@@ -1013,7 +1019,7 @@ def step_remove(request, id):
             except Exception as _:
                 messages.error(request, "Ошибка при удалении траектории")
         else:
-            messages.error(request, "Невозможно удалить траекторию, так как есть связанные записи")
+            messages.error(request, "Невозможно удалить траектории, так как есть связанные записи")
     return redirect("stepper:cs-detail", myedu_id=student.myedu_id)
 
 
