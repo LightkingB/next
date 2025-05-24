@@ -46,11 +46,16 @@ class StepperService:
             data["search"] = search
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, data=data, timeout=10)
 
             if response.status_code == 200:
-                return response.json()
-            return EMPTY_RESPONSE_STEPPER_DATA
+                try:
+                    json_data = response.json()
+                    return json_data if isinstance(json_data, list) else EMPTY_RESPONSE_STEPPER_DATA
+                except ValueError:
+                    return EMPTY_RESPONSE_STEPPER_DATA
+            else:
+                return EMPTY_RESPONSE_STEPPER_DATA
         except requests.RequestException:
             return EMPTY_RESPONSE_STEPPER_DATA
 

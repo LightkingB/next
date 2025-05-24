@@ -4,6 +4,9 @@
 
 {% block content %}
     <div class="container">
+        {% if not student %}
+            <h4 class="text-center text-danger">Не удалось найти студента или отсутствует связь с MyEDU</h4>
+        {% endif %}
         {% if CUSTOM_ROLES.STDEBT in DB_ROLES %}
             <div class="row">
                 {% if history %}
@@ -14,6 +17,9 @@
                                 <h4 class="mb-0 text-primary text-center">{{ student.student_fio }}</h4>
                             </div>
                             <div class="card-body text-left">
+                                {% if not sync_myedu %}
+                                    <h6 class="text-center text-danger">Данные из MyEDU временно недоступны.</h6>
+                                {% endif %}
                                 <div class="row">
                                     <div class="col-md-6">
                                         <ul class="list-group">
@@ -45,7 +51,7 @@
                                 {% csrf_token %}
                                 <div class="form-group mb-1">
                                     <h4 class="form-label text-center">
-                                        Комментарий и решение
+                                        Комментировать
                                     </h4>
                                     <textarea class="form-control form-control-sm" rows="3" name="comment_text"
                                               id="comment"
@@ -62,7 +68,7 @@
                                 </div>
                                 <div class="mb-2">
                                     <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-comment"></i> Комментировать
+                                        <i class="fas fa-comment"></i> Сохранить
                                     </button>
                                 </div>
                             </form>
@@ -74,6 +80,11 @@
                                 <h4 class="mb-0 text-primary text-center">{{ student.student_fio }}</h4>
                             </div>
                             <div class="card-body text-left">
+                                {% if not sync_myedu %}
+                                    <h6 class="text-center text-danger">
+                                        Данные из MyEDU временно недоступны. Вы можете продолжить
+                                        работу и оставить комментарий.</h6>
+                                {% endif %}
                                 <div class="row">
                                     <div class="col-md-6">
                                         <ul class="list-group">
@@ -90,7 +101,6 @@
                                             <li class="list-group-item"><b>Форма оплаты:</b> {{ student.payment_form }}
                                             </li>
                                         </ul>
-
                                     </div>
                                 </div>
                             </div>

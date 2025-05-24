@@ -1102,6 +1102,10 @@ def debts_comment(request, id):
         iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL,
                                                        search=trajectory.clearance_sheet.myedu_id)),
         None)
+    sync_myedu = True
+    if not student:
+        sync_myedu = False
+        student = ClearanceSheet.objects.filter(id=trajectory.clearance_sheet_id).first()
     form = StageStatusForm(request.POST or None)
 
     if request.method == "POST":
@@ -1127,7 +1131,8 @@ def debts_comment(request, id):
         "trajectory": trajectory,
         "comments": StageStatus.objects.filter(trajectory=trajectory),
         "form": form,
-        "student": student
+        "student": student,
+        "sync_myedu": sync_myedu
     }
     return render(request, "teachers/steppers/debts-comment.html", context)
 
@@ -1142,6 +1147,10 @@ def debts_comment_history(request, id):
         iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL,
                                                        search=trajectory.clearance_sheet.myedu_id)),
         None)
+    sync_myedu = True
+    if not student:
+        sync_myedu = False
+        student = ClearanceSheet.objects.filter(id=trajectory.clearance_sheet_id).first()
     form = StageStatusForm(request.POST or None)
 
     context = {
@@ -1150,7 +1159,8 @@ def debts_comment_history(request, id):
         "trajectory": trajectory,
         "comments": StageStatus.objects.filter(trajectory=trajectory),
         "form": form,
-        "student": student
+        "student": student,
+        "sync_myedu": sync_myedu
     }
     return render(request, "teachers/steppers/debts-comment.html", context)
 

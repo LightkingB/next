@@ -4,6 +4,7 @@
 
 {% block content %}
     <div class="container-fluid">
+
         <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
         <hr/>
 
@@ -108,9 +109,13 @@
                     </tbody>
                 </table>
             </div>
+            {% if not student %}
+                <h4 class="text-center text-danger">Не удалось найти студента или отсутствует связь с MyEDU</h4>
+            {% endif %}
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}
+
     </div>
 
 

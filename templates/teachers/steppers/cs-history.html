@@ -4,86 +4,91 @@
 
 {% block content %}
     <div class="container">
-        <h4 class="text-center text-primary">{% trans 'Запись пройденных маршрутов' %}: {{ student.student_fio }}</h4>
-        <hr/>
-        <div class="stage-status">
-            {% for trajectory in trajectories %}
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between flex-wrap">
-                            <h5 class="mb-0">
-                                <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
-                            </h5>
-                            <h5>
-                                {% if trajectory.completed_at %}
-                                    <span class="text-success">
+        {% if student %}
+            <h4 class="text-center text-primary">{% trans 'Запись пройденных маршрутов' %}: {{ student.student_fio }}</h4>
+            <hr/>
+            <div class="stage-status">
+                {% for trajectory in trajectories %}
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between flex-wrap">
+                                <h5 class="mb-0">
+                                    <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
+                                </h5>
+                                <h5>
+                                    {% if trajectory.completed_at %}
+                                        <span class="text-success">
                                     {% trans 'Завершен' %} <i class="far fa-check-square"></i> :
                                     {{ trajectory.completed_at|date:"d.m.Y H:i" }}
                                      </span>
+                                    {% endif %}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% with trajectory.stagestatus_set.all as statuses %}
+                                {% if statuses %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead>
+                                            <tr>
+                                                <th>Обработал</th>
+                                                <th>Комментарий</th>
+                                                <th>Дата создания</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for status in statuses %}
+                                                <tr>
+                                                    <td>{{ status.processed_by|default:"—" }}</td>
+                                                    <td>{{ status.comment_text|default:"—" }}</td>
+                                                    <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
+                                                </tr>
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="4" class="text-center">Статусов пока нет
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <p class="mb-0">Статусов пока нет</p>
                                 {% endif %}
-                            </h5>
+                            {% endwith %}
                         </div>
                     </div>
-                    <div class="card-body">
-                        {% with trajectory.stagestatus_set.all as statuses %}
-                            {% if statuses %}
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered mb-0">
-                                        <thead>
-                                        <tr>
-                                            <th>Обработал</th>
-                                            <th>Комментарий</th>
-                                            <th>Дата создания</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for status in statuses %}
-                                            <tr>
-                                                <td>{{ status.processed_by|default:"—" }}</td>
-                                                <td>{{ status.comment_text|default:"—" }}</td>
-                                                <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
-                                            </tr>
-                                        {% empty %}
-                                            <tr>
-                                                <td colspan="4" class="text-center">Статусов пока нет
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
+                {% empty %}
+
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="card text-center" style="width: 20em">
+                            {% if not cs_student.completed_at %}
+                                <div class="card-header">
+                                    <h5> Нет доступных траекторий</h5>
+                                </div>
+                                <div class="card-body">
+                                    <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}"
+                                       class="text-danger">
+                                        <h5 class="card-title">
+                                            Назначить траектории
+                                        </h5>
+                                    </a>
                                 </div>
                             {% else %}
-                                <p class="mb-0">Статусов пока нет</p>
+                                <div class="card-header">
+                                    <h5>Обходной лист успешно завершен</h5>
+                                </div>
+                                <div class="card-body">
+                                    Дата завершения: {{ cs_student.completed_at|date:'d/m/Y H:i' }}
+                                </div>
                             {% endif %}
-                        {% endwith %}
+                        </div>
                     </div>
-                </div>
-            {% empty %}
-
-                <div class="d-flex justify-content-center align-items-center">
-                    <div class="card text-center" style="width: 20em">
-                        {% if not cs_student.completed_at %}
-                            <div class="card-header">
-                                <h5> Нет доступных траекторий</h5>
-                            </div>
-                            <div class="card-body">
-                                <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}" class="text-danger">
-                                    <h5 class="card-title">
-                                        Назначить траектории
-                                    </h5>
-                                </a>
-                            </div>
-                        {% else %}
-                            <div class="card-header">
-                                <h5>Обходной лист успешно завершен</h5>
-                            </div>
-                            <div class="card-body">
-                                Дата завершения: {{ cs_student.completed_at|date:'d/m/Y H:i' }}
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <h4 class="text-center text-danger">Не удалось найти студента или отсутствует связь с MyEDU</h4>
+        {% endif %}
     </div>
 {% endblock %}
