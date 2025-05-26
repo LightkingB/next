@@ -11,28 +11,39 @@ ctx.lineCap = "round";
 ctx.lineJoin = "round";
 ctx.strokeStyle = "#0051ff";
 
-canvas.addEventListener("mousedown", e => {
+function getCanvasPos(e) {
+    if (e.touches && e.touches.length > 0) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    } else {
+        return {x: e.offsetX, y: e.offsetY};
+    }
+}
+
+function startDraw(e) {
+    e.preventDefault();
     drawing = true;
-    points = [{x: e.offsetX, y: e.offsetY}];
+    const pos = getCanvasPos(e);
+    points = [pos];
     ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-});
+    ctx.moveTo(pos.x, pos.y);
+}
 
-canvas.addEventListener("mousemove", e => {
+function draw(e) {
     if (!drawing) return;
-    const point = {x: e.offsetX, y: e.offsetY};
-    points.push(point);
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    points.push(pos);
     drawSmoothLine();
-});
+}
 
-canvas.addEventListener("mouseup", () => {
+function stopDraw() {
     drawing = false;
     saveSignature();
-});
-
-canvas.addEventListener("mouseleave", () => {
-    drawing = false;
-});
+}
 
 function drawSmoothLine() {
     if (points.length < 3) {
@@ -46,7 +57,6 @@ function drawSmoothLine() {
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
 
@@ -68,3 +78,15 @@ function clearSignature() {
     hiddenInput.value = "";
     points = [];
 }
+
+// Мышь
+canvas.addEventListener("mousedown", startDraw);
+canvas.addEventListener("mousemove", draw);
+canvas.addEventListener("mouseup", stopDraw);
+canvas.addEventListener("mouseleave", stopDraw);
+
+// Touch
+canvas.addEventListener("touchstart", startDraw, {passive: false});
+canvas.addEventListener("touchmove", draw, {passive: false});
+canvas.addEventListener("touchend", stopDraw);
+
