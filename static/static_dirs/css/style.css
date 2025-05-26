@@ -618,4 +618,8 @@ table.no-border th {
     #signature-pad {
         width: 100%;
     }
+
+    .login-form input[type="checkbox"] {
+        margin-top: 0;
+    }
 }
