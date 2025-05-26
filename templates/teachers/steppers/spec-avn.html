@@ -111,12 +111,21 @@
                         </div>
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <button type="button" class="btn btn-sm btn-danger mt-md-4 mt-0" data-toggle="modal"
-                                    data-target="#cameraModal">
-                                <i class="fas fa-camera"></i> Камера
+                            <canvas id="signature-pad"
+                                    height="200"
+                                    style="border: 2px solid #000; border-radius: 6px; background: #fefeff;">
+
+                            </canvas>
+                            <br>
+                            <button type="button" class="btn btn-sm btn-warning" onclick="clearSignature()">
+                                <i class="fas fa-broom"></i> Очистить
                             </button>
+                            {#                            <button type="button" class="btn btn-sm btn-danger mt-md-4 mt-0" data-toggle="modal"#}
+                            {#                                    data-target="#cameraModal">#}
+                            {#                                <i class="fas fa-camera"></i> Камера#}
+                            {#                            </button>#}
                         </div>
                     </div>
                 </div>
@@ -230,6 +239,7 @@
 
 {% block head_js_link %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+
 {% endblock %}
 
 {% block scripts %}
@@ -296,6 +306,6 @@
                 noImageText.show();
             }
         });
-
     </script>
+    <script src="{% static 'js/signature.js' %}"></script>
 {% endblock %}
