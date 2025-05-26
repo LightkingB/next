@@ -107,6 +107,12 @@ INTERNAL_IPS = [
     '127.0.0.1',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://next.oshsu.kg',
+    'http://next.oshsu.kg',
+    'https://www.next.oshsu.kg',
+]
+
 AUTH_USER_MODEL = "bsadmin.CustomUser"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
