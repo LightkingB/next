@@ -2143,4 +2143,8 @@ section {
     .login-form form a {
         line-height: 15px;
     }
+
+    .login-form input[type="checkbox"] {
+        margin-top: 0;
+    }
 }
