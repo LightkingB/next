@@ -3,10 +3,7 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.db import transaction, DatabaseError
-from django.db.models import OuterRef, Subquery, Exists, Window, F
-from django.db.models import Q, Value, CharField
-from django.db.models.functions import Concat
-from django.db.models.functions import RowNumber
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import make_aware
@@ -14,12 +11,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from bsadmin.consts import STADMIN
-from bsadmin.models import CustomUser, Faculty, Speciality
+from bsadmin.models import Faculty, Speciality
 from stepper.choices import TypeChoices
 from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS
 from stepper.decorators import with_stepper
 from stepper.entity import StudentInfo
-from stepper.exceptions import ClearanceCreationError
+from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
 from stepper.filters import StageEmployeeStudentFilter, CSFilter
 from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm, DiplomaForm
 from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep, StageEmployee, Issuance, \
@@ -78,44 +75,22 @@ def cs_index(request):
     return render(request, "teachers/steppers/index.html", context)
 
 
+@with_stepper
 def spec(request):
     request.session['access'] = 'stepper'
     request.session['nav-spec'] = 'spec'
     if not request.user.is_authenticated:
         return redirect("integrator:next-teacher-login")
 
-    issuance_subquery = Issuance.objects.filter(
-        student=OuterRef('myedu_id'),
-        type_choices=TypeChoices.SPEC,
-        cs_id=OuterRef('id')
-    )
-
-    qs = ClearanceSheet.objects.annotate(
-        has_spec=Exists(issuance_subquery),
-        row_number=Window(
-            expression=RowNumber(),
-            partition_by=[F('myedu_id')],
-            order_by=F('id').desc()
-        )
-    ).filter(
-        has_spec=False,
-        completed_at__isnull=False,
-        last_active=True,
-        row_number=1,
-        type_choices=TypeChoices.SPEC
-    ).order_by('-id')
-
-    filterset = CSFilter(request.GET or None, queryset=qs)
-
-    paginator = Pagination(request, filterset)
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination_with_filters(page_number)
+    qs = request.stepper.get_clearance_students(TypeChoices.SPEC, 'has_spec',
+                                                extra_filter={'type_choices': TypeChoices.SPEC})
+    students, form = get_cs_filtered_paginated(request, qs)
 
     context = {
         "title": "Студенты без задолженности по данным MyEDU",
         "navbar": "spec",
         "objects": students,
-        "form": filterset.form,
+        "form": form,
     }
     return render(request, "teachers/steppers/spec.html", context)
 
@@ -185,102 +160,52 @@ def spec_diploma(request):
     return render(request, "teachers/steppers/spec-diploma.html", context)
 
 
+@with_stepper
 def archive(request):
     request.session['access'] = 'stepper'
     if not request.user.is_authenticated:
         return redirect("integrator:next-teacher-login")
 
-    issuance_subquery = Issuance.objects.filter(
-        student=OuterRef('myedu_id'),
-        type_choices=TypeChoices.OTHER,
-        cs_id=OuterRef('id')
-    )
+    qs = request.stepper.get_clearance_students(TypeChoices.OTHER, 'has_archive')
 
-    annotated_qs = ClearanceSheet.objects.annotate(
-        has_archive=Exists(issuance_subquery),
-        row_number=Window(
-            expression=RowNumber(),
-            partition_by=[F('myedu_id')],
-            order_by=F('id').desc()
-        )
-    ).filter(
-        has_archive=False,
-        completed_at__isnull=False,
-        last_active=True,
-        row_number=1
-    ).order_by('-id')
-
-    filterset = CSFilter(request.GET or None, queryset=annotated_qs)
-
-    paginator = Pagination(request, filterset)
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination_with_filters(page_number)
+    students, form = get_cs_filtered_paginated(request, qs)
 
     context = {
         "title": "Студенты без задолженности по данным MyEDU",
         "navbar": "archive",
         "objects": students,
-        "form": filterset.form,
+        "form": form,
     }
     return render(request, "teachers/steppers/archive.html", context)
 
 
+@with_stepper
 def spec_history(request):
     request.session['nav-spec'] = 'spec-history'
-    issuance_subquery = Issuance.objects.filter(
-        student=OuterRef('myedu_id'),
-        type_choices=TypeChoices.SPEC,
-        cs_id=OuterRef('id')
-    )
 
-    issuance_id_subquery = issuance_subquery.values('id')[:1]
-
-    qs = ClearanceSheet.objects.annotate(
-        issuance_id=Subquery(issuance_id_subquery),
-        has_spec=Exists(issuance_subquery)
-    ).filter(has_spec=True, completed_at__isnull=False).order_by('-id')
-
-    filterset = CSFilter(request.GET or None, queryset=qs)
-
-    paginator = Pagination(request, filterset)
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination_with_filters(page_number)
+    qs = request.stepper.get_clearance_history(TypeChoices.SPEC, 'has_spec')
+    students, form = get_cs_filtered_paginated(request, qs)
 
     context = {
         "title": "История студентов без задолженности по данным MyEDU",
         "navbar": "spec-history",
         "objects": students,
-        "form": filterset.form,
+        "form": form,
         "history": True
     }
     return render(request, "teachers/steppers/spec.html", context)
 
 
+@with_stepper
 def archive_history(request):
-    issuance_subquery = Issuance.objects.filter(
-        student=OuterRef('myedu_id'),
-        type_choices=TypeChoices.OTHER,
-        cs_id=OuterRef('id')
-    )
-
-    issuance_id_subquery = issuance_subquery.values('id')[:1]
-
-    qs = ClearanceSheet.objects.annotate(
-        issuance_id=Subquery(issuance_id_subquery),
-        has_archive=Exists(issuance_subquery)
-    ).filter(has_archive=True, completed_at__isnull=False).order_by('-id')
-
-    filterset = CSFilter(request.GET or None, queryset=qs)
-
-    paginator = Pagination(request, filterset)
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination_with_filters(page_number)
+    qs = request.stepper.get_clearance_history(TypeChoices.OTHER, 'has_archive')
+    students, form = get_cs_filtered_paginated(request, qs)
 
     context = {
         "title": "История студентов без задолженности по данным MyEDU",
         "navbar": "archive-history",
         "objects": students,
-        "form": filterset.form,
+        "form": form,
         "history": True
     }
     return render(request, "teachers/steppers/archive.html", context)
@@ -479,20 +404,15 @@ def spec_part_double(request, id, myedu_id):
 @with_stepper
 def spec_part_remove(request, id, myedu_id):
     if request.method == "POST":
+        student = get_object_or_404(ClearanceSheet, id=id, myedu_id=myedu_id)
         try:
-            student = ClearanceSheet.objects.filter(id=id, myedu_id=myedu_id).first()
-            issuance = Issuance.objects.select_for_update().filter(student=myedu_id, type_choices=Issuance.SPEC).first()
-
-            with transaction.atomic():
-                if issuance:
-                    IssuanceHistory.objects.filter(student=myedu_id, type_choices=Issuance.SPEC, cs=student.id).delete()
-                    issuance.delete()
-
+            removed = request.stepper.remove_issuance_and_history(myedu_id, student.id, Issuance.SPEC)
+            if removed:
                 messages.success(request, "Информация о дипломе успешно удалена")
-
-        except DatabaseError:
-            messages.error(request, "Ошибка при выдаче диплома-дубликата")
-
+            else:
+                messages.info(request, "Запись не найдена, удалять нечего")
+        except IssuanceRemovalError:
+            messages.error(request, "Ошибка при удалении информации о дипломе")
     return redirect("stepper:spec-part", id=id, myedu_id=myedu_id)
 
 
@@ -530,22 +450,15 @@ def spec_sync(request, id, myedu_id):
 @with_stepper
 def archive_part_remove(request, id, myedu_id):
     if request.method == "POST":
+        student = get_object_or_404(ClearanceSheet, id=id, myedu_id=myedu_id)
         try:
-            student = ClearanceSheet.objects.filter(id=id, myedu_id=myedu_id).first()
-            issuance = Issuance.objects.select_for_update().filter(student=myedu_id,
-                                                                   type_choices=Issuance.OTHER).first()
-
-            with transaction.atomic():
-                if issuance:
-                    IssuanceHistory.objects.filter(student=myedu_id, type_choices=Issuance.OTHER,
-                                                   cs=student.id).delete()
-                    issuance.delete()
-
+            removed = request.stepper.remove_issuance_and_history(myedu_id, student.id, Issuance.OTHER)
+            if removed:
                 messages.success(request, "Информация о дипломе успешно удалена")
-
-        except DatabaseError:
-            messages.error(request, "Ошибка при выдаче диплома-дубликата")
-
+            else:
+                messages.info(request, "Запись не найдена, удалять нечего")
+        except IssuanceRemovalError:
+            messages.error(request, "Ошибка при удалении информации о дипломе")
     return redirect("stepper:archive-part", id=id, myedu_id=myedu_id)
 
 
@@ -694,9 +607,8 @@ def cs_debt_stage(request, stage):
 def cs_issuance(request):
     search_id = request.GET.get('search')
     if search_id:
-        issuance_qs = Issuance.objects.filter(Q(id=search_id) | Q(cs_id=search_id)).select_related('faculty',
-                                                                                                   'speciality').order_by(
-            'id')
+        issuance_qs = (Issuance.objects.filter(Q(id=search_id) | Q(cs_id=search_id))
+                       .select_related('faculty', 'speciality').order_by('id'))
     else:
         issuance_qs = Issuance.objects.all().select_related('faculty', 'speciality').order_by('id')
 
@@ -731,38 +643,7 @@ def cs_report(request, cs_id):
         None
     )
 
-    latest_status_qs = StageStatus.objects.filter(
-        trajectory=OuterRef('pk')
-    ).order_by('-created_at')
-
-    trajectories = (
-        Trajectory.objects
-        .filter(clearance_sheet=clearance_sheet)
-        .select_related('template_stage', 'template_stage__stage', 'assigned_by')
-        .annotate(
-            last_comment=Subquery(
-                latest_status_qs.values('comment_text')[:1]
-            ),
-            last_processed_by_id=Subquery(
-                latest_status_qs.values('processed_by')[:1]
-            ),
-        )
-    )
-    trajectories = trajectories.annotate(
-        last_processed_by_name=Subquery(
-            CustomUser.objects
-            .filter(id=OuterRef('last_processed_by_id'))
-            .annotate(
-                full_name=Concat(
-                    F('first_name'), Value(' '),
-                    F('last_name'), Value(' '),
-                    F('fathers_name')
-                )
-            )
-            .values('full_name')[:1],
-            output_field=CharField()
-        )
-    )
+    trajectories = request.stepper.get_trajectories_with_annotations(clearance_sheet)
 
     context = {
         "title": "История - Перечень завершенных обходных листов",
@@ -894,18 +775,7 @@ def cs_force(request, myedu_id):
                     myedu_id=myedu_id
                 )
                 clearance_sheets_to_update.update(last_active=False)
-                cs_student = ClearanceSheet.objects.create(
-                    myedu_id=myedu_id,
-                    student_fio=student.get('student_fio', ''),
-                    myedu_faculty_id=student.get('faculty_id', 0),
-                    myedu_faculty=student.get('faculty_name', ''),
-                    myedu_spec_id=student.get('speciality_id', 0),
-                    myedu_spec=student.get('speciality_name', ''),
-                    order_status=student.get('id_movement_info', ''),
-                    order=student.get('info', ''),
-                    order_date=student.get('date_movement', '')
-                )
-
+                cs_student = request.stepper.create_clearance_sheet(student, myedu_id)
                 return redirect("stepper:cs-detail", myedu_id=cs_student.myedu_id)
         else:
             form = StudentTrajectoryForm(request.POST)
@@ -931,6 +801,7 @@ def cs_force(request, myedu_id):
     return render(request, "teachers/steppers/cs-force.html", context)
 
 
+@with_stepper
 def request_cs(request, myedu_id):
     if request.method == "POST":
         student_data = request.POST.get('student')
@@ -943,23 +814,14 @@ def request_cs(request, myedu_id):
         cs_student = ClearanceSheet.objects.filter(myedu_id=myedu_id).first()
 
         if not cs_student:
-            ClearanceSheet.objects.create(
-                myedu_id=myedu_id,
-                student_fio=student.get('student_fio', ''),
-                myedu_faculty_id=student.get('faculty_id', 0),
-                myedu_faculty=student.get('faculty_name', ''),
-                myedu_spec_id=student.get('speciality_id', 0),
-                myedu_spec=student.get('speciality_name', ''),
-                order_status=student.get('id_movement_info', ''),
-                order=student.get('info', ''),
-                order_date=student.get('date_movement', '')
-            )
+            request.stepper.create_clearance_sheet(student, myedu_id)
             messages.success(request, "Обходной лист успешно создан")
         else:
             messages.error(request, "Студент не найден")
     return redirect("stepper:cs-detail", myedu_id=myedu_id)
 
 
+@with_stepper
 def order_done(request, myedu_id):
     if request.method == "POST":
         student_data = request.POST.get('student')
@@ -988,19 +850,7 @@ def order_done(request, myedu_id):
             else:
                 messages.error(request, "Обходной лист находится в процессе прохождения")
         else:
-            ClearanceSheet.objects.create(
-                myedu_id=myedu_id,
-                student_fio=student.get('student_fio', ''),
-                myedu_faculty_id=student.get('faculty_id', 0),
-                myedu_faculty=student.get('faculty_name', ''),
-                myedu_spec_id=student.get('speciality_id', 0),
-                myedu_spec=student.get('speciality_name', ''),
-                order_status=student.get('id_movement_info', ''),
-                order=student.get('info', ''),
-                order_date=student.get('date_movement', ''),
-                type_choices=type_choices,
-                completed_at=make_aware(datetime.now())
-            )
+            request.stepper.create_clearance_sheet(student, myedu_id, type_choices=type_choices, completed=True)
             messages.success(request, "Обходной лист успешно создан и завершён")
 
     return redirect("stepper:cs-detail", myedu_id=myedu_id)
@@ -1332,3 +1182,11 @@ def diploma_create_ajax(request):
         form_html = render(request, 'teachers/steppers/partials/partial_diploma_form.html',
                            {'form': form}).content.decode('utf-8')
         return JsonResponse({'form_html': form_html})
+
+
+def get_cs_filtered_paginated(request, queryset):
+    filterset = CSFilter(request.GET or None, queryset=queryset)
+    paginator = Pagination(request, filterset)
+    page_number = request.GET.get('page', 1)
+    paginated = paginator.pagination_with_filters(page_number)
+    return paginated, filterset.form

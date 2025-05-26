@@ -1,48 +1,95 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block css %}
+    <style media="print">
+        /* Скрыть навигацию и всё ненужное */
+        .navbar-qualities,
+        .sidebar,
+        .modal,
+        .modal-backdrop,
+        .d-print-none {
+            display: none !important;
+        }
+
+        /* Упрощение структуры и расширение контента */
+        .main {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        .main * {
+            color: #000 !important;
+            background: #fff !important;
+            box-shadow: none !important;
+        }
+
+        /* Убрать Bootstrap-отступы */
+        .col-md-3 {
+            display: none !important;
+        }
+
+        .col-md-6 {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+
+        /* Границы таблиц при печати */
+        table, th, td {
+            border: 1px solid black !important;
+            border-collapse: collapse !important;
+        }
+
+        th, td {
+            padding: 4px !important;
+        }
+
+        /* Разрыв страницы по строкам */
+        tr {
+            page-break-inside: avoid;
+        }
+
+        table.custom-width {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
     <div class="container">
-        {#        <h3 class="text-center">{% trans 'Обходной лист' %}#}
-        {#            № {{ student.id }} - {% trans 'Отчёт' %}: {{ student.student_fio }}</h3>#}
-        {#        <hr/>#}
-        {#        <div class="text-right">#}
-        {#            <a href="{% url 'stepper:index' %}" class="btn btn-danger btn-sm">#}
-        {#                MyEDU - должники <i class="fas fa-money-check"></i>#}
-        {#            </a>#}
-        {#            <a href="{% url 'stepper:cs' %}" class="btn btn-primary btn-sm">#}
-        {#                Обходные листы <i class="fas fa-clipboard-list"></i>#}
-        {#            </a>#}
-        {#            <a href="{% url 'stepper:cs-done' %}" class="btn btn-warning btn-sm">#}
-        {#                <i class="fas fa-history"></i> История#}
-        {#            </a>#}
-        {#        </div>#}
-        {#        <hr/>#}
         <div class="row">
             <div class="col-md-3"></div>
             <div class="col-md-6">
                 <div class="text-center mb-2">
                     <h4 class="font-weight-bold">Обходной лист</h4>
-                    <h6 class="text-uppercase font-weight-bold">ошский государственный университет</h6>
+                    <h6 class="text-uppercase font-weight-bold">Ошский государственный университет</h6>
                     <h6 class="font-weight-bold">{{ student.faculty_name }}</h6>
                     <h6 class="font-weight-bold">{{ student.speciality_name }}</h6>
                 </div>
-                <address class="mb-4">
-                    <div class="row">
-                        <div class="col-md-6 text-right">Форма обучения:</div>
-                        <div class="col-md-6 text-left font-weight-bold">{{ student.edu_form }}</div>
-
-                        <div class="col-md-6 text-right">Форма оплаты:</div>
-                        <div class="col-md-6 text-left font-weight-bold">{{ student.payment_form }}</div>
-
-                        <div class="col-md-6 text-right">Обходной лист №:</div>
-                        <div class="col-md-6 text-left font-weight-bold">{{ cs.id }}</div>
-
-                        <div class="col-md-6 text-right">Шифр студента:</div>
-                        <div class="col-md-6 text-left font-weight-bold">{{ cs.myedu_id }}</div>
-                    </div>
-                </address>
+                <table class="table no-border table-sm w-100 mb-4" style="max-width: 600px; margin: 0 auto;">
+                    <tbody>
+                    <tr>
+                        <td class="text-right font-weight-bold">Форма обучения:</td>
+                        <td>{{ student.edu_form }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right font-weight-bold">Форма оплаты:</td>
+                        <td>{{ student.payment_form }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right font-weight-bold">Обходной лист №:</td>
+                        <td>{{ cs.id }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right font-weight-bold">Шифр студента:</td>
+                        <td>{{ cs.myedu_id }}</td>
+                    </tr>
+                    </tbody>
+                </table>
 
 
                 <div class="text-center mb-3">
@@ -54,7 +101,7 @@
         <div class="">
             {% if trajectories %}
                 <div class="table-responsive">
-                    <table class="table table-bordered table-sm table-responsive-md">
+                    <table class="table custom-width table-bordered table-sm table-responsive-md">
                         <thead class="thead-light">
                         <tr>
                             <th scope="col">#</th>

@@ -3,8 +3,8 @@ from datetime import datetime
 import requests
 from django.contrib import messages
 from django.db import transaction, IntegrityError
-from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery
-from django.db.models.functions import RowNumber
+from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery, Value, CharField
+from django.db.models.functions import RowNumber, Concat
 from django.http import Http404
 from django.utils.timezone import make_aware
 
@@ -12,8 +12,9 @@ from bsadmin.consts import MYEDU_LOGIN, MYEDU_PASSWORD
 from bsadmin.models import CustomUser, Faculty, Speciality
 from stepper.consts import EMPTY_RESPONSE_STEPPER_DATA, STUDENT_CS, TEACHER_CS
 from stepper.entity import StudentInfo
-from stepper.exceptions import ClearanceCreationError
-from stepper.models import Issuance, ClearanceSheet, Trajectory, StageStatus, StageEmployee, TemplateStep
+from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
+from stepper.models import Issuance, ClearanceSheet, Trajectory, StageStatus, StageEmployee, TemplateStep, \
+    IssuanceHistory
 from utils.convert import save_signature_image
 
 
@@ -445,3 +446,122 @@ class StepperService:
 
         except Exception as e:
             raise ClearanceCreationError("Не удалось создать обходной лист по технической причине.") from e
+
+    @staticmethod
+    def get_clearance_students(type_choice, has_field_name, extra_filter=None):
+        issuance_subquery = Issuance.objects.filter(
+            student=OuterRef('myedu_id'),
+            type_choices=type_choice,
+            cs_id=OuterRef('id')
+        )
+
+        qs = ClearanceSheet.objects.annotate(
+            **{
+                has_field_name: Exists(issuance_subquery),
+                'row_number': Window(
+                    expression=RowNumber(),
+                    partition_by=[F('myedu_id')],
+                    order_by=F('id').desc()
+                )
+            }
+        ).filter(
+            **{
+                has_field_name: False,
+                'completed_at__isnull': False,
+                'last_active': True,
+                'row_number': 1,
+
+            }
+        )
+        if extra_filter:
+            qs = qs.filter(**extra_filter)
+
+        return qs.order_by('-id')
+
+    @staticmethod
+    def get_clearance_history(type_choice, has_field_name):
+        issuance_subquery = Issuance.objects.filter(
+            student=OuterRef('myedu_id'),
+            type_choices=type_choice,
+            cs_id=OuterRef('id')
+        )
+        issuance_id_subquery = issuance_subquery.values('id')[:1]
+
+        qs = ClearanceSheet.objects.annotate(
+            issuance_id=Subquery(issuance_id_subquery),
+            **{has_field_name: Exists(issuance_subquery)}
+        ).filter(
+            **{has_field_name: True},
+            completed_at__isnull=False
+        ).order_by('-id')
+
+        return qs
+
+    @staticmethod
+    def create_clearance_sheet(student: dict, myedu_id, type_choices=None, completed=False):
+        data = {
+            "myedu_id": myedu_id,
+            "student_fio": student.get('student_fio', ''),
+            "myedu_faculty_id": student.get('faculty_id', 0),
+            "myedu_faculty": student.get('faculty_name', ''),
+            "myedu_spec_id": student.get('speciality_id', 0),
+            "myedu_spec": student.get('speciality_name', ''),
+            "order_status": student.get('id_movement_info', ''),
+            "order": student.get('info', ''),
+            "order_date": student.get('date_movement', ''),
+        }
+
+        if type_choices is not None:
+            data['type_choices'] = type_choices
+        if completed:
+            data['completed_at'] = make_aware(datetime.now())
+
+        return ClearanceSheet.objects.create(**data)
+
+    @staticmethod
+    def remove_issuance_and_history(myedu_id: int, cs_id: int, type_choice: str) -> bool:
+        try:
+            with transaction.atomic():
+                issuance = Issuance.objects.select_for_update().filter(
+                    student=myedu_id, type_choices=type_choice
+                ).first()
+
+                if issuance:
+                    IssuanceHistory.objects.filter(
+                        student=myedu_id,
+                        type_choices=type_choice,
+                        cs=cs_id
+                    ).delete()
+                    issuance.delete()
+                    return True
+                return False
+        except Exception as e:
+            raise IssuanceRemovalError(f"Ошибка при удалении Issuance: {str(e)}") from e
+
+    @staticmethod
+    def get_trajectories_with_annotations(clearance_sheet):
+        latest_status_qs = StageStatus.objects.filter(
+            trajectory=OuterRef('pk')
+        ).order_by('-created_at')
+
+        trajectories = (
+            Trajectory.objects
+            .filter(clearance_sheet=clearance_sheet)
+            .select_related('template_stage', 'template_stage__stage', 'assigned_by')
+            .annotate(
+                last_comment=Subquery(latest_status_qs.values('comment_text')[:1]),
+                last_processed_by_id=Subquery(latest_status_qs.values('processed_by')[:1]),
+            )
+        )
+
+        user_subquery = CustomUser.objects.filter(id=OuterRef('last_processed_by_id')).annotate(
+            full_name=Concat(
+                F('first_name'), Value(' '),
+                F('last_name'), Value(' '),
+                F('fathers_name')
+            )
+        ).values('full_name')[:1]
+
+        return trajectories.annotate(
+            last_processed_by_name=Subquery(user_subquery, output_field=CharField())
+        )

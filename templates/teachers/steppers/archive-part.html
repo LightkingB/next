@@ -35,13 +35,24 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <button type="button" class="btn btn-sm btn-danger mt-md-4 mt-0" data-toggle="modal"
-                                            data-target="#cameraModal">
-                                        <i class="fas fa-camera"></i> Камера
+                                    <canvas id="signature-pad"
+                                            height="200"
+                                            style="border: 2px solid #000; border-radius: 6px; background: #fefeff;">
+
+                                    </canvas>
+                                    <br>
+                                    <button type="button" class="btn btn-sm btn-warning" onclick="clearSignature()">
+                                        <i class="fas fa-broom"></i> Очистить
                                     </button>
                                 </div>
+                                {#                                <div class="form-group">#}
+                                {#                                    <button type="button" class="btn btn-sm btn-danger mt-md-4 mt-0" data-toggle="modal"#}
+                                {#                                            data-target="#cameraModal">#}
+                                {#                                        <i class="fas fa-camera"></i> Камера#}
+                                {#                                    </button>#}
+                                {#                                </div>#}
                             </div>
                         </div>
                         <input type="hidden" name="signature" id="photo">
@@ -71,11 +82,11 @@
                                 </h5>
                                 <h6 class="card-text">
                                     № справки: {{ issuance.id }}<br/>
-{#                                    Регистрационный №: {{ issuance.reg_number }}<br/>#}
+                                    {#                                    Регистрационный №: {{ issuance.reg_number }}<br/>#}
                                     Диплом №: {{ issuance.doc_number }}<br/>
                                     Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
-{#                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}#}
-{#                                    более одного раза {% endif %} <br/>#}
+                                    {#                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}#}
+                                    {#                                    более одного раза {% endif %} <br/>#}
                                     Примечание: {{ issuance.note|date:"-" }}
                                 </h6>
                                 {#                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal"#}
@@ -197,6 +208,78 @@
 
 {% block scripts %}
     <script type="text/javascript">
+        const canvas = document.getElementById("signature-pad");
+        const ctx = canvas.getContext("2d");
+        const hiddenInput = document.getElementById("photo");
+
+        let drawing = false;
+        let points = [];
+
+        // ✍️ Настройки пера как у синей ручки
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#0051ff"; // ярко-синий
+
+        canvas.addEventListener("mousedown", e => {
+            drawing = true;
+            points = [{x: e.offsetX, y: e.offsetY}];
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        });
+
+        canvas.addEventListener("mousemove", e => {
+            if (!drawing) return;
+            const point = {x: e.offsetX, y: e.offsetY};
+            points.push(point);
+            drawSmoothLine();
+        });
+
+        canvas.addEventListener("mouseup", () => {
+            drawing = false;
+            saveSignature();
+        });
+
+        canvas.addEventListener("mouseleave", () => {
+            drawing = false;
+        });
+
+        function drawSmoothLine() {
+            if (points.length < 3) {
+                const b = points[0];
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, ctx.lineWidth / 2, 0, Math.PI * 2, true);
+                ctx.fillStyle = ctx.strokeStyle;
+                ctx.fill();
+                ctx.closePath();
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+
+            for (let i = 1; i < points.length - 2; i++) {
+                const xc = (points[i].x + points[i + 1].x) / 2;
+                const yc = (points[i].y + points[i + 1].y) / 2;
+                ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            }
+
+            ctx.stroke();
+        }
+
+        function saveSignature() {
+            hiddenInput.value = canvas.toDataURL("image/png");
+        }
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hiddenInput.value = "";
+            points = [];
+        }
+
+
         Webcam.set({
             width: 360,
             height: 290,

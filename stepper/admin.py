@@ -77,7 +77,7 @@ class TrajectoryAdmin(admin.ModelAdmin):
 
 @admin.register(Issuance)
 class IssuanceAdmin(admin.ModelAdmin):
-    list_display = ('student', 'get_employee_email', 'doc_number', 'reg_number')
+    list_display = ('student', 'cs', 'doc_number', 'reg_number')
     search_fields = ('student', 'employee__email', 'employee__first_name', 'employee__last_name')
 
     def get_queryset(self, request):
@@ -85,8 +85,8 @@ class IssuanceAdmin(admin.ModelAdmin):
         return qs.select_related('employee')
 
     @admin.display(description="Email")
-    def get_employee_email(self, obj):
-        return obj.employee.email if obj.employee else "-"
+    def get_employee_info(self, obj):
+        return f"{obj.employee.email}: {obj.employee.last_name} {obj.employee.first_name}" if obj.employee else "-"
 
 
 admin.site.register(IssuanceHistory)
