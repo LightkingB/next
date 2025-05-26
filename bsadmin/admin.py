@@ -32,4 +32,16 @@ admin.site.register(Faculty)
 admin.site.register(Speciality)
 admin.site.register(FacultyTranscript)
 admin.site.register(CategoryTranscript)
-admin.site.register(RegistrationTranscript)
+
+
+@admin.register(RegistrationTranscript)
+class RegistrationTranscriptAdmin(admin.ModelAdmin):
+    list_display = ('faculty_transcript', 'student_uuid', 'student_fio')
+    search_fields = (
+        'faculty_transcript__transcript_number',
+        'student_fio'
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('faculty_transcript', )
