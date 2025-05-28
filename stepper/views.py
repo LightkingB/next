@@ -395,8 +395,9 @@ def spec_part_double(request, id, myedu_id):
                 IssuanceHistory.objects.create(student=myedu_id, history=history, cs=id, type_choices=Issuance.SPEC)
                 messages.success(request, "Обработка данных завершена успешно. Дубликат диплома выдан.")
 
-        except DatabaseError:
-            messages.error(request, "Не удалось выдать дубликат диплома")
+        except DatabaseError as e:
+
+            messages.error(request, "Не удалось выдать дубликат диплома" + str(e))
 
     return redirect("stepper:spec-part", id=id, myedu_id=myedu_id)
 
