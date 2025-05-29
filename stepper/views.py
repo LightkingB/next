@@ -384,7 +384,7 @@ def spec_part_double(request, id, myedu_id):
         history = request.POST.get('history', "Дубликат")
 
         try:
-            issuance = Issuance.objects.select_for_update().filter(student=myedu_id, type_choices=Issuance.SPEC).first()
+            issuance = Issuance.objects.filter(student=myedu_id, type_choices=Issuance.SPEC).first()
             if not issuance:
                 messages.error(request, "Не найдено подходящей записи для выдачи дубликата")
                 return redirect("stepper:spec-part", id=id, myedu_id=myedu_id)
@@ -397,7 +397,7 @@ def spec_part_double(request, id, myedu_id):
 
         except DatabaseError as e:
 
-            messages.error(request, "Не удалось выдать дубликат диплома" + str(e))
+            messages.error(request, "Не удалось выдать дубликат диплома")
 
     return redirect("stepper:spec-part", id=id, myedu_id=myedu_id)
 
