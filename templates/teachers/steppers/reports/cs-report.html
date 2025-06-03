@@ -140,7 +140,7 @@
         </div>
 
         <div class="signature text-center">
-            Оператор единого окна: Азимов Амантур Дастанбекович
+            Оператор единого окна: {{ request.user.full_name }}
             {% if cs.completed_at %}
                 <img src="{% static 'img/el-pechat.png' %}" style="max-width: 130px"/>
             {% endif %}
