@@ -45,6 +45,7 @@ def student_index(request):
     context = {
         "cs_list": cs_list,
         "has_cs": has_cs,
+        "student": student
     }
     return render(request, "students/index.html", context)
 

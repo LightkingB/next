@@ -7,14 +7,17 @@
             <div class="alert alert-success fade show" role="alert">
                 <h4> Ваш обходной лист пока не завершён – процесс продолжается.</h4>
             </div>
+        {% else %}
+            {% if student and not request.user.is_worker %}
+                <div class="text-center mb-4">
+                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"
+                            data-target="#requestCS">
+                        Подать заявку
+                    </button>
+                </div>
+            {% endif %}
         {% endif %}
-        {% if not request.user.is_worker %}
-            <div class="text-center mb-4">
-                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#requestCS">
-                    Подать заявку
-                </button>
-            </div>
-        {% endif %}
+
         <hr/>
         <h3 class="text-center">История моих обходных листов</h3>
         <hr/>
@@ -41,10 +44,7 @@
                                         </span>
                                         {% endif %}
                                     </span>
-                                    <a href="{% url 'students:cs-history' cs_id=cs.id %}"
-                                       class="btn btn-sm btn-danger">
-                                        <i class="fas fa-info-circle"></i> {% trans 'Детально' %}
-                                    </a>
+
                                 </h5>
                                 <div class="card-text mb-0">
                                     <ul class="list-group">
@@ -60,10 +60,10 @@
                                                             class="fas fa-hourglass-start"></i></span>
                                                 {% endif %}
                                             </li>
-                                        {% empty %}
-                                            <li class="list-group-item">
-                                                {% trans 'Траектории пока не заданы' %}
-                                            </li>
+{#                                        {% empty %}#}
+{#                                            <li class="list-group-item">#}
+{#                                                {% trans 'Траектории пока не заданы' %}#}
+{#                                            </li>#}
                                         {% endfor %}
                                     </ul>
                                 </div>
