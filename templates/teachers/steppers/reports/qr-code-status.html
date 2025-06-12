@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QR-CODE STATUS</title>
+    <style media="print">
+        /* Скрыть навигацию и всё ненужное */
+        .navbar-qualities,
+        .sidebar,
+        .modal,
+        .modal-backdrop,
+        .d-print-none {
+            display: none !important;
+        }
+
+        /* Упрощение структуры и расширение контента */
+        .main {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        .main * {
+            color: #000 !important;
+            background: #fff !important;
+            box-shadow: none !important;
+        }
+
+        /* Убрать Bootstrap-отступы */
+        .col-md-3 {
+            display: none !important;
+        }
+
+        .col-md-6 {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+
+        /* Границы таблиц при печати */
+        table, th, td {
+            border: 1px solid black !important;
+            border-collapse: collapse !important;
+        }
+
+        th, td {
+            padding: 4px !important;
+        }
+
+        /* Разрыв страницы по строкам */
+        tr {
+            page-break-inside: avoid;
+        }
+
+        table.custom-width {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"/>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <div class="mb-3 text-danger text-center">
+                <h5>
+                    {% if cs.completed_at %}
+                        Обходной лист завершён. Пожалуйста, убедитесь в совпадении ФИО.
+                    {% else %}
+                        Обходной лист не завершён. Пожалуйста, перед продолжением убедитесь в совпадении ФИО.
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="text-center mb-2">
+                <h4 class="font-weight-bold">Обходной лист</h4>
+                <h6 class="text-uppercase font-weight-bold">Ошский государственный университет</h6>
+                <h6 class="font-weight-bold">{{ student.faculty_name }}</h6>
+                <h6 class="font-weight-bold">{{ student.speciality_name }}</h6>
+            </div>
+            <table class="table no-border table-sm w-100 mb-4" style="max-width: 600px; margin: 0 auto;">
+                <tbody>
+                <tr>
+                    <td class="text-right font-weight-bold">Форма обучения:</td>
+                    <td>{{ student.edu_form }}</td>
+                </tr>
+                <tr>
+                    <td class="text-right font-weight-bold">Форма оплаты:</td>
+                    <td>{{ student.payment_form }}</td>
+                </tr>
+                <tr>
+                    <td class="text-right font-weight-bold">Обходной лист №:</td>
+                    <td>{{ cs.id }}</td>
+                </tr>
+                <tr>
+                    <td class="text-right font-weight-bold">Шифр студента:</td>
+                    <td>{{ cs.myedu_id }}</td>
+                </tr>
+                </tbody>
+            </table>
+
+
+            <div class="text-center mb-3">
+                <h4 class="font-weight-bold">{{ student.student_fio }}</h4>
+            </div>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+    <div class="">
+        {% if trajectories %}
+            <div class="table-responsive">
+                <table class="table custom-width table-bordered table-sm table-responsive-md">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Подразделение</th>
+                        <th scope="col">Примечания</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">Подпись, дата</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for trajectory in trajectories %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ trajectory.template_stage.stage.name }}</td>
+                            <td>
+                                {% if trajectory.completed_at %}
+                                    Согласовано
+                                {% endif %}
+                            </td>
+                            <td>{{ trajectory.last_processed_by_name|default:"-" }}</td>
+                            <td>
+                                {{ trajectory.completed_at|date:"d/m/Y H:i"|default:"-" }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="signature text-center">
+        Потвержден
+        {% if cs.completed_at %}
+            <img src="{% static 'img/el-pechat.png' %}" style="max-width: 130px"/>
+        {% endif %}
+        {{ cs.completed_at|date:"d/m/Y H:i"|default:"-" }}
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

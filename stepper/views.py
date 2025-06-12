@@ -1,11 +1,15 @@
+import base64
 import json
 from datetime import datetime
+from io import BytesIO
 
+import qrcode
 from django.contrib import messages
 from django.db import transaction, DatabaseError
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils.timezone import make_aware
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -646,10 +650,19 @@ def cs_report(request, cs_id):
 
     trajectories = request.stepper.get_trajectories_with_annotations(clearance_sheet)
 
+    relative_url = reverse('stepper:qr-code-status', kwargs={'qr_id': cs_id})
+    full_url = request.build_absolute_uri(relative_url)
+
+    qr = qrcode.make(full_url)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    img_str = base64.b64encode(buffer.getvalue()).decode()
+
     context = {
         "title": "История - Перечень завершенных обходных листов",
         "student": student,
         "cs": clearance_sheet,
+        "qr_code": img_str,
         "trajectories": trajectories,
         "navbar": "cs",
     }
@@ -1183,6 +1196,13 @@ def diploma_create_ajax(request):
         form_html = render(request, 'teachers/steppers/partials/partial_diploma_form.html',
                            {'form': form}).content.decode('utf-8')
         return JsonResponse({'form_html': form_html})
+
+
+def qr_code_status(request, qr_id):
+    context = {
+
+    }
+    return render(request, "teachers/steppers/reports/qr-code-status.html", context)
 
 
 def get_cs_filtered_paginated(request, queryset):

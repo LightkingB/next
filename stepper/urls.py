@@ -60,4 +60,6 @@ urlpatterns = [
     path('teachers/cs/', teachers_cs, name='teachers-cs'),
     path('teachers/debts/', teacher_debts, name='teacher-debts'),
     path('teachers/debts/<int:id>/comment/', teacher_debt_comments, name='teacher-debt-comments'),
+
+    path('check/<str:qr_id>/qrcode/status/', qr_code_status, name='qr-code-status')
 ]
