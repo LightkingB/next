@@ -1198,6 +1198,7 @@ def diploma_create_ajax(request):
         return JsonResponse({'form_html': form_html})
 
 
+@with_stepper
 def qr_code_status(request, qr_id):
     clearance_sheet = get_object_or_404(ClearanceSheet, id=qr_id)
 
@@ -1207,7 +1208,6 @@ def qr_code_status(request, qr_id):
     )
 
     trajectories = request.stepper.get_trajectories_with_annotations(clearance_sheet)
-
 
     context = {
         "student": student,
