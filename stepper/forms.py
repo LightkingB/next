@@ -53,18 +53,31 @@ class StageEmployeeForm(forms.ModelForm):
         instance = super().save(commit=False)
 
         role = instance.template_stage.role
-
         if role:
-            if not instance.pk and instance.is_active:
+            roles_to_remove = instance.employee.roles.filter(name__startswith='st')
+            instance.employee.roles.remove(*roles_to_remove)
+            if instance.is_active:
                 instance.employee.roles.add(role)
-            elif instance.is_active:
-                instance.employee.roles.add(role)
-            else:
-                instance.employee.roles.remove(role)
         if commit:
             instance.save()
 
         return instance
+    # def save(self, commit=True):
+    #     instance = super().save(commit=False)
+    #
+    #     role = instance.template_stage.role
+    #
+    #     if role:
+    #         if not instance.pk and instance.is_active:
+    #             instance.employee.roles.add(role)
+    #         elif instance.is_active:
+    #             instance.employee.roles.add(role)
+    #         else:
+    #             instance.employee.roles.remove(role)
+    #     if commit:
+    #         instance.save()
+    #
+    #     return instance
 
 
 class DiplomaForm(forms.ModelForm):
