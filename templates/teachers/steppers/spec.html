@@ -2,14 +2,15 @@
 {% load static i18n custom_filters crispy_forms_tags %}
 
 {% block content %}
-    <div class="container">
+    <div class="container-fluid">
         <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
         <hr/>
         {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
             {% include 'utils/_messages.html' %}
             <form action="" method="get">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-3">
                         <label for="search">ФИО / MyEDU ID / Обх. №:</label>
                         <input type="text"
                                class="form-control form-control-sm"
@@ -21,7 +22,7 @@
                     </div>
 
                     <div class="col-md-2">
-                        <div class="mt-4">
+                        <div class="mt-2 mt-md-4">
                             <button type="submit" class="btn btn-sm btn-danger">
                                 <i class="fas fa-search"></i> Поиск
                             </button>
@@ -38,6 +39,9 @@
                         <th scope="col">#</th>
                         <th scope="col">ФИО</th>
                         <th scope="col">№ Обх. листа</th>
+                        <th scope="col">Приказ</th>
+                        <th scope="col">Дата приказа</th>
+                        <th scope="col">Статус</th>
                         <th scope="col">Факультет</th>
                         <th scope="col">Специальность</th>
                         <th scope="col">№ справки</th>
@@ -53,6 +57,9 @@
                                 </a>
                             </td>
                             <td>{{ student.id }}</td>
+                            <td>{{ student.order|default:"-" }}</td>
+                            <td>{{ student.order_date|default:"-" }}</td>
+                            <td>{{ student.order_status|default:"-" }}</td>
                             <td>{{ student.myedu_faculty }}</td>
                             <td>{{ student.myedu_spec }}</td>
                             <td>{{ student.issuance_id|default:"-" }}</td>

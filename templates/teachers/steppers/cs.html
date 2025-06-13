@@ -85,7 +85,7 @@
                                 <td>{{ student.current_stage|default_if_none:"-" }}</td>
                             {% else %}
                                 <td>
-                                    <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id %}">
+                                    <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}">
                                         {{ student.student_fio }} ({{ student.myedu_id }})
                                     </a>
                                 </td>
@@ -97,7 +97,7 @@
                                         class="fas fa-check-square"></i></td>
                             {% endif %}
                             <td class="text-center">
-                                <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id %}"
+                                <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}"
                                    class="btn btn-sm btn-danger">
                                     <i class="fas fa-seedling"></i>
                                 </a>

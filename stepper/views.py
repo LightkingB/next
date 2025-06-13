@@ -701,13 +701,13 @@ def cs_step_undo(request, cs_id):
 
 
 @with_stepper
-def cs_history(request, myedu_id):
+def cs_history(request, myedu_id, cs_id):
     student = next(
         iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
         None
     )
     order = student.get("info") if student else None
-    cs_student = ClearanceSheet.objects.filter(myedu_id=myedu_id, order=order).order_by('-issued_at').first()
+    cs_student = ClearanceSheet.objects.filter(myedu_id=myedu_id, order=order, id=cs_id).order_by('-issued_at').first()
     trajectories = request.stepper.cs_history_detail(cs_student)
     context = {
         "title": "История обходных листов",
@@ -1200,14 +1200,17 @@ def diploma_create_ajax(request):
 
 @with_stepper
 def qr_code_status(request, qr_id):
-    clearance_sheet = get_object_or_404(ClearanceSheet, id=qr_id)
+    clearance_sheet = ClearanceSheet.objects.filter(id=qr_id).first()
+    student = None
+    trajectories = None
 
-    student = next(
-        iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=clearance_sheet.myedu_id)),
-        None
-    )
+    if clearance_sheet:
+        student = next(
+            iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=clearance_sheet.myedu_id)),
+            None
+        )
 
-    trajectories = request.stepper.get_trajectories_with_annotations(clearance_sheet)
+        trajectories = request.stepper.get_trajectories_with_annotations(clearance_sheet)
 
     context = {
         "student": student,

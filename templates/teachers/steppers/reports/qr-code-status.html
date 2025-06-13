@@ -65,99 +65,105 @@
 </head>
 <body>
 <div class="container">
-    <div class="my-3 text-danger text-center">
-        {% if cs.completed_at %}
-            <h5 class="text-success">
-                Обходной лист завершён. Пожалуйста, убедитесь в совпадении ФИО.
-            </h5>
-        {% else %}
-            <h5 class="text-danger">
-                Обходной лист не завершён. Пожалуйста, перед продолжением убедитесь в совпадении ФИО.
-            </h5>
-        {% endif %}
+    {% if cs %}
+        <div class="my-3 text-danger text-center">
+            {% if cs.completed_at %}
+                <h5 class="text-success">
+                    Обходной лист завершён. Пожалуйста, убедитесь в совпадении ФИО.
+                </h5>
+            {% else %}
+                <h5 class="text-danger">
+                    Обходной лист не завершён. Пожалуйста, перед продолжением убедитесь в совпадении ФИО.
+                </h5>
+            {% endif %}
 
-    </div>
-    <div class="text-center mb-2">
-        <h4 class="font-weight-bold">Обходной лист</h4>
-        <h6 class="text-uppercase font-weight-bold">Ошский государственный университет</h6>
-        <h6 class="font-weight-bold">{{ student.faculty_name }}</h6>
-        <h6 class="font-weight-bold">{{ student.speciality_name }}</h6>
-    </div>
-    <table class="table no-border table-sm w-100 mb-4" style="max-width: 600px; margin: 0 auto;">
-        <tbody>
-        <tr>
-            <td class="text-right font-weight-bold">Форма обучения:</td>
-            <td>{{ student.edu_form }}</td>
-        </tr>
-        <tr>
-            <td class="text-right font-weight-bold">Форма оплаты:</td>
-            <td>{{ student.payment_form }}</td>
-        </tr>
-        <tr>
-            <td class="text-right font-weight-bold">Обходной лист №:</td>
-            <td>{{ cs.id }}</td>
-        </tr>
-        <tr>
-            <td class="text-right font-weight-bold">Шифр студента:</td>
-            <td>{{ cs.myedu_id }}</td>
-        </tr>
-        </tbody>
-    </table>
-
-
-    <div class="text-center mb-3">
-        <h4 class="font-weight-bold">{{ student.student_fio }}</h4>
-    </div>
+        </div>
+        <div class="text-center mb-2">
+            <h4 class="font-weight-bold">Обходной лист</h4>
+            <h6 class="text-uppercase font-weight-bold">Ошский государственный университет</h6>
+            <h6 class="font-weight-bold">{{ student.faculty_name }}</h6>
+            <h6 class="font-weight-bold">{{ student.speciality_name }}</h6>
+        </div>
+        <table class="table no-border table-sm w-100 mb-4" style="max-width: 600px; margin: 0 auto;">
+            <tbody>
+            <tr>
+                <td class="text-right font-weight-bold">Форма обучения:</td>
+                <td>{{ student.edu_form }}</td>
+            </tr>
+            <tr>
+                <td class="text-right font-weight-bold">Форма оплаты:</td>
+                <td>{{ student.payment_form }}</td>
+            </tr>
+            <tr>
+                <td class="text-right font-weight-bold">Обходной лист №:</td>
+                <td>{{ cs.id }}</td>
+            </tr>
+            <tr>
+                <td class="text-right font-weight-bold">Шифр студента:</td>
+                <td>{{ cs.myedu_id }}</td>
+            </tr>
+            </tbody>
+        </table>
 
 
-    <div class="">
-        {% if trajectories %}
-            <div class="table-responsive">
-                <table class="table custom-width table-bordered table-sm table-responsive-md">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Подразделение</th>
-                        <th scope="col">Примечания</th>
-                        <th scope="col">ФИО</th>
-                        <th scope="col">Подпись, дата</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for trajectory in trajectories %}
+        <div class="text-center mb-3">
+            <h4 class="font-weight-bold">{{ student.student_fio }}</h4>
+        </div>
+
+
+        <div class="">
+            {% if trajectories %}
+                <div class="table-responsive">
+                    <table class="table custom-width table-bordered table-sm table-responsive-md">
+                        <thead class="thead-light">
                         <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ trajectory.template_stage.stage.name }}</td>
-                            <td>
-                                {% if trajectory.completed_at %}
-                                    Согласовано
-                                {% endif %}
-                            </td>
-                            <td>{{ trajectory.last_processed_by_name|default:"-" }}</td>
-                            <td>
-                                {{ trajectory.completed_at|date:"d/m/Y H:i"|default:"-" }}
-                            </td>
+                            <th scope="col">#</th>
+                            <th scope="col">Подразделение</th>
+                            <th scope="col">Примечания</th>
+                            <th scope="col">ФИО</th>
+                            <th scope="col">Подпись, дата</th>
                         </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
-    </div>
+                        </thead>
+                        <tbody class="order">
+                        {% for trajectory in trajectories %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ trajectory.template_stage.stage.name }}</td>
+                                <td>
+                                    {% if trajectory.completed_at %}
+                                        Согласовано
+                                    {% endif %}
+                                </td>
+                                <td>{{ trajectory.last_processed_by_name|default:"-" }}</td>
+                                <td>
+                                    {{ trajectory.completed_at|date:"d/m/Y H:i"|default:"-" }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr class="table-warning nosort">
+                                <td colspan="100%" class="text-center">
+                                    <small class="text-muted">{% trans 'Пусто' %}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
 
-    <div class="signature text-center">
-        Потвержден
-        {% if cs.completed_at %}
-            <img src="{% static 'img/el-pechat.png' %}" style="max-width: 130px"/>
-        {% endif %}
-        {{ cs.completed_at|date:"d/m/Y H:i"|default:"-" }}
-    </div>
+        <div class="signature text-center">
+            Потвержден
+            {% if cs.completed_at %}
+                <img src="{% static 'img/el-pechat.png' %}" style="max-width: 130px"/>
+            {% endif %}
+            {{ cs.completed_at|date:"d/m/Y H:i"|default:"-" }}
+        </div>
+    {% else %}
+        <h4 class="my-4 text-danger">
+            Обходной лист не найден. Пожалуйста, проверьте правильность.
+        </h4>
+    {% endif %}
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
