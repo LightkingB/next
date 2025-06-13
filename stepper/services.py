@@ -199,6 +199,9 @@ class StepperService:
                 "fio": sheet.student_fio,
                 "faculty_name": sheet.myedu_faculty,
                 "spec_name": sheet.myedu_spec,
+                "order": sheet.order,
+                "order_date": sheet.order_date,
+                "order_status": sheet.order_status,
                 "current_stage": clearance_with_stage.get(sheet.id),
                 "myedu_id": sheet.myedu_id,
                 "completed_at": sheet.completed_at

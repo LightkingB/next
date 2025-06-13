@@ -555,7 +555,8 @@ def cs(request):
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
 
-    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0).select_related('stage')
+    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
+                                         stage__is_mandatory=True).select_related('stage')
 
     context = {
         "title": "Перечень сформированных обходных листов",
@@ -593,8 +594,8 @@ def cs_debt_stage(request, stage):
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
 
-    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0).select_related('stage')
-
+    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
+                                         stage__is_mandatory=True).select_related('stage')
     current_stage = TemplateStep.objects.filter(id=stage).select_related('stage').first()
 
     context = {
@@ -709,12 +710,16 @@ def cs_history(request, myedu_id, cs_id):
     order = student.get("info") if student else None
     cs_student = ClearanceSheet.objects.filter(myedu_id=myedu_id, order=order, id=cs_id).order_by('-issued_at').first()
     trajectories = request.stepper.cs_history_detail(cs_student)
+
+    issuance = Issuance.objects.filter(cs_id=cs_id).first()
+
     context = {
         "title": "История обходных листов",
         "navbar": "cs-done",
         "trajectories": trajectories,
         "cs_student": cs_student,
-        "student": student
+        "student": student,
+        "issuance": issuance
     }
     return render(request, "teachers/steppers/cs-history.html", context)
 
