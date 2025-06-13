@@ -87,7 +87,7 @@
                                     Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
                                     {#                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}#}
                                     {#                                    более одного раза {% endif %} <br/>#}
-                                    Примечание: {{ issuance.note|date:"-" }}
+                                    Примечание: {{ issuance.note|default:"-" }}
                                 </h6>
                                 {#                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal"#}
                                 {#                                        data-target="#doubleCS">#}

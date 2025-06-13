@@ -9,29 +9,31 @@
 
             {% if issuance %}
                 <hr/>
-                <div class="card mb-3" style="max-width: 540px;">
-                    <div class="row no-gutters">
-                        <div class="col-md-4">
-                            {% if  issuance.signature %}
-                                <img src="{{ issuance.signature.url }}" class="card-img" alt="...">
-                            {% else %}
-                                <img src="{% static 'img/No-photo-m.png' %}" class="card-img" alt="...">
-                            {% endif %}
-                        </div>
-                        <div class="col-md-8">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    Обходной лист №: {{ student.id }}
-                                </h5>
-                                <h6 class="card-text">
-                                    № справки: {{ issuance.id }}<br/>
-                                    Регистрационный №: {{ issuance.reg_number }}<br/>
-                                    Диплом №: {{ issuance.doc_number }}<br/>
-                                    Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
-                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
-                                    более одного раза {% endif %}<br/>
-                                    Примечание: {{ issuance.note|date:"-" }}
-                                </h6>
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="card mb-3" style="max-width: 540px;">
+                        <div class="row no-gutters">
+                            <div class="col-md-4">
+                                {% if  issuance.signature %}
+                                    <img src="{{ issuance.signature.url }}" class="card-img" alt="...">
+                                {% else %}
+                                    <img src="{% static 'img/No-photo-m.png' %}" class="card-img" alt="...">
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        Обходной лист №: {{ student.id }}
+                                    </h5>
+                                    <h6 class="card-text">
+                                        № справки: {{ issuance.id }}<br/>
+                                        Регистрационный №: {{ issuance.reg_number }}<br/>
+                                        Диплом №: {{ issuance.doc_number }}<br/>
+                                        Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
+                                        Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
+                                        более одного раза {% endif %}<br/>
+                                        Примечание: {{ issuance.note|default:"-" }}
+                                    </h6>
+                                </div>
                             </div>
                         </div>
                     </div>
