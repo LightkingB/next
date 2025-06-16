@@ -4,61 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <title>QR-CODE STATUS</title>
-    <style media="print">
-        /* Скрыть навигацию и всё ненужное */
-        .navbar-qualities,
-        .sidebar,
-        .modal,
-        .modal-backdrop,
-        .d-print-none {
-            display: none !important;
-        }
-
-        /* Упрощение структуры и расширение контента */
-        .main {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-        }
-
-        .main * {
-            color: #000 !important;
-            background: #fff !important;
-            box-shadow: none !important;
-        }
-
-        /* Убрать Bootstrap-отступы */
-        .col-md-3 {
-            display: none !important;
-        }
-
-        .col-md-6 {
-            width: 100% !important;
-            max-width: 100% !important;
-            flex: 0 0 100% !important;
-        }
-
-        /* Границы таблиц при печати */
-        table, th, td {
-            border: 1px solid black !important;
-            border-collapse: collapse !important;
-        }
-
-        th, td {
-            padding: 4px !important;
-        }
-
-        /* Разрыв страницы по строкам */
-        tr {
-            page-break-inside: avoid;
-        }
-
-        table.custom-width {
-            max-width: 100% !important;
-            width: 100% !important;
-            margin: 0 !important;
-        }
-    </style>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"/>
     <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
@@ -66,15 +11,15 @@
 <body>
 <div class="container">
     {% if cs %}
-        <div class="my-3 text-danger text-center">
+        <div class="my-4 text-danger text-center">
             {% if cs.completed_at %}
-                <h4 class="text-success">
+                <h3 class="text-success">
                     Обходной лист найден. Пожалуйста, убедитесь в совпадении ФИО.
-                </h4>
+                </h3>
             {% else %}
-                <h4 class="text-danger">
+                <h3 class="text-danger">
                     Обходной лист не завершён. Пожалуйста, перед продолжением убедитесь в совпадении ФИО.
-                </h4>
+                </h3>
             {% endif %}
 
         </div>
@@ -160,9 +105,9 @@
             {{ cs.completed_at|date:"d/m/Y H:i"|default:"-" }}
         </div>
     {% else %}
-        <h4 class="my-4 text-danger">
+        <h3 class="my-4 text-danger">
             Обходной лист не найден. Пожалуйста, проверьте правильность.
-        </h4>
+        </h3>
     {% endif %}
 </div>
 
