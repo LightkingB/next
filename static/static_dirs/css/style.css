@@ -620,3 +620,7 @@ table.no-border th {
     }
 
 }
+
+.total-row td {
+    font-weight: bold;
+}

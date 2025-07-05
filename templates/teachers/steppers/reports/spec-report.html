@@ -1,0 +1,68 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters crispy_forms_tags %}
+
+{% block content %}
+    <div class="container">
+        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
+        <hr/>
+        {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-md">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Количество</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for faculty in statistics %}
+                        <tr {% if forloop.last %}class="total-row"{% endif %}>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ faculty.myedu_faculty }}</td>
+                            <td>{{ faculty.total }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#faculty').change(function () {
+                const faculty_id = $(this).val();
+
+                if (faculty_id) {
+                    $.ajax({
+                        url: "{% url 'stepper:load-specialities' %}",
+                        data: {
+                            'faculty_id': faculty_id
+                        },
+                        success: function (data) {
+                            $('#speciality').empty();
+                            $('#speciality').append('<option value="">Выберите специальность</option>');
+                            $.each(data, function (index, item) {
+                                $('#speciality').append('<option value="' + item.myedu_spec_id + '">' + item.title + '</option>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#speciality').empty();
+                    $('#speciality').append('<option value="">Выберите специальность</option>');
+                }
+            });
+        });
+    </script>
+{% endblock %}

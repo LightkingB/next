@@ -3,7 +3,7 @@ from datetime import datetime
 import requests
 from django.contrib import messages
 from django.db import transaction, IntegrityError
-from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery, Value, CharField
+from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery, Value, CharField, Count
 from django.db.models.functions import RowNumber, Concat
 from django.http import Http404
 from django.utils.timezone import make_aware
@@ -502,6 +502,37 @@ class StepperService:
         ).order_by('-id')
 
         return qs
+
+    @staticmethod
+    def get_clearance_statistics_by_faculty(type_choice, has_field_name):
+        issuance_subquery = Issuance.objects.filter(
+            student=OuterRef('myedu_id'),
+            type_choices=type_choice,
+            cs_id=OuterRef('id')
+        )
+
+        issuance_id_subquery = issuance_subquery.values('id')[:1]
+
+        base_qs = ClearanceSheet.objects.annotate(
+            issuance_id=Subquery(issuance_id_subquery),
+            **{has_field_name: Exists(issuance_subquery)}
+        ).filter(
+            **{has_field_name: True},
+            completed_at__isnull=False
+        )
+
+        stats = list(base_qs.values('myedu_faculty').annotate(
+            total=Count('id')
+        ).order_by('myedu_faculty'))
+
+        total_sum = sum(item['total'] for item in stats)
+
+        stats.append({
+            'myedu_faculty': 'Итого',
+            'total': total_sum
+        })
+
+        return stats
 
     @staticmethod
     def create_clearance_sheet(student: dict, myedu_id, type_choices=None, completed=False):

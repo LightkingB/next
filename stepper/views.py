@@ -201,6 +201,18 @@ def spec_history(request):
 
 
 @with_stepper
+def spec_report(request):
+    statistics = request.stepper.get_clearance_statistics_by_faculty(TypeChoices.SPEC, 'has_spec')
+
+    context = {
+        "title": "Отчётная статистика по завершённым обходным листам",
+        "navbar": "spec-report",
+        "statistics": statistics
+    }
+    return render(request, "teachers/steppers/reports/spec-report.html", context)
+
+
+@with_stepper
 def archive_history(request):
     qs = request.stepper.get_clearance_history(TypeChoices.OTHER, 'has_archive')
     students, form = get_cs_filtered_paginated(request, qs)

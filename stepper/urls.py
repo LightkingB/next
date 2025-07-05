@@ -30,6 +30,7 @@ urlpatterns = [
     path('spec/students/', spec_students, name='spec-students'),
     path('spec/diploma/', spec_diploma, name='spec-diploma'),
     path('spec/history/', spec_history, name='spec-history'),
+    path('spec/report/', spec_report, name='spec-report'),
     path('spec/avn/', spec_avn, name='spec-avn'),
     path('spec/<int:id>/<int:myedu_id>/student/', spec_part, name='spec-part'),
     path('spec/<int:id>/<int:myedu_id>/sync/', spec_sync, name='spec-sync'),

@@ -19,28 +19,37 @@
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="form-row">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Номер диплома</label>
                                     <input type="text" name="doc_number" class="form-control form-control-sm" required
                                            value="{{ form.doc_number.value|default:'' }}" placeholder="0000012345">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Регистрационный номер</label>
                                     <input type="text" name="reg_number" class="form-control form-control-sm"
                                            value="{{ form.reg_number.value|default:'' }}" placeholder="1234">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Дата выдачи</label>
                                     <input type="date" name="date_issue" class="form-control form-control-sm" required
                                            value="{{ form.date_issue.value|default:'' }}">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Паспортные данные</label>
+                                    <input type="text" name="inn" class="form-control form-control-sm"
+                                           value="{{ form.inn.value|default:'' }}" placeholder="ID123456">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Примечание (если есть)</label>
                                     <input type="text" name="note" class="form-control form-control-sm"
@@ -106,6 +115,7 @@
                                     Регистрационный №: {{ issuance.reg_number }}<br/>
                                     Диплом №: {{ issuance.doc_number }}<br/>
                                     Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
+                                    Паспортные данные: {{ issuance.inn|default:"-" }} <br/>
                                     Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
                                     более одного раза {% endif %}<br/>
                                     Примечание: {{ issuance.note|default:"-" }}

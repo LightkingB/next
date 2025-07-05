@@ -100,7 +100,7 @@
         <div class="signature text-center">
             Потвержден
             {% if cs.completed_at %}
-                <img src="{% static 'img/el-pechat.png' %}" style="max-width: 130px"/>
+                    <img src="{% static 'img/el-pechat.png' %}" style="max-width: 130px"/>
             {% endif %}
             {{ cs.completed_at|date:"d/m/Y H:i"|default:"-" }}
         </div>
