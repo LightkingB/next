@@ -95,8 +95,8 @@ class StepperService:
 
     @staticmethod
     def create_issuance_form(form, user, signature_base64, **myedu):
-        if not signature_base64:
-            return None, "Снимите студента на камеру"
+        # if not signature_base64:
+        #     return None, "Снимите студента на камеру"
 
         if not form.is_valid():
             return None, "Введите корректные данные"

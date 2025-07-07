@@ -56,28 +56,28 @@
                                            value="{{ form.note.value|default:'' }}" placeholder="123456789">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+{#                            <div class="col-md-4">#}
+{#                                <div class="form-group">#}
+{#                                    <canvas id="signature-pad"#}
+{#                                            height="200"#}
+{#                                            style="border: 2px solid #000; border-radius: 6px; background: #fefeff;">#}
+{##}
+{#                                    </canvas>#}
+{#                                    <br>#}
+{#                                    <button type="button" class="btn btn-sm btn-warning" onclick="clearSignature()">#}
+{#                                        <i class="fas fa-broom"></i> Очистить#}
+{#                                    </button>#}
+{#                                </div>#}
+{#                            </div>#}
+                            <div class="col-md-4 mt-0 mt-md-4">
                                 <div class="form-group">
-                                    <canvas id="signature-pad"
-                                            height="200"
-                                            style="border: 2px solid #000; border-radius: 6px; background: #fefeff;">
-
-                                    </canvas>
-                                    <br>
-                                    <button type="button" class="btn btn-sm btn-warning" onclick="clearSignature()">
-                                        <i class="fas fa-broom"></i> Очистить
+{#                                    <label>Снимите студента на камеру</label>#}
+                                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"
+                                            data-target="#cameraModal">
+                                        <i class="fas fa-camera"></i> Камера
                                     </button>
                                 </div>
                             </div>
-                            {#                            <div class="col-md-3">#}
-                            {#                                <div class="form-group">#}
-                            {#                                    <label>Снимите студента на камеру</label>#}
-                            {#                                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"#}
-                            {#                                            data-target="#cameraModal">#}
-                            {#                                        <i class="fas fa-camera"></i> Камера#}
-                            {#                                    </button>#}
-                            {#                                </div>#}
-                            {#                            </div>#}
                         </div>
                         <input type="hidden" name="signature" id="photo">
                         <div class="text-center">
