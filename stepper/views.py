@@ -4,6 +4,7 @@ from datetime import datetime
 from io import BytesIO
 
 import qrcode
+from PIL import Image
 from django.contrib import messages
 from django.db import transaction, DatabaseError
 from django.db.models import Q

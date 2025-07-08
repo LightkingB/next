@@ -56,17 +56,8 @@
                                            value="{{ form.note.value|default:'' }}" placeholder="123456789">
                                 </div>
                             </div>
-                            <div class="col-md-4 mt-0 mt-md-4 text-center">
-                                <div class="form-group">
-                                    <div class="signature-preview-container mb-3">
-                                        <img id="signature-preview" class="signature-preview-img"
-                                             src="{% static 'img/No-photo-m.png' %}" alt="Нет подписи">
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-primary" id="openSignature">
-                                        <i class="fas fa-signature"></i> Подписаться
-                                    </button>
-                                </div>
-
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-primary" id="openSignature">Подписать</button>
                                 {#                                <div class="form-group">#}
                                 {#                                    <canvas id="signature-pad"#}
                                 {#                                            height="200"#}
@@ -89,8 +80,9 @@
                             {#                                </div>#}
                             {#                            </div>#}
                         </div>
-                        <input type="hidden" name="signature" id="signature">
+                        <input type="hidden" name="signature" id="photo">
                         <div class="text-center">
+                            <a href="{% url 'stepper:signature' %}" class="btn btn-sm btn-danger">Подпись</a>
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <i class="fas fa-save"></i> Сохранить
                             </button>
@@ -109,14 +101,11 @@
                 <div class="card mb-3" style="max-width: 540px;">
                     <div class="row no-gutters">
                         <div class="col-md-4">
-                            <div class="signature-preview-container">
-                                {% if issuance.signature %}
-                                    <img src="{{ issuance.signature.url }}" class="signature-preview-img" alt="Подпись">
-                                {% else %}
-                                    <img src="{% static 'img/No-photo-m.png' %}" class="signature-preview-img"
-                                         alt="Нет подписи">
-                                {% endif %}
-                            </div>
+                            {% if  issuance.signature %}
+                                <img src="{{ issuance.signature.url }}" class="card-img" alt="...">
+                            {% else %}
+                                <img src="{% static 'img/No-photo-m.png' %}" class="card-img" alt="...">
+                            {% endif %}
                         </div>
                         <div class="col-md-8">
                             <div class="card-body">
@@ -138,11 +127,10 @@
                                     <i class="fas fa-question-circle"></i> Выдать дубликат
                                 </button>
 
-                                <button type="button" class="btn btn-sm btn-danger"
-                                        data-toggle="modal"
-                                        data-target="#removeCS">
-                                    <i class="fas fa-trash-alt"></i> Удалить
-                                </button>
+                                {#                                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"#}
+                                {#                                        data-target="#removeCS">#}
+                                {#                                    <i class="fas fa-trash-alt"></i> Удалить#}
+                                {#                                </button>#}
                             </div>
                         </div>
                     </div>
@@ -273,13 +261,16 @@
         </div>
     </div>
 
-    <!-- ПОЛНОЭКРАННЫЙ CANVAS -->
-    <div id="signatureScreen">
-        <canvas id="signatureCanvas"></canvas>
-        <div class="signature-controls">
-            <button class="btn btn-primary" id="saveSignature">Сохранить</button>
-            <button class="btn btn-danger" id="clearSignature">Очистить</button>
-            <button class="btn btn-warning" id="cancelSignature">Отмена</button>
+
+    <!-- Полноэкранный canvas -->
+    <div id="signatureFullScreen"
+         style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:white; z-index:9999;">
+        <canvas id="signatureCanvas" style="width:100%; height:100%;"></canvas>
+
+        <div style="position:absolute; bottom:20px; left:20px; z-index:10000;">
+            <button class="btn btn-success" id="saveSignature">Сохранить</button>
+            <button class="btn btn-warning" id="clearSignature">Очистить</button>
+            <button class="btn btn-secondary" id="cancelSignature">Отмена</button>
         </div>
     </div>
 {% endblock %}
@@ -290,5 +281,47 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="{% static 'js/signature.js' %}"></script>
+    <script type="text/javascript">
+        Webcam.set({
+            width: 360,
+            height: 290,
+            image_format: 'jpeg',
+            jpeg_quality: 90
+        });
+
+        $('#cameraModal').on('shown.bs.modal', function () {
+            Webcam.attach('#camera');
+        });
+
+        $('#cameraModal').on('hidden.bs.modal', function () {
+            Webcam.reset();
+        });
+
+        function takeSnapshot() {
+            Webcam.snap(function (dataUri) {
+                document.getElementById('photo').value = dataUri;
+                $('#cameraModal').modal('hide');
+            });
+        }
+
+
+        $('#imageModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var imagePath = button.data('image');
+
+            var modal = $(this);
+            var imgElement = modal.find('#imageModalContent');
+            var noImageText = modal.find('#noImageText');
+
+            if (imagePath) {
+                imgElement.attr('src', imagePath).show();
+                noImageText.hide();
+            } else {
+                imgElement.hide();
+                noImageText.show();
+            }
+        });
+
+    </script>
+{#    <script src="{% static 'js/signature.js' %}"></script>#}
 {% endblock %}
