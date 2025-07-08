@@ -174,6 +174,8 @@ class StepperService:
                 Q(student_fio__icontains=search_query) | Q(myedu_id__icontains=search_query)
             )
 
+        open_clearance_sheets = open_clearance_sheets.order_by("-id")
+
         trajectories = (
             Trajectory.objects
             .filter(
@@ -188,7 +190,7 @@ class StepperService:
                 )
             )
             .filter(row_number=1)
-            .select_related("clearance_sheet", "template_stage")
+            .select_related("clearance_sheet", "template_stage", "template_stage__stage")
         )
 
         clearance_with_stage = {t.clearance_sheet_id: t.template_stage for t in trajectories}

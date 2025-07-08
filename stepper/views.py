@@ -580,6 +580,31 @@ def cs(request):
 
 
 @with_stepper
+@require_POST
+def cs_delete(request):
+    cs_id = request.POST.get("cs_id")
+
+    clearance_sheet_detail = ClearanceSheet.objects.filter(id=cs_id).first()
+    if not clearance_sheet_detail:
+        messages.error(request, f"Обходной лист №{cs_id} не найден.")
+        return redirect("stepper:cs")
+
+    has_trajectory = Trajectory.objects.filter(clearance_sheet_id=clearance_sheet_detail.id).exists()
+    has_issuance = Issuance.objects.filter(cs_id=clearance_sheet_detail.id).exists()
+
+    if not has_trajectory and not has_issuance:
+        clearance_sheet_detail.delete()
+        messages.success(request, f"Обходной лист №{cs_id} успешно удалён. ФИО: {clearance_sheet_detail.student_fio}")
+    else:
+        messages.error(
+            request,
+            f"Обходной лист №{cs_id} не может быть удалён, так как уже находится в процессе прохождения."
+        )
+
+    return redirect("stepper:cs")
+
+
+@with_stepper
 def cs_done(request):
     search_query = request.GET.get('search')
     students_qs = request.stepper.cs_done_list(search_query)

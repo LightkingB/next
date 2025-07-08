@@ -58,6 +58,7 @@
                         <th scope="col">ФИО</th>
                         <th scope="col">Отчёт (Печать)</th>
                         <th scope="col">Об. лист №</th>
+
                         <th scope="col">Приказ</th>
                         <th scope="col">Дата приказа</th>
                         <th scope="col">Статус</th>
@@ -65,13 +66,12 @@
                         <th scope="col">Специальность</th>
                         {% if not history %}
                             <th scope="col">Текущий шаг</th>
+                            <th scope="col">Удалить</th>
                         {% else %}
                             <th scope="col">Направление</th>
                             <th scope="col">Статус (время)</th>
                         {% endif %}
                         <th scope="col">История</th>
-
-
                     </tr>
                     </thead>
                     <tbody class="order">
@@ -97,6 +97,16 @@
                                 <td>{{ student.faculty_name }}</td>
                                 <td>{{ student.spec_name }}</td>
                                 <td>{{ student.current_stage|default_if_none:"-" }}</td>
+                                <td class="text-center">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            data-toggle="modal"
+                                            data-target="#deleteModal"
+                                            data-cs-id="{{ student.id }}"
+                                            data-student-name="{{ student.fio|default:"-" }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
                             {% else %}
                                 <td>
                                     <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}">
@@ -121,7 +131,7 @@
                             {% endif %}
                             <td class="text-center">
                                 <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}"
-                                   class="btn btn-sm btn-danger">
+                                   class="btn btn-sm btn-success">
                                     <i class="fas fa-seedling"></i>
                                 </a>
                             </td>
@@ -143,5 +153,46 @@
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form method="post" action="{% url 'stepper:cs-delete' %}">
+                {% csrf_token %}
+                <input type="hidden" name="cs_id" id="modal-cs-id">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Подтверждение удаления</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить обходной лист: <strong id="modal-student-name"></strong>?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $('#deleteModal').on('show.bs.modal', function (event) {
+            let button = $(event.relatedTarget);
+            let csId = button.data('cs-id');
+            let studentName = button.data('student-name');
+
+            let modal = $(this);
+            modal.find('#modal-cs-id').val(csId);
+            modal.find('#modal-student-name').text(studentName);
+        });
+    </script>
 {% endblock %}
 
