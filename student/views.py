@@ -16,38 +16,45 @@ def student_index(request):
     if not request.user.is_authenticated:
         return redirect("students:next-student-login")
 
-    student = next(
-        iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=request.user.myedu_id)),
-        None)
+    myedu_id = request.user.myedu_id
 
-    if request.method == "POST":
-        if student:
-            ClearanceSheet.objects.create(
-                myedu_id=request.user.myedu_id,
-                student_fio=student.get('student_fio', ''),
-                myedu_faculty_id=student.get('faculty_id', 0),
-                myedu_faculty=student.get('faculty_name', ''),
-                myedu_spec_id=student.get('speciality_id', 0),
-                myedu_spec=student.get('speciality_name', ''),
-                order_status=student.get('id_movement_info', ''),
-                order=student.get('info', ''),
-                order_date=student.get('date_movement', '')
-            )
-            messages.success(request, "Заявка успешно отправлена")
+    student_data = request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)
+    student = next(iter(student_data), None)
+
+    active_cs_qs = ClearanceSheet.objects.filter(myedu_id=myedu_id, completed_at__isnull=True)
+    has_cs = active_cs_qs.exists()
+
+    if request.method == "POST" and student and not has_cs:
+        ClearanceSheet.objects.create(
+            myedu_id=myedu_id,
+            student_fio=student.get('student_fio', ''),
+            myedu_faculty_id=student.get('faculty_id', 0),
+            myedu_faculty=student.get('faculty_name', ''),
+            myedu_spec_id=student.get('speciality_id', 0),
+            myedu_spec=student.get('speciality_name', ''),
+            order_status=student.get('id_movement_info', ''),
+            order=student.get('info', ''),
+            order_date=student.get('date_movement', '')
+        )
+        messages.success(request, "Заявка успешно отправлена")
+        has_cs = True
 
     trajectory_prefetch = Prefetch(
         'trajectory_set',
-        queryset=Trajectory.objects.select_related('template_stage', 'template_stage__stage', 'assigned_by')
+        queryset=Trajectory.objects.select_related(
+            'template_stage',
+            'template_stage__stage',
+            'assigned_by'
+        )
     )
-    has_cs = ClearanceSheet.objects.filter(myedu_id=request.user.myedu_id, completed_at__isnull=True).exists()
-    cs_list = ClearanceSheet.objects.filter(myedu_id=request.user.myedu_id).prefetch_related(trajectory_prefetch)
 
-    context = {
+    cs_list = ClearanceSheet.objects.filter(myedu_id=myedu_id).prefetch_related(trajectory_prefetch)
+
+    return render(request, "students/index.html", {
         "cs_list": cs_list,
         "has_cs": has_cs,
         "student": student
-    }
-    return render(request, "students/index.html", context)
+    })
 
 
 def student_cs_history_detail(request, cs_id):
