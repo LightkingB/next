@@ -43,8 +43,7 @@ class CSFilter(django_filters.FilterSet):
         fields = ['search', ]
 
     def filter_search(self, queryset, name, value):
-        return queryset.filter(
-            Q(myedu_id__icontains=value) |
-            Q(student_fio__icontains=value) |
-            Q(id=value)
-        )
+        query = Q(myedu_id__icontains=value) | Q(student_fio__icontains=value)
+        if value.isdigit():
+            query |= Q(id=int(value))
+        return queryset.filter(query)
