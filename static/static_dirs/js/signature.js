@@ -1,3 +1,46 @@
+Webcam.set({
+    width: 360,
+    height: 290,
+    image_format: 'jpeg',
+    jpeg_quality: 90
+});
+
+$('#cameraModal').on('shown.bs.modal', function () {
+    Webcam.attach('#camera');
+});
+
+$('#cameraModal').on('hidden.bs.modal', function () {
+    Webcam.reset();
+});
+
+function takeSnapshot() {
+    Webcam.snap(function (dataUri) {
+        document.getElementById('photo').value = dataUri;
+        const preview = document.getElementById('profile-preview');
+        if (preview) {
+            preview.src = dataUri;
+        }
+        $('#cameraModal').modal('hide');
+    });
+}
+
+
+$('#imageModal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var imagePath = button.data('image');
+
+    var modal = $(this);
+    var imgElement = modal.find('#imageModalContent');
+    var noImageText = modal.find('#noImageText');
+
+    if (imagePath) {
+        imgElement.attr('src', imagePath).show();
+        noImageText.hide();
+    } else {
+        imgElement.hide();
+        noImageText.show();
+    }
+});
 document.addEventListener("DOMContentLoaded", function () {
     const canvas = document.getElementById("signatureCanvas");
     const ctx = canvas.getContext("2d");

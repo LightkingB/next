@@ -19,48 +19,42 @@
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="form-row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Номер диплома</label>
                                     <input type="text" name="doc_number" class="form-control form-control-sm" required
                                            value="{{ form.doc_number.value|default:'' }}" placeholder="0000012345">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Регистрационный номер</label>
                                     <input type="text" name="reg_number" class="form-control form-control-sm"
                                            value="{{ form.reg_number.value|default:'' }}" placeholder="1234">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Дата выдачи</label>
                                     <input type="date" name="date_issue" class="form-control form-control-sm" required
                                            value="{{ form.date_issue.value|default:'' }}">
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Паспортные данные</label>
                                     <input type="text" name="inn" class="form-control form-control-sm"
                                            value="{{ form.inn.value|default:'' }}" placeholder="ID123456">
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Примечание (если есть)</label>
-                                    <input type="text" name="note" class="form-control form-control-sm"
-                                           value="{{ form.note.value|default:'' }}" placeholder="123456789">
-                                </div>
-                            </div>
-                            <div class="col-md-4 mt-0 mt-md-4 text-center">
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-4 text-center">
                                 <div class="form-group" id="openSignature">
+                                    <label>Вставьте подпись</label>
                                     <div class="signature-preview-container mb-3">
                                         <img id="signature-preview" class="signature-preview-img"
-                                             src="{% static 'img/signature.png' %}" alt="Нет подписи">
+                                             src="{% static 'img/signature.jpg' %}" alt="Нет подписи">
                                     </div>
                                     <button type="button" class="btn btn-sm btn-primary">
                                         <i class="fas fa-signature"></i> Подписаться
@@ -79,17 +73,38 @@
                                 {#                                    </button>#}
                                 {#                                </div>#}
                             </div>
-                            {#                            <div class="col-md-4 mt-0 mt-md-4">#}
-                            {#                                <div class="form-group">#}
-                            {#                                    <label>Снимите студента на камеру</label>#}
-                            {#                                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"#}
-                            {#                                            data-target="#cameraModal">#}
-                            {#                                        <i class="fas fa-camera"></i> Камера#}
-                            {#                                    </button>#}
-                            {#                                </div>#}
-                            {#                            </div>#}
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label>Примечание (если есть)</label>
+                                    {#                                    <input type="text" name="note" class="form-control form-control-sm"#}
+                                    {#                                           value="{{ form.note.value|default:'' }}" placeholder="123456789">#}
+                                    <textarea name="note" class="form-control" placeholder="Доверенность..."
+                                              rows="4">{{ form.note.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center">
+
+                                <div class="form-group">
+                                    <label>Снимите студента на камеру</label>
+                                    <div class="signature-preview-container mb-3">
+                                        <img id="profile-preview"
+                                             class="signature-preview-img"
+                                             src="{% static 'img/nophoto.jpg' %}"
+                                             alt="Нет подписи">
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            data-toggle="modal"
+                                            data-target="#cameraModal">
+                                        <i class="fas fa-camera"></i> Камера
+                                    </button>
+                                </div>
+                            </div>
+
+
                         </div>
+                        <input type="hidden" name="profile" id="photo">
                         <input type="hidden" name="signature" id="signature">
+                        <hr/>
                         <div class="text-center">
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <i class="fas fa-save"></i> Сохранить
@@ -106,9 +121,9 @@
             {% endif %}
             <hr/>
             {% if issuance %}
-                <div class="card mb-3" style="max-width: 540px;">
+                <div class="card mb-3" style="max-width: 650px;">
                     <div class="row no-gutters">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="signature-preview-container">
                                 {% if issuance.signature %}
                                     <img src="{{ issuance.signature.url }}" class="signature-preview-img" alt="Подпись">
@@ -118,11 +133,12 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     Обходной лист №: {{ student.id }}
                                 </h5>
+
                                 <h6 class="card-text">
                                     № справки: {{ issuance.id }}<br/>
                                     Регистрационный №: {{ issuance.reg_number }}<br/>
@@ -143,6 +159,16 @@
                                         data-target="#removeCS">
                                     <i class="fas fa-trash-alt"></i> Удалить
                                 </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="signature-preview-container">
+                                {% if issuance.profile %}
+                                    <img src="{{ issuance.profile.url }}" class="signature-preview-img" alt="Подпись">
+                                {% else %}
+                                    <img src="{% static 'img/No-photo-m.png' %}" class="signature-preview-img"
+                                         alt="Нет подписи">
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -290,5 +316,9 @@
 {% endblock %}
 
 {% block scripts %}
+    <script type="text/javascript">
+
+
+    </script>
     <script src="{% static 'js/signature.js' %}"></script>
 {% endblock %}

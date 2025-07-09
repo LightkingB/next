@@ -326,6 +326,7 @@ def spec_part(request, id, myedu_id):
     if request.method == "POST":
         form = IssuanceForm(request.POST, request.FILES)
         signature_base64 = request.POST.get('signature')
+        profile_base64 = request.POST.get('profile')
         instance, error = request.stepper.create_issuance_form(
             form=form,
             user=request.user,
@@ -334,7 +335,8 @@ def spec_part(request, id, myedu_id):
             cs_id=student.id,
             faculty_id=student.myedu_faculty_id,
             specialty_id=student.myedu_spec_id,
-            type=Issuance.SPEC
+            type=Issuance.SPEC,
+            profile_base64=profile_base64
         )
         if error:
             messages.error(request, error)

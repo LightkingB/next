@@ -212,6 +212,7 @@ class Issuance(models.Model):
     phone = models.CharField(max_length=20, verbose_name=_("Телефон"), null=True, blank=True)
     inn = models.CharField(verbose_name=_("ИНН"), max_length=100, blank=True, null=True)
     signature = models.ImageField(upload_to="document/", null=True, blank=True)
+    profile = models.ImageField(upload_to="document/profile/", null=True, blank=True)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, verbose_name=_("Получил"), default=RECEIVED)
     type_choices = models.CharField(max_length=50, verbose_name=_("Выберите тип"), choices=TypeChoices.choices,
                                     default=OTHER)

@@ -12,7 +12,7 @@ def to_bool(value):
     return True
 
 
-def save_signature_image(base64_image):
+def save_signature_image(base64_image, storage="signatures"):
     try:
         if not base64_image or ';base64,' not in base64_image:
             return None
@@ -29,7 +29,7 @@ def save_signature_image(base64_image):
 
         imgdata = base64.b64decode(imgstr)
 
-        filename = f"signatures/{uuid.uuid4()}.{extension}"
+        filename = f"{storage}/{uuid.uuid4()}.{extension}"
         return ContentFile(imgdata, name=filename)
 
     except Exception:

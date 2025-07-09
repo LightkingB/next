@@ -95,8 +95,8 @@ class StepperService:
 
     @staticmethod
     def create_issuance_form(form, user, signature_base64, **myedu):
-        # if not signature_base64:
-        #     return None, "Снимите студента на камеру"
+        if not signature_base64:
+            return None, "Обязательное наличие подписи"
 
         if not form.is_valid():
             return None, "Введите корректные данные"
@@ -116,6 +116,12 @@ class StepperService:
 
         if signature_file:
             instance.signature = signature_file
+
+        if myedu.get('profile_base64', None):
+            profile_file = save_signature_image(myedu['profile_base64'], storage="users")
+
+            if profile_file:
+                instance.profile = profile_file
 
         instance.employee = user
         instance.save()
