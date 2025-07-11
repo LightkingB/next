@@ -753,6 +753,11 @@ def cs_history(request, myedu_id, cs_id):
 
     issuance = Issuance.objects.filter(cs_id=cs_id).first()
 
+    if request.method == "POST":
+        cs_student.type_choices = ClearanceSheet.SPEC
+        cs_student.save()
+        messages.success(request, "Восстановление данных выполнено успешно.")
+
     context = {
         "title": "История обходных листов",
         "navbar": "cs-done",

@@ -60,7 +60,6 @@
                                         <i class="fas fa-signature"></i> Подписаться
                                     </button>
                                 </div>
-
                                 {#                                <div class="form-group">#}
                                 {#                                    <canvas id="signature-pad"#}
                                 {#                                            height="200"#}
@@ -143,11 +142,12 @@
                                     № справки: {{ issuance.id }}<br/>
                                     Регистрационный №: {{ issuance.reg_number }}<br/>
                                     Диплом №: {{ issuance.doc_number }}<br/>
-                                    Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
+                                    Дата выдачи диплома: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
                                     Паспортные данные: {{ issuance.inn|default:"-" }} <br/>
                                     Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
                                     более одного раза {% endif %}<br/>
-                                    Примечание: {{ issuance.note|default:"-" }}
+                                    Примечание: {{ issuance.note|default:"-" }}<br/>
+                                    Дата создания записи: {{ issuance.created_at|date:"d-m-Y" }}
                                 </h6>
                                 <button type="button" class="btn btn-sm btn-primary" data-toggle="modal"
                                         data-target="#doubleCS">

@@ -35,27 +35,27 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <canvas id="signature-pad"
-                                            height="200"
-                                            style="border: 2px solid #000; border-radius: 6px; background: #fefeff;">
 
-                                    </canvas>
-                                    <br>
-                                    <button type="button" class="btn btn-sm btn-warning" onclick="clearSignature()">
-                                        <i class="fas fa-broom"></i> Очистить
+                            <div class="col-md-4 text-center">
+                                <div class="form-group" id="openSignature">
+                                    <label>Вставьте подпись</label>
+                                    <div class="signature-preview-container mb-3">
+                                        <img id="signature-preview" class="signature-preview-img"
+                                             src="{% static 'img/signature.jpg' %}" alt="Нет подписи">
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-signature"></i> Подписаться
                                     </button>
                                 </div>
-                                {#                                <div class="form-group">#}
-                                {#                                    <button type="button" class="btn btn-sm btn-danger mt-md-4 mt-0" data-toggle="modal"#}
-                                {#                                            data-target="#cameraModal">#}
-                                {#                                        <i class="fas fa-camera"></i> Камера#}
-                                {#                                    </button>#}
-                                {#                                </div>#}
                             </div>
+                            {#                                <div class="form-group">#}
+                            {#                                    <button type="button" class="btn btn-sm btn-danger mt-md-4 mt-0" data-toggle="modal"#}
+                            {#                                            data-target="#cameraModal">#}
+                            {#                                        <i class="fas fa-camera"></i> Камера#}
+                            {#                                    </button>#}
+                            {#                                </div>#}
                         </div>
-                        <input type="hidden" name="signature" id="photo">
+                        <input type="hidden" name="signature" id="signature">
                         <div class="text-center">
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <i class="fas fa-save"></i> Сохранить
@@ -84,10 +84,10 @@
                                     № справки: {{ issuance.id }}<br/>
                                     {#                                    Регистрационный №: {{ issuance.reg_number }}<br/>#}
                                     Диплом №: {{ issuance.doc_number }}<br/>
-                                    Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
+                                    Дата выдачи документа: {{ issuance.created_at|date:"d-m-Y" }} <br/>
                                     {#                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}#}
                                     {#                                    более одного раза {% endif %} <br/>#}
-                                    Примечание: {{ issuance.note|default:"-" }}
+                                    Примечание: {{ issuance.note|default:"-" }} <br/>
                                 </h6>
                                 {#                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal"#}
                                 {#                                        data-target="#doubleCS">#}
@@ -110,27 +110,27 @@
         {% endif %}
     </div>
 
-    <div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cameraModalLabel">Сделать фото</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div id="camera">
-                        <div class="camera-ring"></div>
-                    </div>
-                    <button type="button" class="btn btn-danger mt-3" onclick="takeSnapshot()">
-                        <i class="fas fa-camera"></i> Снять
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {#    <div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel"#}
+    {#         aria-hidden="true">#}
+    {#        <div class="modal-dialog" role="document">#}
+    {#            <div class="modal-content">#}
+    {#                <div class="modal-header">#}
+    {#                    <h5 class="modal-title" id="cameraModalLabel">Сделать фото</h5>#}
+    {#                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">#}
+    {#                        <span aria-hidden="true">&times;</span>#}
+    {#                    </button>#}
+    {#                </div>#}
+    {#                <div class="modal-body">#}
+    {#                    <div id="camera">#}
+    {#                        <div class="camera-ring"></div>#}
+    {#                    </div>#}
+    {#                    <button type="button" class="btn btn-danger mt-3" onclick="takeSnapshot()">#}
+    {#                        <i class="fas fa-camera"></i> Снять#}
+    {#                    </button>#}
+    {#                </div>#}
+    {#            </div>#}
+    {#        </div>#}
+    {#    </div>#}
 
     <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel"
          aria-hidden="true">
@@ -199,6 +199,16 @@
             </div>
         </div>
     </div>
+
+    <!-- ПОЛНОЭКРАННЫЙ CANVAS -->
+    <div id="signatureScreen">
+        <canvas id="signatureCanvas"></canvas>
+        <div class="signature-controls">
+            <button class="btn btn-primary" id="saveSignature">Сохранить</button>
+            <button class="btn btn-danger" id="clearSignature">Очистить</button>
+            <button class="btn btn-warning" id="cancelSignature">Отмена</button>
+        </div>
+    </div>
 {% endblock %}
 
 
@@ -207,47 +217,5 @@
 {% endblock %}
 
 {% block scripts %}
-    <script type="text/javascript">
-        Webcam.set({
-            width: 360,
-            height: 290,
-            image_format: 'jpeg',
-            jpeg_quality: 90
-        });
-
-        $('#cameraModal').on('shown.bs.modal', function () {
-            Webcam.attach('#camera');
-        });
-
-        $('#cameraModal').on('hidden.bs.modal', function () {
-            Webcam.reset();
-        });
-
-        function takeSnapshot() {
-            Webcam.snap(function (dataUri) {
-                document.getElementById('photo').value = dataUri;
-                $('#cameraModal').modal('hide');
-            });
-        }
-
-
-        $('#imageModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget);
-            var imagePath = button.data('image');
-
-            var modal = $(this);
-            var imgElement = modal.find('#imageModalContent');
-            var noImageText = modal.find('#noImageText');
-
-            if (imagePath) {
-                imgElement.attr('src', imagePath).show();
-                noImageText.hide();
-            } else {
-                imgElement.hide();
-                noImageText.show();
-            }
-        });
-
-    </script>
     <script src="{% static 'js/signature.js' %}"></script>
 {% endblock %}

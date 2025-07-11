@@ -31,7 +31,8 @@
                                         Дата выдачи: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
                                         Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
                                         более одного раза {% endif %}<br/>
-                                        Примечание: {{ issuance.note|default:"-" }}
+                                        Примечание: {{ issuance.note|default:"-" }} <br/>
+                                        Дата создания записи: {{ issuance.created_at|date:"d-m-Y" }}
                                     </h6>
                                 </div>
                             </div>
@@ -40,6 +41,45 @@
                 </div>
             {% else %}
 
+
+            {% endif %}
+            <hr/>
+            {% if cs_student and cs_student.type_choices != "speciality" %}
+                <div class="text-center">
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"
+                            data-target="#exampleModal">
+                        Восстановить в спец. часть <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                     aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form method="post" action="">
+                                {% csrf_token %}
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Процесс восстановления!!!</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    Вы действительно хотите восстановить <b>{{ cs_student.student_fio }}</b> в спец.
+                                    часть ?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">
+                                        Закрыть
+                                    </button>
+                                    <button type="submit" class="btn btn-sm btn-danger">Восстановить</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             {% endif %}
             <hr/>
             <div class="stage-status">
