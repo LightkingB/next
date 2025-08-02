@@ -9,3 +9,7 @@ TEACHER_STEPPER_URL = f"{API_URL}/obhadnoi/searchstudent/debt"
 
 STUDENT_CS = "student"
 TEACHER_CS = "teacher"
+
+
+CS_PROCESS = 1
+CS_FINISHED = 2

@@ -18,7 +18,7 @@ from django.views.decorators.http import require_POST
 from bsadmin.consts import STADMIN
 from bsadmin.models import Faculty, Speciality
 from stepper.choices import TypeChoices
-from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS
+from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS, CS_PROCESS
 from stepper.decorators import with_stepper
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
@@ -644,6 +644,32 @@ def cs_debt_stage(request, stage):
         "navbar": "cs",
         "stage": True,
         "current_stage": current_stage,
+        "stages": stages
+    }
+    return render(request, "teachers/steppers/cs.html", context)
+
+
+@with_stepper
+def cs_status(request):
+    search_query = request.GET.get('search')
+    status_param = CS_PROCESS
+    if request.method == "POST":
+        status_param = int(request.POST.get("status", CS_PROCESS))
+
+    students_qs = request.stepper.get_clearance_sheets_status(status_param, search_query)
+
+    paginator = Pagination(request, students_qs)
+    page_number = request.GET.get('page', 1)
+    students = paginator.pagination(page_number)
+
+    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
+                                         stage__is_mandatory=True).select_related('stage')
+
+    context = {
+        "title": "Перечень обходных листов",
+        "students": students,
+        "navbar": "cs",
+        "stage": True,
         "stages": stages
     }
     return render(request, "teachers/steppers/cs.html", context)

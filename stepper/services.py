@@ -10,7 +10,7 @@ from django.utils.timezone import make_aware
 
 from bsadmin.consts import MYEDU_LOGIN, MYEDU_PASSWORD
 from bsadmin.models import CustomUser, Faculty, Speciality
-from stepper.consts import EMPTY_RESPONSE_STEPPER_DATA, STUDENT_CS, TEACHER_CS
+from stepper.consts import EMPTY_RESPONSE_STEPPER_DATA, STUDENT_CS, TEACHER_CS, CS_PROCESS, CS_FINISHED
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
 from stepper.models import Issuance, ClearanceSheet, Trajectory, StageStatus, StageEmployee, TemplateStep, \
@@ -211,6 +211,40 @@ class StepperService:
                 "order_date": sheet.order_date,
                 "order_status": sheet.order_status,
                 "current_stage": clearance_with_stage.get(sheet.id),
+                "myedu_id": sheet.myedu_id,
+                "completed_at": sheet.completed_at
+            }
+            for sheet in open_clearance_sheets
+        ]
+
+        return students
+
+    @staticmethod
+    def get_clearance_sheets_status(status_param, search_query=None):
+        open_clearance_sheets = ClearanceSheet.objects.filter(category=ClearanceSheet.STUDENT,
+                                                              type_choices__isnull=True, last_active=True)
+        if search_query:
+            open_clearance_sheets = open_clearance_sheets.filter(
+                Q(student_fio__icontains=search_query) | Q(myedu_id__icontains=search_query)
+            )
+
+        if status_param == CS_FINISHED:
+            open_clearance_sheets = open_clearance_sheets.filter(completed_at__isnull=False)
+        else:
+            open_clearance_sheets = open_clearance_sheets.filter(completed_at__isnull=True)
+
+        open_clearance_sheets = open_clearance_sheets.order_by("-id")
+
+        students = [
+            {
+                "id": sheet.id,
+                "fio": sheet.student_fio,
+                "faculty_name": sheet.myedu_faculty,
+                "spec_name": sheet.myedu_spec,
+                "order": sheet.order,
+                "order_date": sheet.order_date,
+                "order_status": sheet.order_status,
+                "current_stage": None,
                 "myedu_id": sheet.myedu_id,
                 "completed_at": sheet.completed_at
             }

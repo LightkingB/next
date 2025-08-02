@@ -18,6 +18,7 @@ urlpatterns = [
     path('stage/employee/<int:pk>/update/', stage_employee_update, name='stage-employee-update'),
 
     path('cs/', cs, name='cs'),
+    path('cs/status/', cs_status, name='cs-status'),
     path('cs/delete/', cs_delete, name='cs-delete'),
     path('cs/done/', cs_done, name='cs-done'),
     path('cs/issuance/', cs_issuance, name='cs-issuance'),

@@ -11,42 +11,52 @@
         <hr/>
 
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
-            <div class="row justify-content-between">
-                <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-4">
                     <form action="" method="get">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-8">
                                 <input type="text" name="search" class="form-control form-control-sm mb-2 mb-md-0"
                                        placeholder="Введите ФИО | уникальный номер"/>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <button type="submit" class="btn btn-sm btn-danger">
                                     <i class="fas fa-search"></i> Поиск
                                 </button>
                             </div>
-                            <div class="col-md-6 mt-3 mt-md-0 text-left">
-                                <div class="btn-group" role="group" aria-label="Basic mixed styles example">
-                                    {% if not history %}
-                                        <a type="button" href="{% url 'stepper:cs' %}"
-                                           class="btn btn-sm btn-primary">
-                                            <i class="fas fa-globe-europe"></i> Все
-                                        </a>
-                                    {% endif %}
-                                    {% for stage in stages %}
-                                        {% get_stage_button_class forloop.counter as stage_classes %}
 
-                                        <a type="button" href="{% url 'stepper:cs-stage' stage=stage.stage.id %}"
-                                           class="btn btn-sm {{ stage_classes.btn_class }}">
-                                            <i class="{{ stage_classes.icon_class }}"></i> {{ stage.stage.name }}
-                                        </a>
-                                    {% endfor %}
-                                </div>
-
-                            </div>
                         </div>
                     </form>
                 </div>
+                <div class="col-md-6 mt-3 mt-md-0 text-center">
+                    <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                        {% if not history %}
+                            <a type="button" href="{% url 'stepper:cs' %}"
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-globe-europe"></i> Все
+                            </a>
+                        {% endif %}
+                        {% for stage in stages %}
+                            {% get_stage_button_class forloop.counter as stage_classes %}
 
+                            <a type="button" href="{% url 'stepper:cs-stage' stage=stage.stage.id %}"
+                               class="btn btn-sm {{ stage_classes.btn_class }}">
+                                <i class="{{ stage_classes.icon_class }}"></i> {{ stage.stage.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <form action="{% url 'stepper:cs-status' %}" method="post" id="status-form">
+                        {% csrf_token %}
+                        <select class="custom-select my-1 mr-sm-2" name="status" id="status-select">
+                            <option value="" {% if not request.POST.status %}selected{% endif %}>---------</option>
+                            <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>В процессе</option>
+                            <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>Завершенные
+                            </option>
+                        </select>
+                    </form>
+                </div>
             </div>
             <hr/>
             {% include 'utils/_messages.html' %}
@@ -192,6 +202,10 @@
             let modal = $(this);
             modal.find('#modal-cs-id').val(csId);
             modal.find('#modal-student-name').text(studentName);
+        });
+
+        document.getElementById('status-select').addEventListener('change', function () {
+            document.getElementById('status-form').submit();
         });
     </script>
 {% endblock %}
