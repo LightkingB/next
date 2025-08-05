@@ -203,12 +203,22 @@ def spec_history(request):
 
 @with_stepper
 def spec_report(request):
-    statistics = request.stepper.get_clearance_statistics_by_faculty(TypeChoices.SPEC, 'has_spec')
+    active_edu_year = request.stepper.active_edu_year()
+    edu_years = request.stepper.edu_years()
+
+    if request.method == "POST":
+        form_edu_year = request.POST.get("edu_year")
+        if form_edu_year:
+            active_edu_year = request.stepper.filter_edu_year_by_id(edu_year_id=form_edu_year)
+
+    statistics = request.stepper.get_clearance_statistics_by_faculty(TypeChoices.SPEC, active_edu_year, 'has_spec')
 
     context = {
-        "title": "Отчётная статистика по завершённым обходным листам",
+        "title": f"Обходной лист - отчёт за {active_edu_year} учебный год",
         "navbar": "spec-report",
-        "statistics": statistics
+        "statistics": statistics,
+        "active_edu_year": active_edu_year,
+        "edu_years": edu_years
     }
     return render(request, "teachers/steppers/reports/spec-report.html", context)
 

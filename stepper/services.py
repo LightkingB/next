@@ -137,6 +137,14 @@ class StepperService:
         return EduYear.objects.filter(active=True).first()
 
     @staticmethod
+    def filter_edu_year_by_id(edu_year_id):
+        return EduYear.objects.filter(id=edu_year_id).first()
+
+    @staticmethod
+    def edu_years():
+        return EduYear.objects.all()
+
+    @staticmethod
     def cs_done_list(search_query=None):
         clearance_sheets = ClearanceSheet.objects.filter(category=ClearanceSheet.STUDENT,
                                                          type_choices__isnull=False).order_by('-completed_at')
@@ -550,7 +558,7 @@ class StepperService:
         return qs
 
     @staticmethod
-    def get_clearance_statistics_by_faculty(type_choice, has_field_name):
+    def get_clearance_statistics_by_faculty(type_choice, edu_year, has_field_name):
         issuance_subquery = Issuance.objects.filter(
             student=OuterRef('myedu_id'),
             type_choices=type_choice,
@@ -564,6 +572,7 @@ class StepperService:
             **{has_field_name: Exists(issuance_subquery)}
         ).filter(
             **{has_field_name: True},
+            edu_year=edu_year,
             completed_at__isnull=False
         )
 

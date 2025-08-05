@@ -5,6 +5,27 @@
     <div class="container">
         <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
         <hr/>
+        <form action="" method="post">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="col-md-3">
+                    <select name="edu_year" class="form-control">
+                        {% for edu_year in edu_years %}
+                            <option value="{{ edu_year.id }}"
+                                    {% if edu_year.id == active_edu_year.id %}
+                                    selected {% endif %}>
+                                {{ edu_year.title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-danger"><i class="fa fa-search"></i> Поиск</button>
+                </div>
+            </div>
+        </form>
+        <hr/>
         {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
             <div class="table-responsive">
                 <table class="table table-bordered table-sm table-responsive-md">
