@@ -38,6 +38,7 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">ФИО</th>
+                        <th scope="col">Отчёт (Печать)</th>
                         <th scope="col">№ Обх. листа</th>
                         <th scope="col">Факультет</th>
                         <th scope="col">Специальность</th>
@@ -53,10 +54,16 @@
                                     {{ student.student_fio }} ({{ student.myedu_id }})
                                 </a>
                             </td>
-                            <td>{{ student.id }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'stepper:cs-report' cs_id=student.id %}"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">{{ student.id }}</td>
                             <td>{{ student.myedu_faculty }}</td>
                             <td>{{ student.myedu_spec }}</td>
-                            <td>{{ student.issuance_id|default:"-" }}</td>
+                            <td class="text-center">{{ student.issuance_id|default:"-" }}</td>
                         </tr>
                     {% empty %}
                         <tr class="table-warning nosort">
