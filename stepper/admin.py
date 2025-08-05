@@ -16,7 +16,9 @@ class TemplateStepAdmin(admin.ModelAdmin):
     list_editable = ('order', 'role',)
 
 
-admin.site.register(EduYear)
+@admin.register(EduYear)
+class EduYearAdmin(admin.ModelAdmin):
+    list_display = ('title', 'active', 'commission_active')
 
 
 @admin.register(StageEmployee)

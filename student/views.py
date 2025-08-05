@@ -34,7 +34,8 @@ def student_index(request):
             myedu_spec=student.get('speciality_name', ''),
             order_status=student.get('id_movement_info', ''),
             order=student.get('info', ''),
-            order_date=student.get('date_movement', '')
+            order_date=student.get('date_movement', ''),
+            edu_year=request.stepper.active_edu_year()
         )
         messages.success(request, "Заявка успешно отправлена")
         has_cs = True

@@ -14,7 +14,7 @@ from stepper.consts import EMPTY_RESPONSE_STEPPER_DATA, STUDENT_CS, TEACHER_CS, 
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
 from stepper.models import Issuance, ClearanceSheet, Trajectory, StageStatus, StageEmployee, TemplateStep, \
-    IssuanceHistory
+    IssuanceHistory, EduYear
 from utils.convert import save_signature_image
 
 
@@ -131,6 +131,10 @@ class StepperService:
     @staticmethod
     def active_cs():
         return ClearanceSheet.objects.filter(completed_at__isnull=True)
+
+    @staticmethod
+    def active_edu_year():
+        return EduYear.objects.filter(active=True).first()
 
     @staticmethod
     def cs_done_list(search_query=None):
@@ -576,8 +580,7 @@ class StepperService:
 
         return stats
 
-    @staticmethod
-    def create_clearance_sheet(student: dict, myedu_id, type_choices=None, completed=False):
+    def create_clearance_sheet(self, student: dict, myedu_id, type_choices=None, completed=False):
         data = {
             "myedu_id": myedu_id,
             "student_fio": student.get('student_fio', ''),
@@ -588,6 +591,7 @@ class StepperService:
             "order_status": student.get('id_movement_info', ''),
             "order": student.get('info', ''),
             "order_date": student.get('date_movement', ''),
+            "edu_year": self.active_edu_year()
         }
 
         if type_choices is not None:

@@ -16,6 +16,7 @@ class EduYear(models.Model):
     """Учебный год """
     title = models.CharField(max_length=100, verbose_name="Название")
     active = models.BooleanField(default=False)
+    commission_active = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = _("Учебный год")
@@ -116,6 +117,8 @@ class ClearanceSheet(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Дата завершения"),
                                         help_text=_("Дата завершения обходного листа."))
     last_active = models.BooleanField(default=True, verbose_name=_("Последний активный обходной"))
+    edu_year = models.ForeignKey(EduYear, on_delete=models.SET_NULL, null=True, blank=True,
+                                 verbose_name=_("Учебный год"))
 
     def update_completed_at(self):
         has_null_trajectories = self.trajectory_set.filter(completed_at__isnull=True)
