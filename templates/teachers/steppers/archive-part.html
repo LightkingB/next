@@ -20,18 +20,33 @@
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="form-row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Документ №</label>
-                                    <input type="text" name="doc_number" class="form-control form-control-sm" required
-                                           value="{{ form.doc_number.value|default:'' }}" placeholder="0000012345">
+                            <div class="col-md-4">
+                                <div class="form-row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Документ №</label>
+                                            <input type="text" name="doc_number" class="form-control form-control-sm"
+                                                   required
+                                                   value="{{ form.doc_number.value|default:'' }}"
+                                                   placeholder="0000012345">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Паспортные данные (если есть*)</label>
+                                            <input type="text" name="passport_archive"
+                                                   class="form-control form-control-sm"
+                                                   value="{{ form.passport_archive.value|default:'' }}"
+                                                   placeholder="0000012345">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Примечание (если есть)</label>
-                                    <input type="text" name="note" class="form-control form-control-sm"
-                                           value="{{ form.note.value|default:'' }}" placeholder="123456789">
+                                    <textarea name="note" class="form-control" placeholder="Доверенность..."
+                                              rows="4">{{ form.note.value|default:'' }}</textarea>
                                 </div>
                             </div>
 
@@ -84,6 +99,7 @@
                                     № справки: {{ issuance.id }}<br/>
                                     {#                                    Регистрационный №: {{ issuance.reg_number }}<br/>#}
                                     Диплом №: {{ issuance.doc_number }}<br/>
+                                    Паспортные данные №: {{ issuance.passport_archive|default:"-" }}<br/>
                                     Дата выдачи документа: {{ issuance.created_at|date:"d-m-Y" }} <br/>
                                     {#                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}#}
                                     {#                                    более одного раза {% endif %} <br/>#}

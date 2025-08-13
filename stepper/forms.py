@@ -26,7 +26,7 @@ class IssuanceForm(forms.ModelForm):
         model = Issuance
         fields = (
             'doc_number', 'reg_number', 'files', 'signature', 'date_issue', 'fio', 'phone', 'inn', 'faculty',
-            'speciality', 'note'
+            'speciality', 'note', 'passport_archive'
         )
 
 

@@ -214,6 +214,7 @@ class Issuance(models.Model):
     fio = models.CharField(max_length=150, verbose_name=_("ФИО"), null=True, blank=True)
     phone = models.CharField(max_length=20, verbose_name=_("Телефон"), null=True, blank=True)
     inn = models.CharField(verbose_name=_("ИНН"), max_length=100, blank=True, null=True)
+    passport_archive = models.CharField(max_length=255, verbose_name=_("Паспорт (архив)"), null=True, blank=True)
     signature = models.ImageField(upload_to="document/", null=True, blank=True)
     profile = models.ImageField(upload_to="document/profile/", null=True, blank=True)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, verbose_name=_("Получил"), default=RECEIVED)
