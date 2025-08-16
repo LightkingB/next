@@ -398,8 +398,12 @@ class StepperService:
     def mandatory_stages():
         return TemplateStep.objects.filter(stage__is_mandatory=True)
 
-    def get_cs_employees_by_category(self, employee_stage, category=None):
+    def get_cs_employees_by_category(self, employee_stage, category=None, status_filter=None):
         mandatory_stages = self.mandatory_stages().filter(category=category)
+
+        latest_comment_subquery = StageStatus.objects.filter(
+            trajectory=OuterRef("trajectory__id")
+        ).order_by("-id").values("comment_text")[:1]
 
         subquery = Trajectory.objects.filter(
             clearance_sheet=OuterRef("trajectory__clearance_sheet"),
@@ -418,11 +422,22 @@ class StepperService:
             .annotate(
                 has_unfinished_previous_stage=Exists(subquery),
                 current_trajectory_id=F("trajectory__id"),
+                last_comment=Subquery(latest_comment_subquery),
                 status=F("trajectory__completed_at")
             )
             .filter(has_unfinished_previous_stage=False)
             .order_by("-trajectory__update_at")
         )
+        if status_filter == 1:
+            has_status_subquery = StageStatus.objects.filter(
+                trajectory=OuterRef("trajectory__id")
+            ).values("id")
+            employees = employees.annotate(has_status=Exists(has_status_subquery)).filter(has_status=True)
+        elif status_filter == 2:
+            no_status_subquery = StageStatus.objects.filter(
+                trajectory=OuterRef("trajectory__id")
+            ).values("id")
+            employees = employees.annotate(no_status=Exists(no_status_subquery)).filter(no_status=False)
 
         return employees
 

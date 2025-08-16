@@ -3,7 +3,7 @@
 
 
 {% block content %}
-    <div class="container">
+    <div class="container-fluid">
         {% if CUSTOM_ROLES.STDEBT in DB_ROLES %}
             {% if history %}
                 <h3 class="text-center text-success">
@@ -15,34 +15,43 @@
                 </h3>
                 <h4 class="text-center text-danger mb-0">Текущий этап ({{ employee.template_stage.stage }})</h4>
             {% endif %}
-
             <hr/>
-            <div class="row">
-                <div class="col-md-8">
-                    <form action="" method="get">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="search">ФИО / MyEDU ID:</label>
-                                <input type="text" class="form-control form-control-sm" name="search"
-                                       placeholder="230795"
-                                       id="search"/>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="mt-4">
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-search"></i> Поиск
-                                    </button>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <form action="" method="get">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label for="search">ФИО / MyEDU ID:</label>
+                                    <input type="text" class="form-control form-control-sm" name="search"
+                                           placeholder="230795"
+                                           id="search"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="my-2 mt-md-4 mb-md-0">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-search"></i> Поиск
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="col-md-4 text-right">
-
-                    {#                        <a href="{% url 'stepper:debts-history' %}" class="btn btn-sm btn-warning mt-0 mt-md-4">#}
-                    {#                            <i class="fas fa-history"></i> {% trans 'История' %}#}
-                    {#                        </a>#}
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        {% if not history %}
+                            <label for="status-form">Статус:</label>
+                            <form action="" method="post" id="status-form">
+                                {% csrf_token %}
+                                <select class="custom-select custom-select-sm" name="status" id="status-select">
+                                    <option value="0" {% if not request.POST.status %}selected{% endif %}>Все</option>
+                                    <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>В процессе
+                                    </option>
+                                    <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные
+                                    </option>
+                                </select>
+                            </form>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -57,6 +66,12 @@
                         <th scope="col">{% trans 'ФИО' %}</th>
                         <th scope="col">{% trans 'Кафедра' %}</th>
                         <th scope="col">{% trans 'Специальность' %}</th>
+                        <th scope="col">Приказ</th>
+                        <th scope="col">Дата приказа</th>
+                        <th scope="col">Статус</th>
+                        {% if not history %}
+                            <th scope="col">Ваш вердикт</th>
+                        {% endif %}
                     </tr>
                     </thead>
                     <tbody class="order">
@@ -77,6 +92,12 @@
                             </td>
                             <td>{{ student.myedu_faculty }}</td>
                             <td>{{ student.myedu_spec }}</td>
+                            <td>{{ student.order|default:"-" }}</td>
+                            <td>{{ student.order_date|default:"-" }}</td>
+                            <td>{{ student.order_status|default:"-" }}</td>
+                            {% if not history %}
+                                <td>{{ student.last_comment|default:"-" }}</td>
+                            {% endif %}
                         </tr>
                     {% empty %}
                         <tr class="table-warning nosort">
@@ -95,4 +116,12 @@
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        document.getElementById('status-select').addEventListener('change', function () {
+            document.getElementById('status-form').submit();
+        });
+    </script>
 {% endblock %}

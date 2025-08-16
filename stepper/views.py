@@ -996,10 +996,15 @@ def debts(request):
 
     search_query = request.GET.get('search')
 
+    status_param = None
+    if request.method == "POST":
+        status_param = int(request.POST.get("status"))
+
     if employee:
         students_qs = request.stepper.get_cs_employees_by_category(
             employee.template_stage,
-            category=TemplateStep.STUDENT
+            category=TemplateStep.STUDENT,
+            status_filter=status_param
         )
         if search_query:
             students_qs = students_qs.filter(
