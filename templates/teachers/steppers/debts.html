@@ -43,7 +43,7 @@
                             <form action="" method="post" id="status-form">
                                 {% csrf_token %}
                                 <select class="custom-select custom-select-sm" name="status" id="status-select">
-                                    <option value="0" {% if not request.POST.status %}selected{% endif %}>Все</option>
+                                    <option value="0" {% if not request.POST.status %}selected{% endif %}>Все активные</option>
                                     <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>В процессе
                                     </option>
                                     <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные
@@ -57,7 +57,7 @@
 
                             <select class="custom-select custom-select-sm" name="status" id="status-select">
 
-                                <option value="0" {% if not request.POST.status %}selected{% endif %}>Все</option>
+                                <option value="0" {% if not request.POST.status %}selected{% endif %}>Все активные</option>
                                 <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>В процессе
                                 </option>
                                 <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные
