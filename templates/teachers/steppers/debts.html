@@ -48,8 +48,22 @@
                                     </option>
                                     <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные
                                     </option>
+                                    <option value="3" {% if request.POST.status == '3' %}selected{% endif %}>История
+                                    </option>
                                 </select>
                             </form>
+                        {% else %}
+                            <label for="status-form">Статус:</label>
+
+                            <select class="custom-select custom-select-sm" name="status" id="status-select">
+
+                                <option value="0" {% if not request.POST.status %}selected{% endif %}>Все</option>
+                                <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>В процессе
+                                </option>
+                                <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные
+                                </option>
+                                <option value="3" selected>История</option>
+                            </select>
                         {% endif %}
                     </div>
                 </div>
@@ -88,7 +102,6 @@
                                         {{ student.student_fio }} ({{ student.myedu_id }})
                                     </a>
                                 {% endif %}
-
                             </td>
                             <td>{{ student.myedu_faculty }}</td>
                             <td>{{ student.myedu_spec }}</td>
@@ -120,8 +133,31 @@
 
 {% block scripts %}
     <script type="text/javascript">
-        document.getElementById('status-select').addEventListener('change', function () {
-            document.getElementById('status-form').submit();
-        });
+        {% if history %}
+            const select = document.getElementById('status-select');
+            select.addEventListener('change', function () {
+                const value = this.value;
+
+                if (value !== 3) {
+                    const form = document.createElement('form');
+                    form.method = 'post';
+                    form.action = '/stepper/debts/';
+
+                    const csrfToken = '{{ csrf_token }}';
+                    form.innerHTML = `
+            <input type="hidden" name="status" value="${value}">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+        `;
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        {% else %}
+            document.getElementById('status-select').addEventListener('change', function () {
+                document.getElementById('status-form').submit();
+            });
+        {% endif %}
+
     </script>
 {% endblock %}

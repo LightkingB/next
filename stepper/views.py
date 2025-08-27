@@ -999,6 +999,8 @@ def debts(request):
     status_param = None
     if request.method == "POST":
         status_param = int(request.POST.get("status"))
+        if status_param == 3:
+            return redirect("stepper:debts-history")
 
     if employee:
         students_qs = request.stepper.get_cs_employees_by_category(
