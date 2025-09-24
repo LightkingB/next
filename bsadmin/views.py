@@ -379,8 +379,10 @@ def fail_transcript(request):
         transcript = user_service.get_academic_transcript_by_number(transcript_number)
 
         if transcript:
-            if user_service.is_reg_academic_transcript_for_student(transcript.id):
-                return JsonResponse({"error": "Номер уже зарегистрирован"})
+            old_transcript = user_service.is_reg_academic_transcript_for_student(transcript.id)
+            if old_transcript:
+                old_transcript.delete()
+                # return JsonResponse({"error": "Номер уже зарегистрирован"})
             form = FailFacultyTranscriptForm(request.POST, request.FILES, instance=transcript)
             if form.is_valid():
                 transcript_instance = form.save(commit=False)

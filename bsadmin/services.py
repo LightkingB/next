@@ -150,12 +150,16 @@ class UserService:
     def get_all_category_transcript():
         return CategoryTranscript.objects.all()
 
+    # @staticmethod
+    # def is_reg_academic_transcript_for_student(transcript_id):
+    #     reg_transcript = RegistrationTranscript.objects.filter(faculty_transcript_id=transcript_id)
+    #     if reg_transcript:
+    #         return True
+    #     return False
+
     @staticmethod
     def is_reg_academic_transcript_for_student(transcript_id):
-        reg_transcript = RegistrationTranscript.objects.filter(faculty_transcript_id=transcript_id)
-        if reg_transcript:
-            return True
-        return False
+        return RegistrationTranscript.objects.filter(faculty_transcript_id=transcript_id).first()
 
     @staticmethod
     def get_faculty_by_myedu_faculty_id_or_none(myedu_faculty_id):
