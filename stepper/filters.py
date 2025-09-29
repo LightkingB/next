@@ -47,6 +47,21 @@ class CSFilter(django_filters.FilterSet):
         if value.isdigit():
             query |= Q(id=int(value))
 
+        return queryset.filter(query)
+
+
+class CsHistoryFilter(django_filters.FilterSet):
+    search = django_filters.CharFilter(method='filter_search', label='Поиск')
+
+    class Meta:
+        model = ClearanceSheet
+        fields = ['search', ]
+
+    def filter_search(self, queryset, name, value):
+        query = Q(myedu_id__icontains=value) | Q(student_fio__icontains=value)
+        if value.isdigit():
+            query |= Q(id=int(value))
+
         query |= Q(issuance_id__in=Issuance.objects.filter(
             Q(doc_number__icontains=value)
         ).values_list('id', flat=True))

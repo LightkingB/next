@@ -22,7 +22,7 @@ from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS,
 from stepper.decorators import with_stepper
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
-from stepper.filters import StageEmployeeStudentFilter, CSFilter
+from stepper.filters import StageEmployeeStudentFilter, CSFilter, CsHistoryFilter
 from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm, DiplomaForm
 from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep, StageEmployee, Issuance, \
     IssuanceHistory, Diploma
@@ -189,7 +189,7 @@ def spec_history(request):
     request.session['nav-spec'] = 'spec-history'
 
     qs = request.stepper.get_clearance_history(TypeChoices.SPEC, 'has_spec')
-    students, form = get_cs_filtered_paginated(request, qs)
+    students, form = get_cs_history_filtered_paginated(request, qs)
 
     context = {
         "title": "История студентов без задолженности по данным MyEDU",
@@ -226,7 +226,7 @@ def spec_report(request):
 @with_stepper
 def archive_history(request):
     qs = request.stepper.get_clearance_history(TypeChoices.OTHER, 'has_archive')
-    students, form = get_cs_filtered_paginated(request, qs)
+    students, form = get_cs_history_filtered_paginated(request, qs)
 
     context = {
         "title": "История студентов без задолженности по данным MyEDU",
@@ -1315,6 +1315,14 @@ def qr_code_status(request, qr_id):
 
 def get_cs_filtered_paginated(request, queryset):
     filterset = CSFilter(request.GET or None, queryset=queryset)
+    paginator = Pagination(request, filterset)
+    page_number = request.GET.get('page', 1)
+    paginated = paginator.pagination_with_filters(page_number)
+    return paginated, filterset.form
+
+
+def get_cs_history_filtered_paginated(request, queryset):
+    filterset = CsHistoryFilter(request.GET or None, queryset=queryset)
     paginator = Pagination(request, filterset)
     page_number = request.GET.get('page', 1)
     paginated = paginator.pagination_with_filters(page_number)
