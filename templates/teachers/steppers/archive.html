@@ -11,7 +11,7 @@
             <form action="" method="get">
                 <div class="row">
                     <div class="col-md-4">
-                        <label for="search">ФИО / MyEDU ID / Обх. №:</label>
+                        <label for="search">ФИО / MyEDU ID / Обх. № / № диплома:</label>
                         <input type="text"
                                class="form-control form-control-sm"
                                name="search"
@@ -40,6 +40,9 @@
                         <th scope="col">ФИО</th>
                         <th scope="col">Отчёт (Печать)</th>
                         <th scope="col">№ Обх. листа</th>
+                        {% if history %}
+                            <th scope="col">№ диплома</th>
+                        {% endif %}
                         <th scope="col">Приказ</th>
                         <th scope="col">Дата приказа</th>
                         <th scope="col">Статус</th>
@@ -64,6 +67,9 @@
                                 </a>
                             </td>
                             <td class="text-center">{{ student.id }}</td>
+                            {% if history %}
+                                <td>{{ student.issuance_doc_number }}</td>
+                            {% endif %}
                             <td>{{ student.order|default:"-" }}</td>
                             <td>{{ student.order_date|default:"-" }}</td>
                             <td>{{ student.order_status|default:"-" }}</td>

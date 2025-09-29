@@ -2,7 +2,7 @@ import django_filters
 from django import forms
 from django.db.models import Q
 
-from stepper.models import StageEmployee, TemplateStep, ClearanceSheet
+from stepper.models import StageEmployee, TemplateStep, ClearanceSheet, Issuance
 
 
 class StageEmployeeStudentFilter(django_filters.FilterSet):
@@ -46,4 +46,9 @@ class CSFilter(django_filters.FilterSet):
         query = Q(myedu_id__icontains=value) | Q(student_fio__icontains=value)
         if value.isdigit():
             query |= Q(id=int(value))
+
+        query |= Q(issuance_id__in=Issuance.objects.filter(
+            Q(doc_number__icontains=value)
+        ).values_list('id', flat=True))
+
         return queryset.filter(query)

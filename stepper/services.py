@@ -564,6 +564,7 @@ class StepperService:
 
         qs = ClearanceSheet.objects.annotate(
             issuance_id=Subquery(issuance_id_subquery),
+            issuance_doc_number=Subquery(issuance_subquery.values('doc_number')[:1]),
             **{has_field_name: Exists(issuance_subquery)}
         ).filter(
             **{has_field_name: True},
