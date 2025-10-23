@@ -69,7 +69,7 @@ def act_index(request):
             acts = acts.distinct()
 
     acts_pagination = Pagination(request, acts)
-    edu_year = EduYear.objects.all()
+    edu_year = EduYear.objects.all().order_by('-title')
     category_form = CategoryForm.objects.all()
     context = {
         "navbar": "archive-index",
