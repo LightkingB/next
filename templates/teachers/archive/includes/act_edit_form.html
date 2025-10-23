@@ -1,0 +1,25 @@
+<form method="post" id="act-edit-form" action="{% url 'archive:act-edit' act.id %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="id_faculty">Факультет</label>
+        {{ form.faculty }}
+    </div>
+    <div class="form-group">
+        <label for="id_edu_form">Форма обучения</label>
+        {{ form.edu_form }}
+    </div>
+    <div class="form-group">
+        <label for="id_edu_form">Учебный год</label>
+        {{ form.edu_year }}
+    </div>
+    <div class="form-group">
+        <label for="id_edu_form">Категория</label>
+        {{ form.category_form }}
+    </div>
+    <div class="form-group">
+        <label for="id_notes">Примечание</label>
+        {{ form.notes }}
+    </div>
+
+    <button type="submit" class="btn btn-danger">Редактировать</button>
+</form>

@@ -1,0 +1,28 @@
+<tr id="act-row-{{ act.id }}" class="text-{% if act.is_confirm %}success{% endif %}">
+    <td>{{ counter }}</td>
+    <td>
+        <a href="{% url 'archive:act-detail'  act.id %}">
+            {{ act.faculty.title }} ({{ act.studentsact_set.count }})
+        </a>
+    </td>
+    <td class="text-center">{{ act.id }}</td>
+    <td>{{ act.edu_form.title|default:"-" }}</td>
+    <td>{{ act.edu_year.title|default:"-" }}</td>
+    <td>{{ act.category_form.title|default:"-" }}</td>
+    <td>{{ act.notes|default:"-" }}</td>
+    <td>{{ act.created_user.full_name }} <br/> {{ act.created_date|date:"d-m-Y" }}</td>
+    <td>{{ act.confirm_user.full_name|default:"-" }} <br/> {{ act.confirm_date|date:"d-m-Y"|default:"-" }}</td>
+    <td>
+        {% if not act.is_confirm and act.created_user == current_user %}
+            <button type="button"
+                    class="btn btn-warning btn-sm js-edit-act"
+                    data-url="{% url 'archive:act-edit' act.id %}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="btn btn-danger btn-sm js-delete-act"
+                    data-url="{% url 'archive:act-delete' act.id %}">
+                <i class="fas fa-trash"></i>
+            </button>
+        {% endif %}
+    </td>
+</tr>

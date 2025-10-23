@@ -50,7 +50,7 @@ class UserService:
 
     @staticmethod
     def active_faculties():
-        return Faculty.objects.filter(visit=True).order_by('title')
+        return Faculty.objects.filter(visit=True, is_myedu=True).order_by('title')
 
     @staticmethod
     def get_first_active_faculty(myedu_faculty_id):
@@ -81,7 +81,7 @@ class UserService:
 
     @staticmethod
     def active_faculties_transcripts():
-        faculties = Faculty.objects.annotate(
+        faculties = Faculty.objects.filter(visit=True, is_myedu=True).annotate(
             total_documents=Count('facultytranscript', distinct=True),
             used_documents=Count(
                 'facultytranscript__registrationtranscript', distinct=True
@@ -181,7 +181,7 @@ class UserService:
             return None, "Ошибка при получении факультетов"
 
         external_faculties = {faculty["id"]: faculty for faculty in faculties_data}
-        db_faculties = {faculty.myedu_faculty_id: faculty for faculty in Faculty.objects.all()}
+        db_faculties = {faculty.myedu_faculty_id: faculty for faculty in Faculty.objects.filter(is_myedu=True)}
 
         faculties_to_deactivate = set(db_faculties.keys()) - set(external_faculties.keys())
         faculties_to_activate = set(db_faculties.keys()) & set(external_faculties.keys())

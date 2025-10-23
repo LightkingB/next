@@ -1,0 +1,364 @@
+{% extends 'admin_base.html' %}
+{% load static i18n crispy_forms_tags cms_tags %}
+{% block css %}
+    <style>
+        @page {
+            margin: 0.5cm;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+
+            .container, #print-area, #print-area * {
+                visibility: visible !important;
+            }
+
+            .d-flex, .btn, .form-row, hr, .text-center button, .text-center h4 {
+                display: none !important;
+            }
+
+
+            .container, #print-area {
+                max-width: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 1cm !important;
+                position: static !important;
+                box-sizing: border-box !important;
+            }
+
+            .table-responsive {
+                overflow: visible !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .table-bordered {
+                width: 70% !important;
+                border-collapse: collapse !important;
+                margin: 0 auto;
+                table-layout: fixed !important;
+            }
+
+
+            .table-bordered th, .table-bordered td {
+                border: 1px solid #000 !important;
+                padding: 0.5rem !important;
+                box-sizing: border-box !important;
+
+                word-break: break-all !important;
+                white-space: normal !important;
+            }
+
+            .text-danger {
+                color: #8B0000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .thead-light th {
+                background-color: #f2f2f2 !important;
+                color: #000 !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {% if CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
+            {% include 'utils/_messages.html' %}
+            {% if act.is_confirm %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'archive:act-index' %}" class="btn btn-danger btn-sm">
+                        <i class="fa fa-arrow-left"></i> Список актов
+                    </a>
+                    <a href="javascript:window.print()" class="btn btn-primary btn-sm">
+                        <i class="fas fa-print"></i> Печать
+                    </a>
+                </div>
+            {% else %}
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="col-md-2">
+                            <a href="{% url 'archive:act-index' %}" class="btn btn-danger btn-sm">
+                                <i class="fa fa-arrow-left"></i> Список актов
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <input class="form-control form-control-sm" placeholder="Введите ФИО или MyEDU ID"
+                                   name="search" value="{{ search }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-sm btn-danger" type="submit" name="search-act">Поиск из MyEDU
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div class="row">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-6">
+                        <div class="my-2">
+                            <label>
+                                Если студент отсутствует в MyEDU
+                                <input type="checkbox" name="toggleForm" id="toggleForm"/>
+                            </label>
+                        </div>
+                        <div id="extraForm" class="mt-3" style="display: none;">
+                            <form action="{% url 'archive:act-custom' act_id=act.id %}" method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label>ФИО студента</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           placeholder="Бекназаров Нурсултан Бекназарович"
+                                           name="extra_fio"
+                                           required
+                                    >
+                                </div>
+                                <div class="form-group">
+                                    <label>Документ</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           placeholder="Паспорт ID 123456"
+                                           name="extra_doc"
+                                           required
+                                    >
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-sm btn-danger">Добавить в акт</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% if students %}
+                <script type="text/javascript">
+                    document.addEventListener('DOMContentLoaded', function () {
+                        $('#studentModal').modal('show');
+                    });
+                </script>
+            {% endif %}
+            <hr/>
+            <div id="print-area">
+                <div class="text-center mb-2">
+                    <h3 class="my-2">Акт</h3>
+                    {% if act.category_form.slug == 'foreign' %}
+                        Биз,  төмөндөгү кол коюучулар, кадрлар башкармалыгынын
+                        инспектору {{ act.created_user.official_name }} чет өлкөлүк жарандардын
+                        <br/>
+                        секторунун архивдеги бөлүм башчысы___________________________-жылга чейинки төмөнкү чет өлкөлүк
+                        <br/>
+                        <span class="text-danger font-weight-bold"> {{ act.edu_form.template_text }} </span> иш
+                        кагаздарын
+                        ОшМУнун
+                        архивине өткөрүү боюнча {{ act.created_date|date:"d-m-Y" }}-жыл АКТ түзүлдү.
+                    {% else %}
+                        Биз,  төмөндөгү кол коюучулар, кадрлар башкармалыгынын
+                        инспектору {{ act.created_user.official_name }} жана архив <br/>  башчысы
+                        _________________
+                        {{ act.edu_year.title }} окуу жылындагы
+                        <span class="text-danger font-weight-bold">{{ act.edu_form.template_text }} </span>
+                        студенттердин <br/>
+                        өздүк делолорун архивге өткөрүү боюнча төмөндөгүдөй акт түздүк.
+                    {% endif %}
+                </div>
+                <div class="table-responsive">
+                    <h5 class="text-center">{{ act.faculty.title }}</h5>
+                    <h5 class="text-center">Связка ({{ act.id }})</h5>
+                    <table class="table table-bordered table-sm table-responsive-md">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">ФИО</th>
+                            <th scope="col">Документ</th>
+                            {% if not act.is_confirm %}
+                                <th scope="col"></th>
+                            {% endif %}
+                        </tr>
+                        </thead>
+                        <tbody class="order">
+                        {% for student in students_act %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ student.student_fio|default:"-" }}
+                                    {% if student.myedu_id != "0" %}
+                                        ({{ student.myedu_id|default:"-" }})
+                                    {% endif %}
+                                </td>
+                                <td>{{ student.doc_number|default:"-" }}</td>
+                                {% if not act.is_confirm %}
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
+                                                data-target="#deleteModal" data-student-id="{{ student.id }}"
+                                                data-student-name="{{ student.student_fio }}">
+                                            Исключить
+                                        </button>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% empty %}
+                            <tr class="table-warning nosort">
+                                <td colspan="100%" class="text-center">
+                                    <small class="text-muted">{% trans 'Пусто' %}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="text-center">
+                        {% if not act.is_confirm %}
+                            {% if CUSTOM_ROLES.STHEADARCHIVE in DB_ROLES %}
+                                {% if students_act %}
+                                    <button type="button" class="btn btn-primary" data-toggle="modal"
+                                            data-target="#confirmModal">
+                                        Подтверждение ?
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <h4 class="text-success"> Подтверждён <i class="far fa-check-square"></i></h4>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Процесс подтверждения</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'archive:act-confirm' act_id=act.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        👉 «Вы действительно хотите подтвердить акт?»
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Закрыть</button>
+                        <button type="submit" class="btn btn-sm btn-primary">Подтвердить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка -->
+    <div class="modal fade" id="studentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Результаты поиска: <span class="text-danger">{{ search }}</span></h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    {% if students %}
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>ФИО (MyEDU ID)</th>
+                                <th>Факультет</th>
+                                <th>Специальность</th>
+                                <th>Документ</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for student in students %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ student.student_fio }} ({{ student.student_id }})</td>
+                                    <td>{{ student.faculty_name }}</td>
+                                    <td>{{ student.speciality_name }}</td>
+                                    <td>
+                                        <form method="post" class="form-inline" action="">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="myedu_id"
+                                                   value="{{ student.student_id }}">
+                                            <input type="hidden" name="fio"
+                                                   value="{{ student.student_fio }}">
+                                            <input type="hidden" name="info"
+                                                   value="{{ student.info }}">
+                                            <input type="hidden" name="movement_info"
+                                                   value="{{ student.movement_info }}">
+                                            <input type="hidden" name="movement_date"
+                                                   value="{{ student.movement_date }}">
+                                            <input type="text" class="form-control form-control-sm mb-2"
+                                                   name="doc" placeholder="Тип документа и номер" required>
+                                            <button type="submit" class="btn btn-sm btn-danger" name="save-act">
+                                                Добавить в акт
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-muted">Студенты не найдены.</div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка подтверждения удаления -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Процесс исключения студента из акта</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите исключить <b id="studentName"></b>?</p>
+                </div>
+
+                <div class="modal-footer">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_student_id" id="deleteStudentId">
+                        <button type="submit" name="delete-act" class="btn btn-sm btn-danger">Исключить из акта</button>
+                    </form>
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        $('#deleteModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget)
+            var studentId = button.data('student-id')
+            var studentName = button.data('student-name')
+            $('#deleteStudentId').val(studentId)
+            $('#studentName').text(studentName)
+        });
+
+        document.getElementById('toggleForm').addEventListener('change', function () {
+            const form = document.getElementById('extraForm');
+            form.style.display = this.checked ? 'block' : 'none';
+        });
+
+    </script>
+{% endblock %}

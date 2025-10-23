@@ -1,0 +1,13 @@
+<form method="post" id="faculty-edit-form" action="{% url 'archive:custom-faculty-edit' faculty.id %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="id_faculty">Факультет</label>
+        {{ form.title }}
+    </div>
+    <div class="form-group">
+        <label for="id_edu_form">Короткое название</label>
+        {{ form.short_name }}
+    </div>
+
+    <button type="submit" class="btn btn-danger">Редактировать</button>
+</form>

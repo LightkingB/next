@@ -36,6 +36,7 @@ CUSTOM_APPS = [
     'stepper.apps.StepperConfig',
     'integrator.apps.IntegratorConfig',
     'student.apps.StudentConfig',
+    'archives.apps.ArchivesConfig',
 ]
 
 INSTALLED_APPS = FIRST_APPS + SYSTEM_APPS + CUSTOM_APPS + THIRD_APPS

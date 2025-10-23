@@ -26,7 +26,6 @@
         }
 
         .print-qr {
-
             text-align: center;
             margin-bottom: 10px;
         }
@@ -46,25 +45,31 @@
             flex: 0 0 60% !important;
         }
 
-        /* Границы таблиц при печати */
-        table, th, td {
-            border: 1px solid black !important;
-            border-collapse: collapse !important;
-        }
-
-        th, td {
-            padding: 4px !important;
-        }
-
-        /* Разрыв страницы по строкам */
-        tr {
-            page-break-inside: avoid;
-        }
-
-        table.custom-width {
-            max-width: 100% !important;
+        .table-responsive {
+            overflow: visible !important;
             width: 100% !important;
-            margin: 0 !important;
+            max-width: 100% !important;
+        }
+
+        .table-bordered {
+            width: 75% !important;
+            border-collapse: collapse !important;
+            table-layout: fixed !important;
+            margin: 0 auto;
+        }
+
+
+        .table-bordered th, .table-bordered td {
+            border: 1px solid #000 !important;
+            padding: 0.5rem !important;
+            box-sizing: border-box !important;
+
+            word-break: break-all !important;
+            white-space: normal !important;
+        }
+
+        .custom-print-height {
+            height: 70px;
         }
     </style>
 {% endblock %}
@@ -85,18 +90,19 @@
                 <div class="text-center mb-2">
                     <h4 class="font-weight-bold">Обходной лист</h4>
                     <h6 class="text-uppercase font-weight-bold">Ошский государственный университет</h6>
-                    <h6 class="font-weight-bold">{{ student.faculty_name }}</h6>
-                    <h6 class="font-weight-bold">{{ student.speciality_name }}</h6>
+                    <h6 class="font-weight-bold">{{ student.faculty_name|default:"-" }}</h6>
+                    <h6 class="font-weight-bold">{{ student.speciality_name|default:"-" }}</h6>
                 </div>
-                <table class="table no-border table-sm w-100 mb-4" style="max-width: 600px; margin: 0 auto;">
+                <table class="table no-border table-sm w-100 mb-4 report-table"
+                       style="max-width: 600px; margin: 0 auto;">
                     <tbody>
                     <tr>
                         <td class="text-right font-weight-bold">Форма обучения:</td>
-                        <td>{{ student.edu_form }}</td>
+                        <td>{{ student.edu_form|default:"-" }}</td>
                     </tr>
                     <tr>
                         <td class="text-right font-weight-bold">Форма оплаты:</td>
-                        <td>{{ student.payment_form }}</td>
+                        <td>{{ student.payment_form|default:"-" }}</td>
                     </tr>
                     <tr>
                         <td class="text-right font-weight-bold">Обходной лист №:</td>
@@ -105,6 +111,18 @@
                     <tr>
                         <td class="text-right font-weight-bold">Шифр студента:</td>
                         <td>{{ cs.myedu_id }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right font-weight-bold">Приказ:</td>
+                        <td>{{ student.info|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right font-weight-bold">Дата приказа:</td>
+                        <td>{{ student.date_movement|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right font-weight-bold">Статус:</td>
+                        <td>{{ student.id_movement_info|default:"-" }}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -116,10 +134,11 @@
             </div>
             <div class="col-md-3"></div>
         </div>
-        <div class="">
+        <div>
             {% if trajectories %}
+                <div class="custom-print-height"></div>
                 <div class="table-responsive">
-                    <table class="table custom-width table-bordered table-sm table-responsive-md">
+                    <table class="table table-bordered table-sm table-responsive-md">
                         <thead class="thead-light">
                         <tr>
                             <th scope="col">#</th>

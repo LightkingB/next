@@ -1,0 +1,12 @@
+<tr id="faculty-row-{{ faculty.id }}">
+    <td class="text-center">{{ forloop.counter }}</td>
+    <td>{{ faculty.title }}</td>
+    <td>{{ faculty.short_name }}</td>
+    <td>
+        <button type="button"
+                class="btn btn-warning btn-sm js-edit-faculty"
+                data-url="{% url 'archive:custom-faculty-edit' faculty.id %}">
+            <i class="fas fa-edit"></i>
+        </button>
+    </td>
+</tr>

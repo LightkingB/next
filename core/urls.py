@@ -9,6 +9,7 @@ urlpatterns = [
     path('bsheet/', include('bsadmin.urls'), name='bsheet'),
     path('stepper/', include('stepper.urls'), name='stepper'),
     path('integrator/', include('integrator.urls'), name='integrator'),
+    path('archive/', include('archives.urls'), name='archive'),
     path('', include('student.urls'), name='student'),
 ]
 

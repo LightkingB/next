@@ -1,0 +1,123 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters crispy_forms_tags %}
+
+{% block content %}
+    <div class="container">
+        <a href="{% url 'archive:act-index' %}" class="btn btn-danger btn-sm">
+            <i class="fa fa-arrow-left"></i> Список актов
+        </a>
+        <hr/>
+        <h5>Добавить факультет</h5>
+        {% include 'utils/_messages.html' %}
+        <form action="" method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="col-md-3">
+                    <label for="title" class="form-label">Название</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="Информационные технологии"
+                           name="title" id="title" required/>
+                </div>
+                <div class="col-md-3">
+                    <label for="short_name" class="form-label">Короткое название</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="МФТИТ"
+                           name="short_name" id="short_name" required/>
+                </div>
+                <div class="col-md-2 mt-4">
+                    <button type="submit" class="btn btn-sm btn-danger">Сохранить</button>
+                </div>
+            </div>
+        </form>
+        <hr/>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm table-responsive-md">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Факультет</th>
+                    <th scope="col">Короткое название</th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody class="order">
+                {% for faculty in faculties %}
+                    {% include 'teachers/archive/includes/faculty-row.html' with faculty=faculty %}
+                {% empty %}
+                    <tr class="table-warning nosort">
+                        <td colspan="100%" class="text-center">
+                            <small class="text-muted">{% trans 'Пусто' %}</small>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "utils/_pagination.html" with page_obj=faculties %}
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div class="modal fade" id="modalFacultyEdit" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать факультет</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalFacultyEditBody">
+                    <!-- Здесь подгрузим форму через AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(function () {
+            // Открыть модалку
+            $(document).on("click", ".js-edit-faculty", function () {
+                let url = $(this).data("url");
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        $("#modalFacultyEditBody").html(data.html_form);
+                        $("#modalFacultyEdit").modal("show");
+                    }
+                });
+            });
+
+            // Отправка формы (AJAX)
+            $("#modalFacultyEdit").on("submit", "#faculty-edit-form", function (e) {
+                e.preventDefault();
+                let form = $(this);
+
+                $.ajax({
+                    url: form.attr("action") || form.data("url"),
+                    data: form.serialize(),
+                    type: "POST",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.success) {
+                            // обновляем только строку
+                            $("#faculty-row-" + data.faculty_id).replaceWith(data.html_row);
+
+                            // закрываем модалку
+                            $("#modalFacultyEdit").modal("hide");
+                            toastr["success"]("Факультет успешно обновлён");
+                        } else {
+                            // перерисовать форму с ошибками
+                            $("#modalFacultyEditBody").html(data.html_form);
+                            toastr["error"](data.error || "Ошибка при обновлении");
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

@@ -12,6 +12,7 @@ STSPEC = "stspec"
 STDEBT = "stdebt"
 STTEACHER = "stteacher"
 STARCHIVE = "starchive"
+STHEADARCHIVE = "stheadarchive"
 
 USER_ROLES = {
     "SPEC": SPEC,
@@ -21,5 +22,6 @@ USER_ROLES = {
     "STTEACHER": STTEACHER,
     "STSPEC": STSPEC,
     "STDEBT": STDEBT,
-    "STARCHIVE": STARCHIVE
+    "STARCHIVE": STARCHIVE,
+    "STHEADARCHIVE": STHEADARCHIVE,
 }

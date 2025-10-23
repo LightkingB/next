@@ -51,6 +51,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             return f"{self.first_name} {self.last_name} {self.fathers_name}"
         return f"{self.first_name} {self.last_name}"
 
+    @property
+    def official_name(self):
+        return f"{self.first_name[0]}. {self.last_name}"
+
 
 class Faculty(models.Model):
     COLLEGE = "CLE"
@@ -68,10 +72,11 @@ class Faculty(models.Model):
         verbose_name_plural = 'Факультеты'
 
     title = models.CharField(max_length=255, verbose_name="Название")
-    myedu_faculty_id = models.PositiveIntegerField(unique=True, verbose_name="MyEDU Факультет ID")
+    myedu_faculty_id = models.PositiveIntegerField(verbose_name="MyEDU Факультет ID", null=True, blank=True)
     short_name = models.CharField(max_length=150, verbose_name="Короткое название")
     visit = models.BooleanField(default=True, verbose_name="Показывать")
     category = models.CharField(max_length=15, choices=CATEGORIES, default=FFACULTY, null=True, blank=True)
+    is_myedu = models.BooleanField(default=True, verbose_name="Факультет MyEDU ?")
 
     def __str__(self):
         return self.title

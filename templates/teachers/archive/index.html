@@ -1,0 +1,273 @@
+{% extends 'admin_base.html' %}
+{% load static i18n crispy_forms_tags cms_tags %}
+
+
+{% block content %}
+    <div class="container-fluid">
+        {% if CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
+
+            <div class="container">
+                <h3 class="text-center mb-0">Создание акта</h3>
+                <hr/>
+                {% include 'utils/_messages.html' %}
+                <form action="" method="post" class="mb-4">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="col-md-4">
+                            <label for="faculty" class="form-label">Выберите факультет</label>
+                            <select class="form-control" aria-label="" id="faculty" name="faculty" required>
+                                <option selected value=''>----------</option>
+                                {% for faculty in faculties %}
+                                    <option value="{{ faculty.id }}">
+                                        {{ faculty.title }}
+                                        {% if faculty.is_myedu %}
+                                            (MyEDU)
+                                        {% else %}
+                                            (Архив/ОК)
+                                        {% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="mb-2">
+                                <a href="{% url 'archive:custom-faculty' %}">Если отсутствует факультет ?</a>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edu_form" class="form-label">Выберите форму обучения</label>
+                            <select class="form-control" aria-label="" id="edu_form" name="edu_form" required>
+                                <option selected value=''>----------</option>
+                                {% for edu in edu_form %}
+                                    <option value="{{ edu.id }}">
+                                        {{ edu.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edu_year" class="form-label">Выберите учебный год</label>
+                            <select class="form-control" aria-label="" id="edu_year" name="edu_year" required>
+                                <option selected value=''>----------</option>
+                                {% for year in edu_year %}
+                                    <option value="{{ year.id }}">
+                                        {{ year.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="category_form" class="form-label">Выберите категорию</label>
+                            <select class="form-control" aria-label="" id="category_form" name="category_form" required>
+                                <option selected value=''>----------</option>
+                                {% for category in category_form %}
+                                    <option value="{{ category.id }}">
+                                        {{ category.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="notes" class="form-label">Примечание</label>
+                            <input type="text" class="form-control" placeholder="Если есть примечание..."
+                                   name="notes" id="notes"/>
+                        </div>
+
+                        <div class="col-md-12 text-center my-4">
+                            <button type="submit" class="btn btn-danger" name="action"
+                                    value="create_act">{% trans 'Создать акт' %}</button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="my-4">
+                <hr/>
+                <div class="row">
+                    <div class="col-md-9">
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <input
+                                            type="text"
+                                            class="form-control"
+                                            placeholder="Поиск по ФИО, MyEDU ID, номеру акта"
+                                            name="search"
+                                            id="search"
+                                            value="{{ search }}"
+                                    />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-danger" name="action"
+                                            value="search_act">{% trans 'Поиск' %}</button>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-3">
+                        <form id="statusForm" method="get" action="">
+                            <select name="q" class="form-control"
+                                    onchange="this.form.submit()">
+                                <option value="0">-- Все --</option>
+                                <option value="1" {% if request.GET.q == '1' %}selected{% endif %}>Активные
+                                </option>
+                                <option value="2" {% if request.GET.q == '2' %}selected{% endif %}>Подтвержденные
+                                </option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+
+                <hr/>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm table-responsive-md">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Факультет</th>
+                            <th scope="col">Номер связки</th>
+                            <th scope="col">Форма обучения</th>
+                            <th scope="col">Учебный год</th>
+                            <th scope="col">Категория</th>
+                            <th scope="col">Примечание</th>
+                            <th scope="col">Автор</th>
+                            <th scope="col">Подтверждение</th>
+                            <th scope="col"></th>
+                        </tr>
+                        </thead>
+                        <tbody class="order">
+                        {% for act in acts %}
+                            {% include 'teachers/archive/includes/act_row.html' with act=act counter=forloop.counter %}
+                        {% empty %}
+                            <tr class="table-warning nosort">
+                                <td colspan="100%" class="text-center">
+                                    <small class="text-muted">{% trans 'Пусто' %}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% include "utils/_pagination.html" with page_obj=acts %}
+                </div>
+            </div>
+
+
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+
+    <!-- Модальное окно -->
+    <div class="modal fade" id="modalActEdit" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать акт</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalActEditBody">
+                    <!-- Здесь подгрузим форму через AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalActDelete" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтвердите удаление</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" id="modalActDeleteBody">
+                    <!-- Здесь будет текст подтверждения -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Нет</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Да</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        $(function () {
+            // Открыть модалку
+            $(document).on("click", ".js-edit-act", function () {
+                let url = $(this).data("url");
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        $("#modalActEditBody").html(data.html_form);
+                        $("#modalActEdit").modal("show");
+                    }
+                });
+            });
+
+            // Отправка формы (AJAX)
+            $("#modalActEdit").on("submit", "#act-edit-form", function (e) {
+                e.preventDefault();
+                let form = $(this);
+
+                $.ajax({
+                    url: form.attr("action") || form.data("url"),
+                    data: form.serialize(),
+                    type: "POST",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.success) {
+                            // обновляем только строку
+                            $("#act-row-" + data.act_id).replaceWith(data.html_row);
+
+                            // закрываем модалку
+                            $("#modalActEdit").modal("hide");
+                        } else {
+                            // перерисовать форму с ошибками
+                            $("#modalActEditBody").html(data.html_form);
+                        }
+                    }
+                });
+            });
+        });
+
+        let deleteUrl = null;
+        let deleteRowId = null;
+
+        // открыть модалку
+        $(document).on("click", ".js-delete-act", function () {
+            deleteUrl = $(this).data("url");
+            deleteRowId = $(this).closest("tr").attr("id").replace("act-row-", "");
+            $("#modalActDeleteBody").text("Вы уверены, что хотите удалить этот акт?");
+            $("#modalActDelete").modal("show");
+        });
+
+        // подтвердить удаление
+        $(document).on("click", "#confirmDeleteBtn", function () {
+            if (!deleteUrl) return;
+
+            $.ajax({
+                url: deleteUrl,
+                type: "POST",
+                dataType: "json",
+                success: function (data) {
+                    if (data.success) {
+                        $("#act-row-" + data.act_id).fadeOut(300, function () {
+                            $(this).remove();
+                        });
+                        $("#modalActDelete").modal("hide");
+                        toastr["success"](data.message);
+                    } else {
+                        toastr["error"](data.error || "Ошибка при удалении");
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

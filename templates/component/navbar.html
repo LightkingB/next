@@ -81,11 +81,11 @@
                         <i class="fas fa-id-card"></i><span> {% trans 'Дипломы' %}</span>
                     </a>
                 </li>
-                <li class="{% if navbar == 'spec-avn' %}active{% endif %}">
-                    <a href="{% url 'stepper:spec-avn' %}">
-                        <i class="fas fa-file-download"></i><span> {% trans 'АВН' %}</span>
-                    </a>
-                </li>
+{#                <li class="{% if navbar == 'spec-avn' %}active{% endif %}">#}
+{#                    <a href="{% url 'stepper:spec-avn' %}">#}
+{#                        <i class="fas fa-file-download"></i><span> {% trans 'АВН' %}</span>#}
+{#                    </a>#}
+{#                </li>#}
             {% elif CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
                 <li class="{% if navbar == 'archive' %}active{% endif %}">
                     <a href="{% url 'stepper:archive' %}">
@@ -97,11 +97,16 @@
                         <i class="fas fa-history"></i><span> {% trans 'История' %}</span>
                     </a>
                 </li>
-                <li class="{% if navbar == 'archive-avn' %}active{% endif %}">
-                    <a href="{% url 'stepper:archive-avn' %}">
-                        <i class="fas fa-archive"></i><span>{% trans 'АВН' %}</span>
+                <li class="{% if navbar == 'archive-index' %}active{% endif %}">
+                    <a href="{% url 'archive:act-index' %}">
+                        <i class="fab fa-react"></i><span> {% trans 'Акты' %}</span>
                     </a>
                 </li>
+{#                <li class="{% if navbar == 'archive-avn' %}active{% endif %}">#}
+{#                    <a href="{% url 'stepper:archive-avn' %}">#}
+{#                        <i class="fas fa-archive"></i><span>{% trans 'АВН' %}</span>#}
+{#                    </a>#}
+{#                </li>#}
             {% endif %}
             {#        {% elif request.session.access == "teacher" %}#}
             {#            {% if CUSTOM_ROLES.STTEACHER in DB_ROLES %}#}
