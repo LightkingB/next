@@ -4,7 +4,6 @@ from datetime import datetime
 from io import BytesIO
 
 import qrcode
-from PIL import Image
 from django.contrib import messages
 from django.db import transaction, DatabaseError
 from django.db.models import Q
@@ -783,11 +782,12 @@ def cs_history(request, myedu_id, cs_id):
         iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
         None
     )
+
     order = student.get("info") if student else None
     cs_student = ClearanceSheet.objects.filter(myedu_id=myedu_id, order=order, id=cs_id).order_by('-issued_at').first()
     trajectories = request.stepper.cs_history_detail(cs_student)
 
-    issuance = Issuance.objects.filter(cs_id=cs_id).first()
+    issuances = Issuance.objects.filter(cs_id=cs_id)
 
     if request.method == "POST":
         cs_student.type_choices = ClearanceSheet.SPEC
@@ -800,7 +800,7 @@ def cs_history(request, myedu_id, cs_id):
         "trajectories": trajectories,
         "cs_student": cs_student,
         "student": student,
-        "issuance": issuance
+        "issuances": issuances
     }
     return render(request, "teachers/steppers/cs-history.html", context)
 
