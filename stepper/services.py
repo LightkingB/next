@@ -142,7 +142,7 @@ class StepperService:
 
     @staticmethod
     def edu_years():
-        return EduYear.objects.all()
+        return EduYear.objects.all().filter('-title')
 
     @staticmethod
     def cs_done_list(search_query=None):

@@ -82,11 +82,11 @@
             <div class="my-4">
                 <hr/>
                 <div class="row">
-                    <div class="col-md-9">
+                    <div class="col-md-9 mb-3 mb-md-0">
                         <form action="" method="post">
                             {% csrf_token %}
                             <div class="form-row">
-                                <div class="col-md-4">
+                                <div class="col-md-4 mb-3 mb-md-0">
                                     <input
                                             type="text"
                                             class="form-control"
@@ -96,7 +96,7 @@
                                             value="{{ search }}"
                                     />
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2 text-center text-md-left">
                                     <button type="submit" class="btn btn-danger" name="action"
                                             value="search_act">{% trans 'Поиск' %}</button>
                                 </div>
