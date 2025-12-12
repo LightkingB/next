@@ -387,7 +387,7 @@ def ocr_view(request):
         return Response({"error": "Отсутствуют данные изображения."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        optimized_image = compress_image(image_base64)
+        # optimized_image = compress_image(image_base64)
         raw_image_data = image_base64
         # Вызов OpenAI API
         response = client.responses.create(
@@ -397,7 +397,7 @@ def ocr_view(request):
                 {
                     "role": "user",
                     "content": [
-                        {"type": "input_image", "image_url": optimized_image}
+                        {"type": "input_image", "image_url": raw_image_data}
                     ]
                 }
             ],
