@@ -1,4 +1,5 @@
 import base64
+import json
 from datetime import date
 from io import BytesIO
 
@@ -13,6 +14,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from openai import OpenAI
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -315,86 +317,123 @@ client = OpenAI(
 
 def build_prompt() -> str:
     """
-    Возвращает prompt для OCR, чтобы извлечь данные студентов.
-    Результат строго JSON:
-    [
-        {"student_fio": "...", "doc_number": "..."},
-        ...
-    ]
-    Примеры:
-    1) Бекназаров Нурсултан - обх123123
-    2) Асанов Асан (123123) - 123123123123123
+    Возвращает робастный prompt для OCR, чтобы извлечь данные студентов.
     """
     return """
-Ты — OCR-парсер для актов студентов. 
-Твоя задача:
-1. Извлечь **ФИО студента** и **номер документа**.
-2. Данные могут быть в виде таблицы или текста.
-3. Иногда ФИО может содержать номер в скобках, например: 'Асанов Асан (123123)'. Всё до первого '-' или до явного номера — считать ФИО.
-4. Игнорируй лишние символы и пустые строки.
-5. Формат вывода строго JSON-массив:
+Ты — высокоточный OCR-парсер для сканов актов, ведомостей или списков студентов.
+Твоя задача — извлечь пары данных 'ФИО студента' и 'Номер документа'.
+
+### **ИНСТРУКЦИИ И ПРАВИЛА ИЗВЛЕЧЕНИЯ**
+
+1.  **Формат вывода:** Строго JSON-массив, как указано в примере ниже. **Никакого другого текста, объяснений или комментариев.**
+2.  **Извлекаемые поля:**
+    * `student_fio`: Полное ФИО, включая любые скобки или номера, которые являются частью имени.
+    * `doc_number`: Номер документа (может быть буквенно-цифровым, длинным).
+3.  **Определение полей:**
+    * **ФИО** заканчивается там, где начинается явный разделитель (чаще всего '-', '—', или большой пробел/столбец) перед Номером документа.
+    * **Номер документа** — это строка после разделителя.
+4.  **Обработка шума:**
+    * **Игнорируй** номера строк (1., 2., 3.), заголовки, подписи, печати и любой посторонний текст.
+    * **Обрабатывай** данные в виде **сплошного текста** или **таблицы**. Если это таблица, сопоставляй соответствующие столбцы (ФИО -> Номер документа).
+    * **Исключи** пустые или неполные строки.
+
+### **ПРИМЕР РЕЗУЛЬТАТА (Строго придерживайся этой структуры)**
+
 [
   {"student_fio": "Бекназаров Нурсултан", "doc_number": "обх123123"},
   {"student_fio": "Асанов Асан (123123)", "doc_number": "123123123123123"}
 ]
-
-Пример ввода:
-"1. Бекназаров Нурсултан - обх123123
-2. Асанов Асан (123123) - 123123123123123"
-
-Результат:
-[
-  {"student_fio": "Бекназаров Нурсултан", "doc_number": "обх123123"},
-  {"student_fio": "Асанов Асан (123123)", "doc_number": "123123123123123"}
-]
-
-Возвращай **только JSON**, без дополнительных объяснений.
 """
 
 
 def compress_image(base64_str, max_size=1400):
-    """Сжатие и повышение резкости изображения"""
-    header, encoded = base64_str.split(",", 1)
-    img_data = base64.b64decode(encoded)
-    img = Image.open(BytesIO(img_data)).convert("RGB")
+    """
+    Сжатие, преобразование в оттенки серого, повышение контраста
+    и резкости для оптимизации изображения под OCR.
+    """
+    try:
+        header, encoded = base64_str.split(",", 1)
+        img_data = base64.b64decode(encoded)
+        img = Image.open(BytesIO(img_data)).convert("RGB")
 
-    # resize
-    w, h = img.size
-    scale = min(max_size / max(w, h), 1)
-    if scale < 1:
-        img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.LANCZOS)
+        # 1. Сжатие (Resize)
+        w, h = img.size
+        scale = min(max_size / max(w, h), 1)
+        if scale < 1:
+            img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.LANCZOS)
 
-    # sharpness
-    img = ImageEnhance.Sharpness(img).enhance(1.4)
+        # 2. Улучшение для OCR (Grayscale, Contrast, Sharpness)
+        img = img.convert("L")  # Преобразование в оттенки серого
+        img = ImageEnhance.Contrast(img).enhance(1.3)  # Усиление контраста
+        img = ImageEnhance.Sharpness(img).enhance(1.2)  # Небольшое повышение резкости
 
-    buffer = BytesIO()
-    img.save(buffer, format="JPEG", quality=85)
-    encoded_new = base64.b64encode(buffer.getvalue()).decode("utf-8")
-    return "data:image/jpeg;base64," + encoded_new
+        # 3. Сохранение
+        buffer = BytesIO()
+        img.save(buffer, format="JPEG", quality=85)
+
+        encoded_new = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        # Возвращаем Base64 строку с правильным MIME-типом
+        return "data:image/jpeg;base64," + encoded_new
+    except Exception as e:
+        # Важно обработать ошибку, если входная строка base64 некорректна
+        raise ValueError(f"Image compression failed: {e}")
 
 
 @api_view(["POST"])
 def ocr_view(request):
     image_base64 = request.data.get("image")
 
-    optimized_image = compress_image(image_base64)
+    if not image_base64:
+        return Response({"error": "Отсутствуют данные изображения."}, status=status.HTTP_400_BAD_REQUEST)
 
-    response = client.responses.create(
-        model="gpt-4o-mini",
-        input=[
-            {"role": "system", "content": build_prompt()},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "input_image", "image_url": optimized_image}
-                ]
-            }
-        ],
-    )
+    try:
+        optimized_image = compress_image(image_base64)
 
-    result = response.output_text
+        # Вызов OpenAI API
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            input=[
+                {"role": "system", "content": build_prompt()},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_image", "image_url": optimized_image}
+                    ]
+                }
+            ],
+        )
 
-    return Response({"result": result})
+        result_text = response.output_text
+
+        # Валидация и парсинг JSON
+        try:
+            # Парсинг результата (чтобы убедиться, что это массив объектов)
+            json_result = json.loads(result_text)
+
+            # Проверка, что результат — это список (как ожидается)
+            if not isinstance(json_result, list):
+                raise TypeError("Output is not a valid JSON list.")
+
+            return Response({"result": json_result})
+
+        except (json.JSONDecodeError, TypeError) as e:
+            # Ошибка парсинга или несоответствие структуры
+            print(f"Warning: Model output is not valid JSON/structure: {result_text}")
+            return Response(
+                {"error": "Распознавание не смогло выдать данные в чистом JSON формате.", "raw_output": result_text},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    # except APIError as e: # Для обработки специфических ошибок OpenAI (если используется новая библиотека)
+    #     return Response({"error": f"Ошибка OpenAI API: {e.status_code} - {e.message}"}, status=e.status_code)
+
+    except Exception as e:
+        # Общая обработка ошибок, включая сжатие
+        print(f"Error during OCR process: {e}")
+        return Response(
+            {"error": f"Внутренняя ошибка сервера: {e}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 def detect_act_image(request):

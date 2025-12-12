@@ -2,136 +2,189 @@
 {% load static %}
 
 {% block css %}
-<style>
-#camera-wrapper {
-    max-width: 400px;
-    margin: 20px auto;
-    text-align: center;
-    position: relative; /* Для loader */
-}
+    <style>
+        #camera-wrapper {
+            max-width: 400px;
+            margin: 20px auto;
+            text-align: center;
+            position: relative;
+        }
 
-#my_camera video, #my_camera canvas, #my_camera {
-    width: 100% !important;
-    height: auto !important;
-    border-radius: 10px;
-}
+        #my_camera video, #my_camera canvas, #my_camera {
+            width: 100% !important;
+            height: auto !important;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
 
-#loader {
-    display: none; /* Скрыт по умолчанию */
-    position: absolute;
-    top:0; left:0;
-    width:100%; height:100%;
-    background: rgba(255,255,255,0.7);
-    justify-content: center;
-    align-items: center;
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-    border-radius: 10px;
-    z-index: 10;
-}
+        #loader {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Полупрозрачный фон */
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            border-radius: 10px;
+            z-index: 10;
+        }
 
-img.preview-img {
-    width: 100%;
-    border-radius: 12px;
-}
-</style>
+        /* Стили для Bootstrap spinner, если они не в базовом шаблоне */
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        img.preview-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h3 class="text-center mb-4">OCR Сканер студентов</h3>
+    <div class="container mt-4">
+        <h3 class="text-center mb-4">📸 OCR Сканер студентов</h3>
 
-    <div id="camera-wrapper">
-        <div id="my_camera"></div>
+        <div id="camera-wrapper">
+            <div id="my_camera"></div>
 
-        <!-- Loader -->
-        <div id="loader">Обработка...</div>
-
-        <button id="captureBtn" class="btn btn-primary btn-block mt-2">Сделать фото</button>
-    </div>
-
-    <div id="ocrResult" class="mt-4"></div>
-</div>
-
-<!-- Modal подтверждения -->
-<div id="confirmModal" class="modal fade" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">Подтвердите фото</h5>
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            <div id="loader">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Обработка...</span>
+                </div>
+                <p class="mt-3">Обработка данных (это может занять до 15 секунд)...</p>
             </div>
 
-            <div class="modal-body text-center">
-                <img id="modalPreview" class="preview-img" alt="preview">
-            </div>
+            <button id="captureBtn" class="btn btn-primary btn-block mt-3">Сделать фото</button>
+        </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Переснять</button>
-                <button id="confirmSend" class="btn btn-success">Отправить</button>
-            </div>
-
+        <div id="ocrResult" class="mt-4">
         </div>
     </div>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+    <div id="confirmModal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
 
-<script>
-let capturedImage = null;
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтвердите фото</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
 
-// Инициализация камеры
-Webcam.set({
-    width: 360,
-    height: 300,
-    image_format: 'jpeg',
-    jpeg_quality: 90,
-    constraints: { facingMode: { ideal: "environment" } }
-});
-Webcam.attach('#my_camera');
+                <div class="modal-body text-center">
+                    <p>Убедитесь, что текст четкий и хорошо освещен.</p>
+                    <img id="modalPreview" class="preview-img" alt="Предварительный просмотр">
+                </div>
 
-// Снимок
-document.getElementById("captureBtn").onclick = function() {
-    Webcam.snap(function(data_uri){
-        capturedImage = data_uri;
-        document.getElementById("modalPreview").src = data_uri;
-        $('#confirmModal').modal('show');
-    });
-};
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-dismiss="modal">Переснять</button>
+                    <button id="confirmSend" class="btn btn-success">Отправить на распознавание</button>
+                </div>
 
-// Подтверждение и отправка
-document.getElementById("confirmSend").onclick = function() {
-    $('#confirmModal').modal('hide');
+            </div>
+        </div>
+    </div>
 
-    // ПОКАЗ loader ТОЛЬКО здесь
-    const loader = document.getElementById("loader");
-    loader.style.display = "flex";
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
 
-    fetch("/archive/ocr/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-        },
-        body: JSON.stringify({ image: capturedImage })
-    })
-    .then(res => res.json())
-    .then(data => {
-        loader.style.display = "none"; // скрываем после ответа
-        document.getElementById("ocrResult").innerHTML = `
-            <div class="alert alert-info">
-                <strong>Распознанные студенты:</strong>
-                <pre>${JSON.stringify(data.result, null, 2)}</pre>
+    <script>
+        let capturedImage = null;
+
+        // Инициализация камеры
+        Webcam.set({
+            width: 360,
+            height: 300,
+            image_format: 'jpeg',
+            jpeg_quality: 90,
+            // Использовать заднюю камеру на мобильных, если доступна
+            constraints: {facingMode: {ideal: "environment"}}
+        });
+        Webcam.attach('#my_camera');
+
+        // Снимок
+        document.getElementById("captureBtn").onclick = function () {
+            Webcam.snap(function (data_uri) {
+                capturedImage = data_uri;
+                document.getElementById("modalPreview").src = data_uri;
+                $('#confirmModal').modal('show');
+            });
+        };
+
+        // Подтверждение и отправка
+        document.getElementById("confirmSend").onclick = function () {
+            $('#confirmModal').modal('hide');
+
+            const loader = document.getElementById("loader");
+            const resultDiv = document.getElementById("ocrResult");
+
+            // ПОКАЗ loader
+            loader.style.display = "flex";
+            resultDiv.innerHTML = "";
+
+            fetch("{% url 'ocr_view_name' %}", { // Замените 'ocr_view_name' на фактическое имя URL-маршрута
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({image: capturedImage})
+            })
+                .then(res => {
+                    // Проверяем статус ответа
+                    if (!res.ok) {
+                        // Если ошибка (4xx или 5xx), читаем тело ответа для получения сообщения об ошибке
+                        return res.json().then(err => {
+                            throw new Error(err.error || "Произошла неизвестная ошибка на сервере.");
+                        });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    loader.style.display = "none";
+
+                    // Отображение результата
+                    const jsonResult = data.result;
+                    const studentCount = Array.isArray(jsonResult) ? jsonResult.length : 0;
+                    const jsonString = JSON.stringify(jsonResult, null, 2);
+
+                    resultDiv.innerHTML = `
+            <div class="alert alert-success">
+                <strong>✅ Успешно распознано (${studentCount} записей):</strong>
+                <pre>${jsonString}</pre>
             </div>`;
-    })
-    .catch(err => {
-        console.error(err);
-        loader.style.display = "none";
-    });
-};
-</script>
+                })
+                .catch(err => {
+                    console.error("Fetch/OCR Error:", err);
+                    loader.style.display = "none";
+
+                    // Отображение ошибки пользователю
+                    resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>❌ Ошибка распознавания:</strong>
+                <p>${err.message}</p>
+                <p>Пожалуйста, попробуйте переснять документ, убедившись в хорошем освещении и четкости.</p>
+            </div>`;
+                });
+        };
+    </script>
 {% endblock %}
