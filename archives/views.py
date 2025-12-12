@@ -404,25 +404,26 @@ def ocr_view(request):
         )
 
         result_text = response.output_text
-
-        # Валидация и парсинг JSON
-        try:
-            # Парсинг результата (чтобы убедиться, что это массив объектов)
-            json_result = json.loads(result_text)
-
-            # Проверка, что результат — это список (как ожидается)
-            if not isinstance(json_result, list):
-                raise TypeError("Output is not a valid JSON list.")
-
-            return Response({"result": json_result})
-
-        except (json.JSONDecodeError, TypeError) as e:
-            # Ошибка парсинга или несоответствие структуры
-            print(f"Warning: Model output is not valid JSON/structure: {result_text}")
-            return Response(
-                {"error": "Распознавание не смогло выдать данные в чистом JSON формате.", "raw_output": result_text},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return Response({"result": result_text})
+        #
+        # # Валидация и парсинг JSON
+        # try:
+        #     # Парсинг результата (чтобы убедиться, что это массив объектов)
+        #     json_result = json.loads(result_text)
+        #
+        #     # Проверка, что результат — это список (как ожидается)
+        #     if not isinstance(json_result, list):
+        #         raise TypeError("Output is not a valid JSON list.")
+        #
+        #     return Response({"result": json_result})
+        #
+        # except (json.JSONDecodeError, TypeError) as e:
+        #     # Ошибка парсинга или несоответствие структуры
+        #     print(f"Warning: Model output is not valid JSON/structure: {result_text}")
+        #     return Response(
+        #         {"error": "Распознавание не смогло выдать данные в чистом JSON формате.", "raw_output": result_text},
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
 
     # except APIError as e: # Для обработки специфических ошибок OpenAI (если используется новая библиотека)
     #     return Response({"error": f"Ошибка OpenAI API: {e.status_code} - {e.message}"}, status=e.status_code)
