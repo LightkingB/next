@@ -14,4 +14,7 @@ urlpatterns = [
 
     path('custom/faculty/', custom_faculty, name='custom-faculty'),
     path('custom/faculty/<int:pk>/edit/', custom_faculty_edit, name='custom-faculty-edit'),
+
+    path('ocr/', ocr_view, name='ocr'),
+    path('detect/ocr/', detect_act_image, name='detect-ocr'),
 ]

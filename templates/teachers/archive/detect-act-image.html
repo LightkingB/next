@@ -1,0 +1,122 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters crispy_forms_tags %}
+
+{% block css %}
+<style>
+    #loader {
+        display: none;
+        font-size: 18px;
+        background: #000000aa;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="mb-4">Загрузить Акт для распознавания студентов</h2>
+    <hr>
+
+    <div id="loader">Обработка...</div>
+
+    <div id="my_camera" class="mb-3"></div>
+
+    <button id="captureBtn" class="btn btn-primary">Сделать фото</button>
+
+
+    <!-- Блок для вывода результата OCR -->
+    <div id="ocrResult" class="mt-4"></div>
+
+    <!-- WebcamJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+
+    <!-- Bootstrap modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h5 class="modal-title">Подтверждение</h5>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <p>Отправить это фото на распознавание?</p>
+            <img id="modalPreview" src="" width="100%" class="rounded">
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+            <button id="confirmSend" type="button" class="btn btn-primary">Отправить</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script>
+        let capturedImage = null;
+
+        Webcam.set({
+            width: 360,
+            height: 300,
+            image_format: 'jpeg',
+            jpeg_quality: 70,
+            constraints: {
+                facingMode: 'environment'
+            }
+        });
+        Webcam.attach('#my_camera');
+
+        document.getElementById("captureBtn").onclick = function () {
+            Webcam.snap(function (data_uri) {
+
+                capturedImage = data_uri;
+
+                document.getElementById("modalPreview").src = data_uri;
+
+                $("#confirmModal").modal("show");
+            });
+        };
+
+        document.getElementById("confirmSend").onclick = function () {
+            $("#confirmModal").modal("hide");
+            uploadImage(capturedImage);
+        };
+
+        function uploadImage(base64Image) {
+            document.getElementById("loader").style.display = "block";
+
+            fetch("/archive/ocr/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ image: base64Image })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("loader").style.display = "none";
+
+                document.getElementById("ocrResult").innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>Результат:</strong><br>${data.result}
+                    </div>`;
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("loader").style.display = "none";
+            });
+        }
+    </script>
+
+</div>
+{% endblock %}

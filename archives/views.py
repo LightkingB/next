@@ -1,4 +1,10 @@
+import base64
+import io
+from datetime import date
+
 import requests
+from PIL import Image
+from decouple import config
 from django.contrib import messages
 from django.db.models import Prefetch, Q
 from django.http import JsonResponse
@@ -6,6 +12,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from openai import OpenAI
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from archives.forms import ActsForm, CustomFacultyForm
 from archives.models import EduForm, Acts, CategoryForm, StudentsAct
@@ -13,8 +22,6 @@ from bsadmin.consts import API_URL
 from bsadmin.models import Faculty
 from stepper.models import EduYear
 from utils.filter_pagination import Pagination
-
-from datetime import date
 
 
 def act_index(request):
@@ -299,3 +306,105 @@ def custom_faculty_edit(request, pk):
 def handle_students_search(request, search):
     response = requests.post(API_URL + "/obhadnoi/searchstudent", data={"search": search})
     return response.json() if response.status_code == 200 else []
+
+
+client = OpenAI(
+    api_key=config("OPENAI_API_KEY"),
+)
+
+
+def build_prompt() -> str:
+    """
+    Возвращает prompt для OCR, чтобы извлечь данные студентов.
+    Результат строго JSON:
+    [
+        {"student_fio": "...", "doc_number": "..."},
+        ...
+    ]
+    Примеры:
+    1) Бекназаров Нурсултан - обх123123
+    2) Асанов Асан (123123) - 123123123123123
+    """
+    return """
+Ты — OCR-парсер для актов студентов. 
+Твоя задача:
+1. Извлечь **ФИО студента** и **номер документа**.
+2. Данные могут быть в виде таблицы или текста.
+3. Иногда ФИО может содержать номер в скобках, например: 'Асанов Асан (123123)'. Всё до первого '-' или до явного номера — считать ФИО.
+4. Игнорируй лишние символы и пустые строки.
+5. Формат вывода строго JSON-массив:
+[
+  {"student_fio": "Бекназаров Нурсултан", "doc_number": "обх123123"},
+  {"student_fio": "Асанов Асан (123123)", "doc_number": "123123123123123"}
+]
+
+Пример ввода:
+"1. Бекназаров Нурсултан - обх123123
+2. Асанов Асан (123123) - 123123123123123"
+
+Результат:
+[
+  {"student_fio": "Бекназаров Нурсултан", "doc_number": "обх123123"},
+  {"student_fio": "Асанов Асан (123123)", "doc_number": "123123123123123"}
+]
+
+Возвращай **только JSON**, без дополнительных объяснений.
+"""
+
+
+def compress_image(base64_str: str, quality: int = 60) -> str:
+    """
+    Сжимает base64 изображение до JPEG с заданным quality.
+    Возвращает base64 строку готовую для OCR.
+    """
+    try:
+        if "," in base64_str:
+            header, data = base64_str.split(",", 1)
+        else:
+            data = base64_str
+
+        img_data = base64.b64decode(data)
+        img = Image.open(io.BytesIO(img_data))
+
+        # Конвертируем в RGB, если PNG или с альфа-каналом
+        if img.mode in ("RGBA", "LA"):
+            background = Image.new("RGB", img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[3])  # 3-й канал = alpha
+            img = background
+        else:
+            img = img.convert("RGB")
+
+        output = io.BytesIO()
+        img.save(output, format="JPEG", quality=quality)
+        encoded = base64.b64encode(output.getvalue()).decode("utf-8")
+        return f"data:image/jpeg;base64,{encoded}"
+    except Exception as e:
+        raise ValueError(f"Ошибка при сжатии изображения: {e}")
+
+
+@api_view(["POST"])
+def ocr_view(request):
+    image_base64 = request.data.get("image")
+
+    optimized_image = compress_image(image_base64)
+
+    response = client.responses.create(
+        model="gpt-4o-mini",
+        input=[
+            {"role": "system", "content": build_prompt()},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "input_image", "image_url": optimized_image}
+                ]
+            }
+        ],
+    )
+
+    result = response.output_text
+
+    return Response({"result": result})
+
+
+def detect_act_image(request):
+    return render(request, 'teachers/archive/detect-act-image.html')
