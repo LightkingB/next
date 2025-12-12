@@ -3,11 +3,14 @@
 
 {% block css %}
     <style>
+        /* ----------------------------------------------------- */
+        /* ОСНОВНОЙ КОНТЕЙНЕР КАМЕРЫ */
+        /* ----------------------------------------------------- */
         #camera-wrapper {
             max-width: 400px;
             margin: 20px auto;
             text-align: center;
-            position: relative;
+            position: relative; /* Необходим для позиционирования #loader */
         }
 
         #my_camera video, #my_camera canvas, #my_camera {
@@ -17,8 +20,10 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
+        /* ----------------------------------------------------- */
+        /* СТИЛИ LOADER (используем d-none/d-flex от Bootstrap) */
+        /* ----------------------------------------------------- */
         #loader {
-            display: none;
             position: absolute;
             top: 0;
             left: 0;
@@ -26,8 +31,7 @@
             height: 100%;
             /* Полупрозрачный фон */
             background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Элементы идут вертикально */
             justify-content: center;
             align-items: center;
             font-size: 16px;
@@ -37,12 +41,14 @@
             z-index: 10;
         }
 
-        /* Стили для Bootstrap spinner, если они не в базовом шаблоне */
         .spinner-border {
             width: 3rem;
             height: 3rem;
         }
 
+        /* ----------------------------------------------------- */
+        /* СТИЛИ ПРЕДПРОСМОТРА И РЕЗУЛЬТАТА */
+        /* ----------------------------------------------------- */
         img.preview-img {
             max-width: 100%;
             height: auto;
@@ -51,10 +57,11 @@
 
         pre {
             background: #f8f9fa;
-            padding: 10px;
+            padding: 15px;
             border-radius: 5px;
             white-space: pre-wrap;
             word-wrap: break-word;
+            text-align: left;
         }
     </style>
 {% endblock %}
@@ -66,11 +73,11 @@
         <div id="camera-wrapper">
             <div id="my_camera"></div>
 
-            <div id="loader">
+            <div id="loader" class="d-none">
                 <div class="spinner-border text-primary" role="status">
                     <span class="sr-only">Обработка...</span>
                 </div>
-                <p class="mt-3">Обработка данных (это может занять до 15 секунд)...</p>
+                <p class="mt-3 text-muted">Обработка данных (это может занять до 15 секунд)...</p>
             </div>
 
             <button id="captureBtn" class="btn btn-primary btn-block mt-3">Сделать фото</button>
@@ -80,13 +87,15 @@
         </div>
     </div>
 
-    <div id="confirmModal" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+    <div id="confirmModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
 
                 <div class="modal-header">
                     <h5 class="modal-title">Подтвердите фото</h5>
-                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
                 </div>
 
                 <div class="modal-body text-center">
@@ -116,12 +125,19 @@
             height: 300,
             image_format: 'jpeg',
             jpeg_quality: 90,
-            // Использовать заднюю камеру на мобильных, если доступна
             constraints: {facingMode: {ideal: "environment"}}
         });
-        Webcam.attach('#my_camera');
 
-        // Снимок
+        Webcam.attach('#my_camera', function (err) {
+            if (err) {
+                document.getElementById("my_camera").innerHTML =
+                    "<div class='alert alert-warning'>Не удалось получить доступ к камере.</div>";
+                document.getElementById("captureBtn").disabled = true;
+            }
+        });
+
+
+        // 1. Снимок
         document.getElementById("captureBtn").onclick = function () {
             Webcam.snap(function (data_uri) {
                 capturedImage = data_uri;
@@ -130,18 +146,22 @@
             });
         };
 
-        // Подтверждение и отправка
+        // 2. Подтверждение и отправка на сервер
         document.getElementById("confirmSend").onclick = function () {
             $('#confirmModal').modal('hide');
 
             const loader = document.getElementById("loader");
             const resultDiv = document.getElementById("ocrResult");
 
-            // ПОКАЗ loader
-            loader.style.display = "flex";
+            // === Активация Loader: Удаляем d-none и добавляем d-flex ===
+            loader.classList.remove('d-none');
+            loader.classList.add('d-flex');
             resultDiv.innerHTML = "";
 
-            fetch("/archive/ocr/", { // Замените 'ocr_view_name' на фактическое имя URL-маршрута
+            // Используйте правильное имя URL-маршрута Django.
+            const url = "/archive/ocr/";
+
+            fetch(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -150,19 +170,18 @@
                 body: JSON.stringify({image: capturedImage})
             })
                 .then(res => {
-                    // Проверяем статус ответа
                     if (!res.ok) {
-                        // Если ошибка (4xx или 5xx), читаем тело ответа для получения сообщения об ошибке
                         return res.json().then(err => {
-                            throw new Error(err.error || "Произошла неизвестная ошибка на сервере.");
+                            throw new Error(err.error || `Ошибка HTTP: ${res.status} (${res.statusText})`);
                         });
                     }
                     return res.json();
                 })
                 .then(data => {
-                    loader.style.display = "none";
+                    // === Деактивация Loader при успехе ===
+                    loader.classList.remove('d-flex');
+                    loader.classList.add('d-none');
 
-                    // Отображение результата
                     const jsonResult = data.result;
                     const studentCount = Array.isArray(jsonResult) ? jsonResult.length : 0;
                     const jsonString = JSON.stringify(jsonResult, null, 2);
@@ -175,9 +194,10 @@
                 })
                 .catch(err => {
                     console.error("Fetch/OCR Error:", err);
-                    loader.style.display = "none";
+                    // === Деактивация Loader при ошибке ===
+                    loader.classList.remove('d-flex');
+                    loader.classList.add('d-none');
 
-                    // Отображение ошибки пользователю
                     resultDiv.innerHTML = `
             <div class="alert alert-danger">
                 <strong>❌ Ошибка распознавания:</strong>
