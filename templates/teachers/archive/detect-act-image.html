@@ -141,7 +141,7 @@
             loader.style.display = "flex";
             resultDiv.innerHTML = "";
 
-            fetch("{% url 'ocr_view_name' %}", { // Замените 'ocr_view_name' на фактическое имя URL-маршрута
+            fetch("/archive/ocr/", { // Замените 'ocr_view_name' на фактическое имя URL-маршрута
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
