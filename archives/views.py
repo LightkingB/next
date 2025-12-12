@@ -13,7 +13,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from openai import OpenAI
+from openai import OpenAI, APIError
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -404,29 +404,30 @@ def ocr_view(request):
         )
 
         result_text = response.output_text
-        return Response({"result": result_text})
+        # return Response({"result": result_text})
         #
         # # Валидация и парсинг JSON
-        # try:
-        #     # Парсинг результата (чтобы убедиться, что это массив объектов)
-        #     json_result = json.loads(result_text)
-        #
-        #     # Проверка, что результат — это список (как ожидается)
-        #     if not isinstance(json_result, list):
-        #         raise TypeError("Output is not a valid JSON list.")
-        #
-        #     return Response({"result": json_result})
-        #
-        # except (json.JSONDecodeError, TypeError) as e:
-        #     # Ошибка парсинга или несоответствие структуры
-        #     print(f"Warning: Model output is not valid JSON/structure: {result_text}")
-        #     return Response(
-        #         {"error": "Распознавание не смогло выдать данные в чистом JSON формате.", "raw_output": result_text},
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
+        try:
+            # Парсинг результата (чтобы убедиться, что это массив объектов)
+            json_result = json.loads(result_text)
 
-    # except APIError as e: # Для обработки специфических ошибок OpenAI (если используется новая библиотека)
-    #     return Response({"error": f"Ошибка OpenAI API: {e.status_code} - {e.message}"}, status=e.status_code)
+            # Проверка, что результат — это список (как ожидается)
+            if not isinstance(json_result, list):
+                raise TypeError("Output is not a valid JSON list.")
+
+            return Response({"result": json_result})
+
+        except (json.JSONDecodeError, TypeError) as e:
+            # Ошибка парсинга или несоответствие структуры
+            print(f"Warning: Model output is not valid JSON/structure: {result_text}")
+            return Response(
+                {"error": "Распознавание не смогло выдать данные в чистом JSON формате.", "raw_output": result_text},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    except APIError as e:  # Для обработки специфических ошибок OpenAI (если используется новая библиотека)
+        return Response({"error": f"Ошибка OpenAI API: {e.message}"},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     except Exception as e:
         # Общая обработка ошибок, включая сжатие
