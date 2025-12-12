@@ -1,9 +1,9 @@
 import base64
-import io
 from datetime import date
+from io import BytesIO
 
 import requests
-from PIL import Image
+from PIL import Image, ImageEnhance
 from decouple import config
 from django.contrib import messages
 from django.db.models import Prefetch, Q
@@ -352,34 +352,25 @@ def build_prompt() -> str:
 """
 
 
-def compress_image(base64_str: str, quality: int = 60) -> str:
-    """
-    Сжимает base64 изображение до JPEG с заданным quality.
-    Возвращает base64 строку готовую для OCR.
-    """
-    try:
-        if "," in base64_str:
-            header, data = base64_str.split(",", 1)
-        else:
-            data = base64_str
+def compress_image(base64_str, max_size=1400):
+    """Сжатие и повышение резкости изображения"""
+    header, encoded = base64_str.split(",", 1)
+    img_data = base64.b64decode(encoded)
+    img = Image.open(BytesIO(img_data)).convert("RGB")
 
-        img_data = base64.b64decode(data)
-        img = Image.open(io.BytesIO(img_data))
+    # resize
+    w, h = img.size
+    scale = min(max_size / max(w, h), 1)
+    if scale < 1:
+        img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.LANCZOS)
 
-        # Конвертируем в RGB, если PNG или с альфа-каналом
-        if img.mode in ("RGBA", "LA"):
-            background = Image.new("RGB", img.size, (255, 255, 255))
-            background.paste(img, mask=img.split()[3])  # 3-й канал = alpha
-            img = background
-        else:
-            img = img.convert("RGB")
+    # sharpness
+    img = ImageEnhance.Sharpness(img).enhance(1.4)
 
-        output = io.BytesIO()
-        img.save(output, format="JPEG", quality=quality)
-        encoded = base64.b64encode(output.getvalue()).decode("utf-8")
-        return f"data:image/jpeg;base64,{encoded}"
-    except Exception as e:
-        raise ValueError(f"Ошибка при сжатии изображения: {e}")
+    buffer = BytesIO()
+    img.save(buffer, format="JPEG", quality=85)
+    encoded_new = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    return "data:image/jpeg;base64," + encoded_new
 
 
 @api_view(["POST"])
