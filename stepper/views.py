@@ -331,11 +331,12 @@ def spec_part(request, id, myedu_id):
     has_active_cs = request.stepper.has_active_cs(myedu_id)
 
     student = get_object_or_404(ClearanceSheet, myedu_id=myedu_id, id=id)
-
+    selected_edu_year_id = student.edu_year_id
     if request.method == "POST":
         form = IssuanceForm(request.POST, request.FILES)
         signature_base64 = request.POST.get('signature')
         profile_base64 = request.POST.get('profile')
+        edu_year_id = request.POST.get('edu_year_id', 0)
         instance, error = request.stepper.create_issuance_form(
             form=form,
             user=request.user,
@@ -347,6 +348,11 @@ def spec_part(request, id, myedu_id):
             type=Issuance.SPEC,
             profile_base64=profile_base64
         )
+        if edu_year_id:
+            selected_edu_year_id = int(edu_year_id)
+        if edu_year_id and not error:
+            student.edu_year_id = edu_year_id
+            student.save()
         if error:
             messages.error(request, error)
         else:
@@ -357,13 +363,16 @@ def spec_part(request, id, myedu_id):
 
     issuance = Issuance.objects.filter(cs_id=id, student=myedu_id, type_choices=Issuance.SPEC).first()
     diploma = Diploma.objects.filter(student=myedu_id, sync=False).first()
+
     context = {
         "navbar": nav,
         "has_active_cs": has_active_cs,
         "form": form,
         "student": student,
         "issuance": issuance,
-        "diploma": diploma
+        "diploma": diploma,
+        "years": request.stepper.edu_years(),
+        "selected_edu_year_id": selected_edu_year_id
     }
     return render(request, "teachers/steppers/spec-part.html", context)
 
