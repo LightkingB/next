@@ -70,9 +70,18 @@
                     </thead>
                     <tbody class="order">
                     {% for transcript in transcripts %}
-                        <tr class="{% if transcript.is_defective %} error-block {% endif %} {% if transcript.is_used %} success-block {% endif %}">
+                        <tr class="{% if transcript.is_defective %} error-block {% endif %} {% if transcript.is_used %} success-block {% endif %}"
+                            data-id="{{ transcript.id }}">
                             <td>{{ forloop.counter0|add:transcripts.start_index }}</td>
-                            <td>{{ transcript.category.title }} (лист: {{ transcript.category.page_count }})</td>
+                            <td>
+                                {% if transcript.is_used %}
+                                    <button class="btn btn-outline-danger btn-sm delete-ft-button"
+                                            data-id="{{ transcript.id }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                {% endif %}
+                                {{ transcript.category.title }} (лист: {{ transcript.category.page_count }})
+                            </td>
                             <td>
                                 {{ transcript.transcript_number }}
                                 {% if transcript.is_used %}
@@ -145,6 +154,32 @@
             </div>
         </div>
     </div>
+
+    <!-- Модальное окно для подтверждения удаления -->
+    <div class="modal fade" id="deleteFacultyTranscriptModal" tabindex="-1" role="dialog"
+         aria-labelledby="deleteFacultyTranscriptModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteFacultyTranscriptModalLabel">Подтвердите удаление</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите удалить запись:</p>
+                    <h5><strong>Справку №:</strong> <span id="deleteTranscriptNumber"></span></h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="confirmFTDelete">Удалить</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -186,6 +221,39 @@
                     error: function () {
                         $("#error-text").text("Произошла ошибка. Попробуйте снова.");
                         $("#error-message").removeClass("d-none");
+                    }
+                });
+            });
+
+            var rowToDelete = null;
+
+
+            $('.delete-ft-button').on('click', function () {
+                rowToDelete = $(this).closest('tr');
+
+                var transcriptNumber = rowToDelete.find('td').eq(1).text();
+
+                $('#deleteTranscriptNumber').text(transcriptNumber);
+                $('#deleteFacultyTranscriptModal').modal('show');
+            });
+
+
+            $('#confirmFTDelete').on('click', function () {
+                var id = rowToDelete.data('id');
+                $.ajax({
+                    url: '/bsheet/faculty/delete/' + id + '/history/transcript/',
+                    type: 'DELETE',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            $('#deleteFacultyTranscriptModal').modal('hide');
+                            toastr["success"](response.message);
+                            location.reload()
+                        } else {
+                            toastr["error"](response.message);
+                        }
+                    },
+                    error: function () {
+                        toastr["error"]('Повторите попытку!');
                     }
                 });
             });

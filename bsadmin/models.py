@@ -171,6 +171,23 @@ class RegistrationTranscript(models.Model):
         return f'{self.student_uuid} - {self.faculty_transcript.transcript_number}'
 
 
+class RegHistoryTranscript(models.Model):
+    class Meta:
+        verbose_name = 'История регистрации студента'
+        verbose_name_plural = 'Истории регистрации студентов'
+
+    transcript_number = models.CharField(max_length=255, verbose_name="Номер транскрипта")
+    create_date = models.DateTimeField(auto_now_add=True)
+    student_uuid = models.CharField(max_length=100, verbose_name="Уникальный номер студента")
+    student_fio = models.CharField(max_length=150, verbose_name="ФИО студента")
+    faculty = models.CharField(max_length=150, verbose_name="ФИО студента", null=True, blank=True)
+    speciality = models.CharField(max_length=255, verbose_name="История специальности", null=True, blank=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.PROTECT, verbose_name="Автор")
+
+    def __str__(self):
+        return f'{self.student_uuid} - {self.transcript_number}'
+
+
 @receiver(post_delete, sender=FacultyTranscript)
 def delete_faculty_transcript_file(sender, instance, *args, **kwargs):
     if instance.files:

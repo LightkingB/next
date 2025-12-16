@@ -1,5 +1,6 @@
 import requests
 from django.contrib import messages
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -7,7 +8,7 @@ from django.views.generic import ListView
 
 from bsadmin.consts import API_URL
 from bsadmin.forms import FacultyTranscriptForm, FailFacultyTranscriptForm
-from bsadmin.models import RegistrationTranscript
+from bsadmin.models import RegistrationTranscript, RegHistoryTranscript
 from bsadmin.services import UserService
 from utils.errors import handle_error
 from utils.filter_pagination import Pagination
@@ -173,6 +174,42 @@ def delete_faculty_transcript(request, id):
     return JsonResponse({'status': 'error', 'message': 'Запись не найдена'})
 
 
+@csrf_exempt
+def delete_registry_faculty_transcript(request, id):
+    user_service = UserService()
+
+    faculty_transcript = user_service.get_academic_transcript_by_id_or_none(id)
+    if not faculty_transcript:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Запись не найдена'},
+            status=404
+        )
+
+    with transaction.atomic():
+        reg_transcript = (
+            RegistrationTranscript.objects
+            .select_related('faculty', 'speciality', 'faculty_transcript')
+            .filter(faculty_transcript=faculty_transcript)
+            .first()
+        )
+
+        if reg_transcript:
+            RegHistoryTranscript.objects.create(
+                transcript_number=reg_transcript.faculty_transcript.transcript_number,
+                student_uuid=reg_transcript.student_uuid,
+                student_fio=reg_transcript.student_fio,
+                faculty=reg_transcript.faculty.title,
+                speciality=reg_transcript.speciality.title,
+                created_by=request.user
+            )
+
+            reg_transcript.delete()
+
+    return JsonResponse(
+        {'status': 'success', 'message': 'Запись удалена'}
+    )
+
+
 def registration_academic_transcript_student(request):
     user_service = UserService()
     faculties = user_service.active_faculties()
@@ -306,7 +343,9 @@ def save_academic_transcript_student(request):
             speciality_history=speciality_title
         )
         messages.success(request, "Данные успешно сохранены")
-    except Exception as _:
+    except Exception as e:
+        print("---------------------")
+        print(e)
         messages.error(request, "Повторите попытку...")
 
     return redirect("bsadmin:academic-transcript-student")

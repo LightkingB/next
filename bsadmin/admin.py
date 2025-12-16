@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import CustomUser, Role, Faculty, FacultyTranscript, \
-    RegistrationTranscript, CategoryTranscript, Speciality
 from django.contrib.auth.admin import UserAdmin
+
+from .models import CustomUser, Role, Faculty, FacultyTranscript, \
+    RegistrationTranscript, CategoryTranscript, Speciality, RegHistoryTranscript
 
 
 class CustomUserAdmin(UserAdmin):
@@ -32,6 +33,7 @@ admin.site.register(Faculty)
 admin.site.register(Speciality)
 admin.site.register(FacultyTranscript)
 admin.site.register(CategoryTranscript)
+admin.site.register(RegHistoryTranscript)
 
 
 @admin.register(RegistrationTranscript)

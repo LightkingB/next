@@ -157,7 +157,7 @@
                 $('#updateFacultyTranscriptModal').modal('show');
 
                 $.ajax({
-                    url: '/faculty/update/' + id + '/transcript/',
+                    url: '/bsheet/faculty/update/' + id + '/transcript/',
                     type: 'GET',
                     success: function (response) {
                         $('#update_transcript_number').val(response.data.transcript_number);
@@ -173,9 +173,8 @@
             $('#update-ft-form').on('submit', function (e) {
                 e.preventDefault();
                 var formData = $(this).serialize();
-
                 $.ajax({
-                    url: $(this).attr('action'),
+                    url: "/bsheet" + $(this).attr('action'),
                     type: 'POST',
                     data: formData,
                     success: function (response) {
@@ -211,7 +210,7 @@
         $('#confirmFTDelete').on('click', function () {
             var id = rowToDelete.data('id');
             $.ajax({
-                url: '/faculty/delete/' + id + '/transcript/',
+                url: '/bsheet/faculty/delete/' + id + '/transcript/',
                 type: 'DELETE',
                 success: function (response) {
                     if (response.status === 'success') {

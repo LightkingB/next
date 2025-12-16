@@ -23,6 +23,8 @@ urlpatterns = [
 
     path('faculty/update/<int:id>/transcript/', update_faculty_transcript, name='update_faculty_transcript'),
     path('faculty/delete/<int:id>/transcript/', delete_faculty_transcript, name='delete_faculty_transcript'),
+    path('faculty/delete/<int:id>/history/transcript/', delete_registry_faculty_transcript,
+         name='delete_faculty_history_transcript'),
 
     path('fail/transcript/', fail_transcript, name='fail_transcript'),
     path('faculty/specialities/', specialities_by_faculty, name='specialities-faculty'),
