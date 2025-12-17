@@ -23,9 +23,9 @@ class StepperService:
     def fetch_students(request, api_url, search_query=None):
         try:
             if search_query:
-                response = requests.post(api_url, data={"search": search_query})
+                response = requests.post(api_url, data={"search": search_query}, timeout=5)
             else:
-                response = requests.get(api_url)
+                response = requests.get(api_url, timeout=5)
 
             if response.status_code == 200:
                 return response.json()
@@ -47,7 +47,7 @@ class StepperService:
             data["search"] = search
 
         try:
-            response = requests.post(url, data=data, timeout=10)
+            response = requests.post(url, data=data, timeout=5)
 
             if response.status_code == 200:
                 try:
