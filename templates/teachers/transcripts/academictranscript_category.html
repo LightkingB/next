@@ -231,7 +231,7 @@
             $('.delete-ft-button').on('click', function () {
                 rowToDelete = $(this).closest('tr');
 
-                var transcriptNumber = rowToDelete.find('td').eq(1).text();
+                var transcriptNumber = rowToDelete.find('td').eq(2).text();
 
                 $('#deleteTranscriptNumber').text(transcriptNumber);
                 $('#deleteFacultyTranscriptModal').modal('show');
