@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-from django.contrib import messages
+
 from decouple import config
+from django.contrib import messages
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -70,6 +71,16 @@ TEMPLATES = [
         },
     },
 ]
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
