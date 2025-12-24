@@ -25,7 +25,7 @@ from stepper.filters import StageEmployeeStudentFilter, CSFilter, CsHistoryFilte
 from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm, DiplomaForm
 from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep, StageEmployee, Issuance, \
     IssuanceHistory, Diploma
-from utils.caches import get_student_from_cache, set_student_to_cache
+from utils.caches import EntityCache
 from utils.filter_pagination import Pagination
 
 
@@ -729,13 +729,14 @@ def cs_issuance_delete(request):
 def cs_report(request, cs_id):
     clearance_sheet = get_object_or_404(ClearanceSheet, id=cs_id)
 
-    student = get_student_from_cache(clearance_sheet.myedu_id)
-    if not student:
-        student = next(
-            iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=clearance_sheet.myedu_id)),
-            None
-        )
-        set_student_to_cache(student)
+    student = EntityCache.get_or_set(
+        entity_id=clearance_sheet.myedu_id,
+        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_kwargs={
+            "url": STUDENT_STEPPER_URL,
+            "search": clearance_sheet.myedu_id,
+        },
+    )
 
     trajectories = request.stepper.get_trajectories_with_annotations(clearance_sheet)
 
@@ -791,13 +792,14 @@ def cs_step_undo(request, cs_id):
 
 @with_stepper
 def cs_history(request, myedu_id, cs_id):
-    student = get_student_from_cache(myedu_id)
-    if not student:
-        student = next(
-            iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
-            None
-        )
-        set_student_to_cache(student)
+    student = EntityCache.get_or_set(
+        entity_id=myedu_id,
+        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_kwargs={
+            "url": STUDENT_STEPPER_URL,
+            "search": myedu_id,
+        },
+    )
     order = student.get("info") if student else None
     cs_student = ClearanceSheet.objects.filter(myedu_id=myedu_id, order=order, id=cs_id).order_by('-issued_at').first()
     trajectories = request.stepper.cs_history_detail(cs_student)
@@ -836,13 +838,14 @@ def cs_history_detail(request, cs_id):
 @with_stepper
 def cs_detail(request, myedu_id):
     nav = request.session.get("cs-nav", "stepper")
-    student = get_student_from_cache(myedu_id)
-    if not student:
-        student = next(
-            iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
-            None
-        )
-        set_student_to_cache(student)
+    student = EntityCache.get_or_set(
+        entity_id=myedu_id,
+        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_kwargs={
+            "url": STUDENT_STEPPER_URL,
+            "search": myedu_id,
+        },
+    )
     order = student.get("info") if student else None
     cs_student = ClearanceSheet.objects.filter(myedu_id=myedu_id, order=order).order_by('-issued_at').first()
 
@@ -875,13 +878,14 @@ def cs_detail(request, myedu_id):
 
 @with_stepper
 def cs_force(request, myedu_id):
-    student = get_student_from_cache(myedu_id)
-    if not student:
-        student = next(
-            iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
-            None
-        )
-        set_student_to_cache(student)
+    student = EntityCache.get_or_set(
+        entity_id=myedu_id,
+        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_kwargs={
+            "url": STUDENT_STEPPER_URL,
+            "search": myedu_id,
+        },
+    )
 
     process_cs = ClearanceSheet.objects.filter(myedu_id=myedu_id, completed_at__isnull=True)
 
@@ -1084,14 +1088,15 @@ def debts_comment(request, id):
         id=id
     )
 
-    student = get_student_from_cache(trajectory.clearance_sheet.myedu_id)
-    if not student:
-        student = next(
-            iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL,
-                                                           search=trajectory.clearance_sheet.myedu_id)),
-            None
-        )
-        set_student_to_cache(student)
+    student = EntityCache.get_or_set(
+        entity_id=trajectory.clearance_sheet.myedu_id,
+        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_kwargs={
+            "url": STUDENT_STEPPER_URL,
+            "search": trajectory.clearance_sheet.myedu_id,
+        },
+    )
+
     sync_myedu = True
     if not student:
         sync_myedu = False
@@ -1133,14 +1138,14 @@ def debts_comment_history(request, id):
         Trajectory.objects.select_related('clearance_sheet'),
         id=id
     )
-    student = get_student_from_cache(trajectory.clearance_sheet.myedu_id)
-    if not student:
-        student = next(
-            iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL,
-                                                           search=trajectory.clearance_sheet.myedu_id)),
-            None
-        )
-        set_student_to_cache(student)
+    student = EntityCache.get_or_set(
+        entity_id=trajectory.clearance_sheet.myedu_id,
+        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_kwargs={
+            "url": STUDENT_STEPPER_URL,
+            "search": trajectory.clearance_sheet.myedu_id,
+        },
+    )
 
     sync_myedu = True
     if not student:
@@ -1330,14 +1335,14 @@ def qr_code_status(request, qr_id):
     trajectories = None
 
     if clearance_sheet:
-        student = get_student_from_cache(clearance_sheet.myedu_id)
-        if not student:
-            student = next(
-                iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL,
-                                                               search=clearance_sheet.myedu_id)),
-                None
-            )
-            set_student_to_cache(student)
+        student = EntityCache.get_or_set(
+            entity_id=clearance_sheet.myedu_id,
+            fetch_func=request.stepper.get_stepper_data_from_api,
+            fetch_kwargs={
+                "url": STUDENT_STEPPER_URL,
+                "search": clearance_sheet.myedu_id,
+            },
+        )
 
         trajectories = request.stepper.get_trajectories_with_annotations(clearance_sheet)
 
