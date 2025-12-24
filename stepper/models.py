@@ -279,6 +279,24 @@ class Diploma(models.Model):
         return f"{self.student} - {self.doc_number}"
 
 
+class UserActionLog(models.Model):
+    user = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.SET_NULL)
+    username = models.CharField(max_length=150, blank=True)
+    method = models.CharField(max_length=10)
+    path = models.TextField()
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    success = models.BooleanField(default=False)
+    extra_info = models.JSONField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.user or 'Anonymous'} - {self.path}"
+
+
 @receiver(post_delete, sender=Issuance)
 def delete_issuance_file(sender, instance, *args, **kwargs):
     if instance.files:

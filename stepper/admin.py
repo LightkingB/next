@@ -92,3 +92,5 @@ class IssuanceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(IssuanceHistory)
+
+admin.site.register(UserActionLog)

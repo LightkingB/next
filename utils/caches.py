@@ -5,17 +5,10 @@ from django.core.cache import cache
 
 DEFAULT_TTL = 5 * 60 * 60
 LOCK_TTL = 10
-WAIT_ATTEMPTS = 20
+MAX_WAIT = 2
 
 
 class EntityCache:
-    """
-    Универсальный кеш с Redis-lock для одной сущности.
-    - Кеш хранит **одно нормализованное значение**
-    - None не кешируется
-    - Race condition защищён
-    """
-
     @staticmethod
     def _cache_key(entity_id: str) -> str:
         return f"student:{entity_id}"
@@ -50,11 +43,15 @@ class EntityCache:
             return value
         got_lock = cache.add(lock_key, 1, LOCK_TTL)
         if not got_lock:
-            for _ in range(WAIT_ATTEMPTS):
-                time.sleep(0.1)
+            delay = 0.05
+            waited = 0
+            while waited < MAX_WAIT:
+                time.sleep(delay)
+                waited += delay
                 value = cache.get(cache_key)
                 if value is not None:
                     return value
+                delay = min(delay * 2, 0.5)
             return None
         try:
             raw = fetch_func(**fetch_kwargs)
