@@ -65,7 +65,7 @@ class StageStatusAdmin(admin.ModelAdmin):
 @admin.register(Trajectory)
 class TrajectoryAdmin(admin.ModelAdmin):
     list_display = ('clearance_sheet', 'get_stage_name', 'assigned_at', 'completed_at', 'assigned_by')
-    search_fields = ('clearance_sheet__id', 'clearance_sheet__myedu_id', 'clearance_sheet__student_fio')
+    search_fields = ('clearance_sheet_id', 'clearance_sheet__myedu_id', 'clearance_sheet__student_fio')
     list_filter = ('template_stage__stage__name',)
 
     def get_queryset(self, request):
