@@ -9,5 +9,6 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'PORT': config('PORT'),
         'HOST': config('HOST'),
+        'CONN_MAX_AGE': 60,
     }
 }
