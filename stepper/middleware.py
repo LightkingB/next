@@ -1,7 +1,7 @@
 from .tasks import save_user_log
 
 SENSITIVE_FIELDS = {'password', 'token', 'secret', 'csrfmiddlewaretoken'}
-SKIP_PATHS = ['/static/', '/media/', '/health/', '/favicon.ico', '/admin/']
+SKIP_PATHS = ['/static/', '/media/', '/health/', '/favicon.ico', '/admin/', '/silk/']
 
 
 def get_client_ip(request):
