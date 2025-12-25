@@ -240,3 +240,29 @@ LOGGING = {
         },
     }
 }
+
+
+# --- Конфигурация Silk ---
+def silk_intercept_func(request):
+    ignored_paths = ['/admin/', '/silk/', '/static/', '/media/', '/health/']
+    if any(request.path.startswith(p) for p in ignored_paths):
+        return False
+    return True
+
+
+SILKY_INTERCEPT_FUNC = silk_intercept_func
+
+# 2. Ограничиваем объемы данных
+SILKY_MAX_RECORDED_REQUESTS = 500
+SILKY_MAX_RECORDED_REQUESTS_CHECK_STEP = 50
+SILKY_MAX_RESPONSE_BODY_SIZE = 1024
+SILKY_MAX_REQUEST_BODY_SIZE = 1024
+
+# 3. Производительность
+SILKY_PYTHON_PROFILER = False
+SILKY_ANALYZE_QUERIES = True
+SILKY_SAVE_IDS_ONLY = False
+
+# 4. Безопасность
+SILKY_AUTHENTICATION = True
+SILKY_AUTHORISATION = True
