@@ -3,6 +3,21 @@
 
 
 {% block content %}
+    <!-- Индикатор загрузки -->
+    <div id="loading-overlay" style="
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+        text-align: center;
+        color: white;
+        font-size: 24px;
+        padding-top: 20%;
+    ">
+        <i class="fas fa-spinner fa-spin"></i> Загрузка...
+    </div>
     <div class="container-fluid">
         <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
         <hr/>
@@ -10,7 +25,7 @@
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
             <div class="row">
                 <div class="col-md-10 col-lg-8">
-                    <form action="" method="post">
+                    <form action="" method="post" id="search-form">
                         {% csrf_token %}
 
                         <div class="row">
@@ -148,7 +163,18 @@
 {% block scripts %}
     <script type="text/javascript">
         $(document).ready(function () {
+            document.getElementById('search-form').addEventListener('submit', function (e) {
+                const btn = document.getElementById('search-btn');
+                const overlay = document.getElementById('loading-overlay');
 
+                // Показываем оверлей и блокируем все
+                overlay.style.display = 'block';
+                btn.disabled = true;
+
+                // Можно заблокировать всю страницу кликами
+                document.body.style.pointerEvents = 'none';
+                overlay.style.pointerEvents = 'auto';
+            });
             $('#faculty').change(function () {
                 const faculty_id = $(this).val();
 

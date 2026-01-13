@@ -50,9 +50,8 @@ def cs_index(request):
         search = request.POST.get("search", "")
         faculty_id = request.POST.get("faculty_id", 0)
         specialty_id = request.POST.get("specialty_id", 0)
+
         students_qs = request.stepper.get_stepper_data_from_api(STUDENT_STEPPER_URL, search, faculty_id, specialty_id)
-    # else:
-    #     students_qs = request.stepper.get_stepper_data_from_api(STUDENT_STEPPER_URL)
 
     student_ids = [str(student["student_id"]) for student in students_qs]
 

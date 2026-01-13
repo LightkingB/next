@@ -121,7 +121,7 @@ class ClearanceSheet(models.Model):
                                  verbose_name=_("Учебный год"))
 
     def update_completed_at(self):
-        has_null_trajectories = self.trajectory_set.filter(completed_at__isnull=True)
+        has_null_trajectories = self.trajectory_set.filter(completed_at__isnull=True).exists()
         if not has_null_trajectories:
             self.completed_at = datetime.now()
             self.save(update_fields=['completed_at'])
