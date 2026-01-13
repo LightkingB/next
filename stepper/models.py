@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models.signals import post_delete
@@ -123,7 +121,7 @@ class ClearanceSheet(models.Model):
     def update_completed_at(self):
         has_null_trajectories = self.trajectory_set.filter(completed_at__isnull=True).exists()
         if not has_null_trajectories:
-            self.completed_at = datetime.now()
+            self.completed_at = now()
             self.save(update_fields=['completed_at'])
 
     class Meta:
