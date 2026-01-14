@@ -2,8 +2,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 
 from bsadmin.forms import LoginForm
-from bsadmin.services import HttpMyEduServiceAPI, UserService
+from bsadmin.services import UserService
 from utils.errors import handle_error
+from utils.myedu import MyEduService
 
 
 def sign_in_teacher_view(request):
@@ -19,7 +20,7 @@ def sign_in_teacher_view(request):
             user = authenticate(email=email, password=password)
 
             if user is None:
-                myedu_data, success = HttpMyEduServiceAPI.get_myedu_data(email, password)
+                myedu_data, success = MyEduService.get_user_auth(email, password)
                 if success:
                     user = user_service.update_or_create_user(email, password, myedu_data)
                 else:

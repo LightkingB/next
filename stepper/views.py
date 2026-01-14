@@ -27,6 +27,7 @@ from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep
     IssuanceHistory, Diploma
 from utils.caches import EntityCache
 from utils.filter_pagination import Pagination
+from utils.myedu import MyEduService
 
 
 def route(request):
@@ -51,7 +52,7 @@ def cs_index(request):
         faculty_id = request.POST.get("faculty_id", 0)
         specialty_id = request.POST.get("specialty_id", 0)
 
-        students_qs = request.stepper.get_stepper_data_from_api(STUDENT_STEPPER_URL, search, faculty_id, specialty_id)
+        students_qs = MyEduService.get_stepper_data_from_api(STUDENT_STEPPER_URL, search, faculty_id, specialty_id)
 
     student_ids = [str(student["student_id"]) for student in students_qs]
 
@@ -113,7 +114,7 @@ def spec_students(request):
         request.session["faculty_id"] = faculty_id
         request.session["specialty_id"] = specialty_id
 
-    students_qs = request.stepper.get_stepper_data_from_api(
+    students_qs = MyEduService.get_stepper_data_from_api(
         STUDENT_STEPPER_URL, search, faculty_id, specialty_id
     )
 
@@ -730,7 +731,7 @@ def cs_report(request, cs_id):
 
     student = EntityCache.get_or_set(
         entity_id=clearance_sheet.myedu_id,
-        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_func=MyEduService.get_stepper_data_from_api,
         fetch_kwargs={
             "url": STUDENT_STEPPER_URL,
             "search": clearance_sheet.myedu_id,
@@ -793,7 +794,7 @@ def cs_step_undo(request, cs_id):
 def cs_history(request, myedu_id, cs_id):
     student = EntityCache.get_or_set(
         entity_id=myedu_id,
-        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_func=MyEduService.get_stepper_data_from_api,
         fetch_kwargs={
             "url": STUDENT_STEPPER_URL,
             "search": myedu_id,
@@ -839,7 +840,7 @@ def cs_detail(request, myedu_id):
     nav = request.session.get("cs-nav", "stepper")
     student = EntityCache.get_or_set(
         entity_id=myedu_id,
-        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_func=MyEduService.get_stepper_data_from_api,
         fetch_kwargs={
             "url": STUDENT_STEPPER_URL,
             "search": myedu_id,
@@ -879,7 +880,7 @@ def cs_detail(request, myedu_id):
 def cs_force(request, myedu_id):
     student = EntityCache.get_or_set(
         entity_id=myedu_id,
-        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_func=MyEduService.get_stepper_data_from_api,
         fetch_kwargs={
             "url": STUDENT_STEPPER_URL,
             "search": myedu_id,
@@ -1089,7 +1090,7 @@ def debts_comment(request, id):
 
     student = EntityCache.get_or_set(
         entity_id=trajectory.clearance_sheet.myedu_id,
-        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_func=MyEduService.get_stepper_data_from_api,
         fetch_kwargs={
             "url": STUDENT_STEPPER_URL,
             "search": trajectory.clearance_sheet.myedu_id,
@@ -1139,7 +1140,7 @@ def debts_comment_history(request, id):
     )
     student = EntityCache.get_or_set(
         entity_id=trajectory.clearance_sheet.myedu_id,
-        fetch_func=request.stepper.get_stepper_data_from_api,
+        fetch_func=MyEduService.get_stepper_data_from_api,
         fetch_kwargs={
             "url": STUDENT_STEPPER_URL,
             "search": trajectory.clearance_sheet.myedu_id,
@@ -1172,7 +1173,7 @@ def teachers(request):
     if request.method == "POST":
         search = request.POST.get("search", "")
 
-    teachers_qs = request.stepper.get_stepper_data_from_api(TEACHER_STEPPER_URL, search)
+    teachers_qs = MyEduService.get_stepper_data_from_api(TEACHER_STEPPER_URL, search)
 
     paginator = Pagination(request, teachers_qs or [])
     page_number = request.GET.get('page', 1)
@@ -1189,7 +1190,7 @@ def teachers(request):
 
 @with_stepper
 def teacher_cs_detail(request, myedu_id):
-    teacher = next(iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
+    teacher = next(iter(MyEduService.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=myedu_id)),
                    None)
     if request.method == "POST":
         if teacher:
@@ -1224,7 +1225,7 @@ def teacher_cs_detail(request, myedu_id):
 @with_stepper
 def teachers_cs(request):
     teacher = next(
-        iter(request.stepper.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=request.user.myedu_id)),
+        iter(MyEduService.get_stepper_data_from_api(url=STUDENT_STEPPER_URL, search=request.user.myedu_id)),
         None)
 
     search_query = request.GET.get('search')
@@ -1336,7 +1337,7 @@ def qr_code_status(request, qr_id):
     if clearance_sheet:
         student = EntityCache.get_or_set(
             entity_id=clearance_sheet.myedu_id,
-            fetch_func=request.stepper.get_stepper_data_from_api,
+            fetch_func=MyEduService.get_stepper_data_from_api,
             fetch_kwargs={
                 "url": STUDENT_STEPPER_URL,
                 "search": clearance_sheet.myedu_id,

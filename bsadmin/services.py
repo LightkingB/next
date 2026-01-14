@@ -1,56 +1,10 @@
-import logging
-
-import httpx
 from django.db import transaction
 from django.db.models import Count, Q, Exists, OuterRef
 from django.http import Http404
 
-from bsadmin.consts import API_URL
 from bsadmin.models import *
 from utils.convert import to_bool
-
-logger = logging.getLogger(__name__)
-TIMEOUT_CONFIG = httpx.Timeout(7.0, connect=2.0, read=5.0)
-
-
-class HttpMyEduServiceAPI:
-    @staticmethod
-    def get_myedu_data(email, password):
-        payload = {"email": email, "password": password}
-        try:
-            with httpx.Client(timeout=TIMEOUT_CONFIG, http2=True) as client:
-                response = client.post(f"{API_URL}/checkuser", data=payload)
-                response.raise_for_status()
-
-                data = response.json()
-                return data, data.get('success', False)
-        except Exception as e:
-            logger.error(f"MyEdu Login Error: {e}")
-            return None, False
-
-    @staticmethod
-    def fetch_faculties_from_myedu():
-        try:
-            with httpx.Client(timeout=TIMEOUT_CONFIG) as client:
-                response = client.get(f"{API_URL}/open/faculty")
-                response.raise_for_status()
-                return response.json()
-        except Exception as e:
-            logger.error(f"Fetch Faculties Error: {e}")
-            return None
-
-    @staticmethod
-    def fetch_specialities_from_myedu(faculty_id):
-        params = {"id_faculty": faculty_id}
-        try:
-            with httpx.Client(timeout=TIMEOUT_CONFIG) as client:
-                # HTTPX сам правильно приклеит параметры к URL
-                response = client.get(f"{API_URL}/open/getspecialitywithidfaculty", params=params)
-                response.raise_for_status()
-                return response.json()
-        except Exception as e:
-            logger.error(f"Fetch Specialities Error: {e}")
-            return None
+from utils.myedu import MyEduService
 
 
 class UserService:
@@ -172,13 +126,6 @@ class UserService:
     def get_all_category_transcript():
         return CategoryTranscript.objects.all()
 
-    # @staticmethod
-    # def is_reg_academic_transcript_for_student(transcript_id):
-    #     reg_transcript = RegistrationTranscript.objects.filter(faculty_transcript_id=transcript_id)
-    #     if reg_transcript:
-    #         return True
-    #     return False
-
     @staticmethod
     def is_reg_academic_transcript_for_student(transcript_id):
         return RegistrationTranscript.objects.filter(faculty_transcript_id=transcript_id).first()
@@ -198,7 +145,7 @@ class UserService:
             return None
 
     def fetch_and_update_faculties(self):
-        faculties_data = HttpMyEduServiceAPI.fetch_faculties_from_myedu()
+        faculties_data = MyEduService.fetch_faculties()
         if faculties_data is None:
             return None, "Ошибка при получении факультетов"
 
@@ -230,7 +177,7 @@ class UserService:
         return self.active_faculties(), None
 
     def fetch_and_update_specialities_by_faculty(self, faculty):
-        specialities_data = HttpMyEduServiceAPI.fetch_specialities_from_myedu(faculty.myedu_faculty_id)
+        specialities_data = MyEduService.fetch_specialities(faculty.myedu_faculty_id)
         if specialities_data is None:
             return None, "Ошибка при получении специальности"
         faculty_id = faculty.id

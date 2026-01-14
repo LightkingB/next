@@ -1,4 +1,5 @@
-import requests
+import logging
+
 from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
@@ -6,12 +7,12 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView
 
-from bsadmin.consts import API_URL
 from bsadmin.forms import FacultyTranscriptForm, FailFacultyTranscriptForm
 from bsadmin.models import RegistrationTranscript, RegHistoryTranscript
 from bsadmin.services import UserService
 from utils.errors import handle_error
 from utils.filter_pagination import Pagination
+from utils.myedu import MyEduService
 
 
 def faculty(request):
@@ -220,7 +221,7 @@ def registration_academic_transcript_student(request):
         if request.POST.get('manual_entry'):
             students, custom_data, manual_entry_checked = handle_manual_entry(request, user_service)
         else:
-            students = handle_student_search(request)
+            students = MyEduService.handle_student_search(request)
     context = {
         "navbar": "at-register-student",
         "students": students,
@@ -285,11 +286,6 @@ def handle_manual_entry(request, user_service):
         messages.error(request, "Ошибка сохранения. Повторите попытку.")
         return None, custom_data, True
 
-
-def handle_student_search(request):
-    student_query = request.POST.get("student")
-    response = requests.post(API_URL + "/obhadnoi/searchstudent", data={"search": student_query}, timeout=5)
-    return response.json() if response.status_code == 200 else None
 
 
 def save_academic_transcript_student(request):
