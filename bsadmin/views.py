@@ -288,7 +288,7 @@ def handle_manual_entry(request, user_service):
 
 def handle_student_search(request):
     student_query = request.POST.get("student")
-    response = requests.post(API_URL + "/obhadnoi/searchstudent", data={"search": student_query})
+    response = requests.post(API_URL + "/obhadnoi/searchstudent", data={"search": student_query}, timeout=5)
     return response.json() if response.status_code == 200 else None
 
 
@@ -344,8 +344,6 @@ def save_academic_transcript_student(request):
         )
         messages.success(request, "Данные успешно сохранены")
     except Exception as e:
-        print("---------------------")
-        print(e)
         messages.error(request, "Повторите попытку...")
 
     return redirect("bsadmin:academic-transcript-student")

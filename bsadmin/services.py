@@ -13,7 +13,7 @@ class HttpMyEduServiceAPI:
     @staticmethod
     def get_myedu_data(email, password):
         user_response = requests.post(API_URL + "/checkuser",
-                                      data={"email": email, "password": password})
+                                      data={"email": email, "password": password}, timeout=5)
         if user_response.status_code == 200:
             data = user_response.json()
             success = data.get('success', False)
@@ -22,12 +22,12 @@ class HttpMyEduServiceAPI:
 
     @staticmethod
     def fetch_faculties_from_myedu():
-        response = requests.get(API_URL + "/open/faculty")
+        response = requests.get(API_URL + "/open/faculty", timeout=5)
         return response.json() if response.status_code == 200 else None
 
     @staticmethod
     def fetch_specialities_from_myedu(faculty_id):
-        response = requests.get(API_URL + "/open/getspecialitywithidfaculty?id_faculty=" + str(faculty_id))
+        response = requests.get(API_URL + "/open/getspecialitywithidfaculty?id_faculty=" + str(faculty_id), timeout=5)
         return response.json() if response.status_code == 200 else None
 
 
