@@ -1,4 +1,6 @@
-import requests
+import logging
+
+import httpx
 from django.db import transaction
 from django.db.models import Count, Q, Exists, OuterRef
 from django.http import Http404
@@ -7,27 +9,48 @@ from bsadmin.consts import API_URL
 from bsadmin.models import *
 from utils.convert import to_bool
 
+logger = logging.getLogger(__name__)
+TIMEOUT_CONFIG = httpx.Timeout(7.0, connect=2.0, read=5.0)
+
 
 class HttpMyEduServiceAPI:
     @staticmethod
     def get_myedu_data(email, password):
-        user_response = requests.post(API_URL + "/checkuser",
-                                      data={"email": email, "password": password}, timeout=5)
-        if user_response.status_code == 200:
-            data = user_response.json()
-            success = data.get('success', False)
-            return data, success
-        return None, False
+        payload = {"email": email, "password": password}
+        try:
+            with httpx.Client(timeout=TIMEOUT_CONFIG, http2=True) as client:
+                response = client.post(f"{API_URL}/checkuser", data=payload)
+                response.raise_for_status()
+
+                data = response.json()
+                return data, data.get('success', False)
+        except Exception as e:
+            logger.error(f"MyEdu Login Error: {e}")
+            return None, False
 
     @staticmethod
     def fetch_faculties_from_myedu():
-        response = requests.get(API_URL + "/open/faculty", timeout=5)
-        return response.json() if response.status_code == 200 else None
+        try:
+            with httpx.Client(timeout=TIMEOUT_CONFIG) as client:
+                response = client.get(f"{API_URL}/open/faculty")
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            logger.error(f"Fetch Faculties Error: {e}")
+            return None
 
     @staticmethod
     def fetch_specialities_from_myedu(faculty_id):
-        response = requests.get(API_URL + "/open/getspecialitywithidfaculty?id_faculty=" + str(faculty_id), timeout=5)
-        return response.json() if response.status_code == 200 else None
+        params = {"id_faculty": faculty_id}
+        try:
+            with httpx.Client(timeout=TIMEOUT_CONFIG) as client:
+                # HTTPX сам правильно приклеит параметры к URL
+                response = client.get(f"{API_URL}/open/getspecialitywithidfaculty", params=params)
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            logger.error(f"Fetch Specialities Error: {e}")
+            return None
 
 
 class UserService:

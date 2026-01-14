@@ -1,6 +1,7 @@
+import logging
 from datetime import datetime
 
-import requests
+import httpx
 from django.contrib import messages
 from django.db import transaction, IntegrityError
 from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery, Value, CharField, Count
@@ -10,54 +11,76 @@ from django.utils.timezone import make_aware
 
 from bsadmin.consts import MYEDU_LOGIN, MYEDU_PASSWORD
 from bsadmin.models import CustomUser, Faculty, Speciality
-from stepper.consts import EMPTY_RESPONSE_STEPPER_DATA, STUDENT_CS, TEACHER_CS, CS_PROCESS, CS_FINISHED
+from stepper.consts import EMPTY_RESPONSE_STEPPER_DATA, STUDENT_CS, TEACHER_CS, CS_FINISHED
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
 from stepper.models import Issuance, ClearanceSheet, Trajectory, StageStatus, StageEmployee, TemplateStep, \
     IssuanceHistory, EduYear
 from utils.convert import save_signature_image
 
+logger = logging.getLogger(__name__)
+
 
 class StepperService:
     @staticmethod
     def fetch_students(request, api_url, search_query=None):
-        try:
-            if search_query:
-                response = requests.post(api_url, data={"search": search_query}, timeout=5)
-            else:
-                response = requests.get(api_url, timeout=5)
+        limits = httpx.Limits(max_connections=20, max_keepalive_connections=5)
+        timeout = httpx.Timeout(7.0, connect=2.0)
 
-            if response.status_code == 200:
+        try:
+            with httpx.Client(limits=limits, timeout=timeout) as client:
+                if search_query:
+                    response = client.post(api_url, data={"search": search_query})
+                else:
+                    response = client.get(api_url)
+
+                response.raise_for_status()
+
                 return response.json()
-            messages.error(request, "Повторите попытку позже...")
-        except requests.RequestException:
-            messages.error(request, "Ошибка сети. Попробуйте позже...")
+
+        except httpx.ConnectTimeout:
+            messages.error(request, "Сервер API недоступен (таймаут подключения).")
+        except httpx.ReadTimeout:
+            messages.error(request, "API долго отвечает. Повторите попытку позже.")
+        except httpx.HTTPStatusError as exc:
+            messages.error(request, f"Ошибка API: {exc.response.status_code}")
+        except Exception as e:
+            messages.error(request, "Произошла непредвиденная ошибка.")
+
         return []
 
     @staticmethod
     def get_stepper_data_from_api(url, search=None, faculty_id=0, specialty_id=0):
-        data = {
+        payload = {
             "login": MYEDU_LOGIN,
             "password": MYEDU_PASSWORD,
             "faculty_id": faculty_id,
             "speciality_id": specialty_id
         }
-
         if search:
-            data["search"] = search
+            payload["search"] = search
+
+        limits = httpx.Limits(max_connections=10, max_keepalive_connections=5)
 
         try:
-            response = requests.post(url, data=data, timeout=5)
+            with httpx.Client(limits=limits, http2=True) as client:
+                response = client.post(url, data=payload, timeout=httpx.Timeout(5.0, connect=2.0))
 
-            if response.status_code == 200:
-                try:
-                    json_data = response.json()
-                    return json_data if isinstance(json_data, list) else EMPTY_RESPONSE_STEPPER_DATA
-                except ValueError:
-                    return EMPTY_RESPONSE_STEPPER_DATA
-            else:
-                return EMPTY_RESPONSE_STEPPER_DATA
-        except requests.RequestException:
+                response.raise_for_status()
+
+                json_data = response.json()
+                return json_data if isinstance(json_data, list) else EMPTY_RESPONSE_STEPPER_DATA
+
+        except (httpx.ConnectTimeout, httpx.ReadTimeout):
+            logger.warning(f"API Timeout: Внешний сервер {url} не ответил вовремя.")
+            return EMPTY_RESPONSE_STEPPER_DATA
+
+        except httpx.HTTPStatusError as exc:
+            logger.error(f"API Error: Код {exc.response.status_code} при запросе к {url}")
+            return EMPTY_RESPONSE_STEPPER_DATA
+
+        except Exception as e:
+            logger.error(f"Unexpected Error: {e}")
             return EMPTY_RESPONSE_STEPPER_DATA
 
     @staticmethod
