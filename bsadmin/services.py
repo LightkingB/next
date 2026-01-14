@@ -4,8 +4,7 @@ from django.db.models import Count, Q, Exists, OuterRef
 from django.http import Http404
 
 from bsadmin.consts import API_URL
-from bsadmin.models import CustomUser, Faculty, FacultyTranscript, RegistrationTranscript, \
-    CategoryTranscript, Speciality
+from bsadmin.models import *
 from utils.convert import to_bool
 
 
