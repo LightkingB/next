@@ -7,16 +7,11 @@ from bsadmin.consts import MYEDU_LOGIN, MYEDU_PASSWORD, API_URL
 
 logger = logging.getLogger(__name__)
 limits = httpx.Limits(
-    max_connections=20,
-    max_keepalive_connections=10
+    max_connections=50,
+    max_keepalive_connections=20
 )
 
-timeouts = httpx.Timeout(
-    connect=2.0,
-    read=6.0,
-    write=6.0,
-    pool=2.0
-)
+timeouts = httpx.Timeout(7.0, connect=2.0, read=5.0)
 
 client = httpx.Client(
     limits=limits,
