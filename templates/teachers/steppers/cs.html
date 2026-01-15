@@ -3,6 +3,21 @@
 
 
 {% block content %}
+    <!-- Индикатор загрузки -->
+    <div id="loading-overlay" style="
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+        text-align: center;
+        color: white;
+        font-size: 24px;
+        padding-top: 20%;
+    ">
+        <i class="fas fa-spinner fa-spin"></i> Загрузка...
+    </div>
     <div class="container-fluid">
         <h4 class="text-center mb-0">{{ title }}</h4>
         {% if stage %}
@@ -90,7 +105,8 @@
                             <td>{{ forloop.counter }}</td>
                             {% if not history %}
                                 <td>
-                                    <a href="{% url 'stepper:cs-detail' myedu_id=student.myedu_id %}">
+                                    <a href="{% url 'stepper:cs-detail' myedu_id=student.myedu_id %}"
+                                       class="preloader-link">
                                         {{ student.fio }} ({{ student.myedu_id }})
                                     </a>
                                 </td>
@@ -119,7 +135,8 @@
                                 </td>
                             {% else %}
                                 <td>
-                                    <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}">
+                                    <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}"
+                                       class="preloader-link">
                                         {{ student.student_fio }} ({{ student.myedu_id }})
                                     </a>
                                 </td>
@@ -206,6 +223,34 @@
 
         document.getElementById('status-select').addEventListener('change', function () {
             document.getElementById('status-form').submit();
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('loading-overlay');
+            const preloaderLinks = document.querySelectorAll('.preloader-link');
+            let clicked = false;
+
+            overlay.style.display = 'none';
+            document.body.style.pointerEvents = 'auto';
+
+            preloaderLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    if (clicked) return;
+                    clicked = true;
+
+                    overlay.style.display = 'block';
+                    document.body.style.pointerEvents = 'none';
+                    overlay.style.pointerEvents = 'auto';
+                });
+            });
+
+            window.addEventListener('pageshow', function (event) {
+                if (event.persisted) {
+                    overlay.style.display = 'none';
+                    document.body.style.pointerEvents = 'auto';
+                    clicked = false;
+                }
+            });
         });
     </script>
 {% endblock %}

@@ -206,10 +206,15 @@ CELERY_WORKER_MAX_TASKS_PER_CHILD = 50
 CELERY_TASK_SOFT_TIME_LIMIT = 180
 CELERY_TASK_TIME_LIMIT = 240
 
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'ignore_chrome_well_known': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': lambda record: '/.well-known/appspecific/' not in record.getMessage(),
+        },
+    },
     'formatters': {
         'verbose': {
             'format': '[{levelname}] {asctime} {name} {message}',
@@ -225,6 +230,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'filters': ['ignore_chrome_well_known'],
         },
     },
     'loggers': {
@@ -232,6 +238,11 @@ LOGGING = {
             'handlers': ['console', ],
             'level': 'INFO',
             'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
         },
         'celery': {
             'handlers': ['console', ],
