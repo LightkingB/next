@@ -3,10 +3,20 @@
 import os
 import sys
 
+from decouple import config
+
+if config("DEPLOY") == 'prod':
+    from gevent import monkey
+
+    monkey.patch_all()
+
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.dev')
+    if config("DEPLOY") == 'prod':
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.prod')
+    else:
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.dev')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
