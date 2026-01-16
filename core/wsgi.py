@@ -16,6 +16,7 @@ if config("DEPLOY") == 'prod':
     from gevent import monkey
 
     monkey.patch_all()
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
-
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.prod')
+else:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.dev')
 application = get_wsgi_application()
