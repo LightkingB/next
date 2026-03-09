@@ -30,8 +30,6 @@ def sign_in_teacher_view(request):
                         template_name="teachers/profile/login.html",
                         message="Проверьте правильность данных и повторите попытку."
                     )
-
-            request.session['user_id'] = user.id
             login(request, user)
             return redirect("integrator:index")
     context = {

@@ -77,7 +77,6 @@ def sign_in_student_view(request):
                         message="Проверьте правильность данных и повторите попытку."
                     )
 
-            request.session['user_id'] = user.id
             login(request, user)
             return redirect("students:index")
     context = {
