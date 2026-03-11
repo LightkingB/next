@@ -25,6 +25,7 @@ from stepper.filters import StageEmployeeStudentFilter, CSFilter, CsHistoryFilte
 from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm, DiplomaForm
 from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep, StageEmployee, Issuance, \
     IssuanceHistory, Diploma, VacationCertificate
+from stepper.services import StepperService
 from utils.caches import EntityCache
 from utils.filter_pagination import Pagination
 from utils.myedu import MyEduService
@@ -1328,8 +1329,8 @@ def diploma_create_ajax(request):
         return JsonResponse({'form_html': form_html})
 
 
-@with_stepper
 def qr_code_status(request, qr_id):
+    request.stepper = StepperService()
     clearance_sheet = ClearanceSheet.objects.filter(id=qr_id).first()
     student = None
     trajectories = None

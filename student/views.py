@@ -53,8 +53,8 @@ def student_cs_history_detail(request, cs_id):
     return render(request, "students/cs-history.html", context)
 
 
+@with_stepper
 def sign_in_student_view(request):
-    user_service = UserService()
     if request.user.is_authenticated:
         return redirect("students:index")
 
@@ -68,23 +68,22 @@ def sign_in_student_view(request):
             if user is None:
                 myedu_data, success = MyEduService.get_user_auth(email, password)
                 if success:
-                    user = user_service.update_or_create_user(email, password, myedu_data)
+                    user = request.bs.update_or_create_user(email, password, myedu_data)
                 else:
                     return handle_error(
                         request,
                         {"form": form},
-                        template_name="teachers/profile/login.html",
+                        template_name="students/login.html",
                         message="Проверьте правильность данных и повторите попытку."
                     )
 
             login(request, user)
             return redirect("students:index")
     context = {
-        "navbar": "teacher-next-login",
+        "navbar": "student-next-login",
         "form": LoginForm()
     }
     return render(request, "students/login.html", context)
-    # return redirect("integrator:index")
 
 
 def sign_out_student_view(request):

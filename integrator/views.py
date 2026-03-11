@@ -3,12 +3,13 @@ from django.shortcuts import render, redirect
 
 from bsadmin.forms import LoginForm
 from bsadmin.services import UserService
+from stepper.decorators import with_stepper
 from utils.errors import handle_error
 from utils.myedu import MyEduService
 
 
+@with_stepper
 def sign_in_teacher_view(request):
-    user_service = UserService()
     if request.user.is_authenticated:
         return redirect("integrator:index")
 
@@ -22,7 +23,7 @@ def sign_in_teacher_view(request):
             if user is None:
                 myedu_data, success = MyEduService.get_user_auth(email, password)
                 if success:
-                    user = user_service.update_or_create_user(email, password, myedu_data)
+                    user = request.bs.update_or_create_user(email, password, myedu_data)
                 else:
                     return handle_error(
                         request,
