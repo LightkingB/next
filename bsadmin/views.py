@@ -442,13 +442,26 @@ def get_back_url(request):
     """
     Автоматически определяет, откуда пришел пользователь.
     """
-    referer = request.META.get('HTTP_REFERER')
-    # Получаем текущий домен сайта, чтобы убедиться, что ссылка внутренняя
-    host = request.get_host()
+    # 1. Пытаемся достать из сессии (самый надежный вариант)
+    back_url = request.session.get('previous_url')
 
-    # Если реферер есть и он содержит наш домен -> возвращаем его
-    if referer and host in referer:
-        return referer
+    # 2. Если в сессии пусто, пробуем стандартный реферер
+    if not back_url:
+        back_url = request.META.get('HTTP_REFERER')
+
+    # 3. Если ссылка нашлась, проверяем её
+    if back_url:
+        # Получаем полный текущий URL (где мы сейчас находимся)
+        current_url = request.build_absolute_uri()
+
+        # Проверяем, что ссылка ведет на наш же сайт
+        host = request.get_host()
+        if host in back_url:
+            # ГЛАВНОЕ ИСПРАВЛЕНИЕ:
+            # Сравниваем ссылки целиком. Если они разные - возвращаем кнопку "Назад".
+            if back_url != current_url:
+                return back_url
+
     return None
 
 
