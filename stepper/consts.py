@@ -6,6 +6,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
 
 STUDENT_STEPPER_URL = f"{API_URL}/obhadnoi/searchstudent/debt"
 TEACHER_STEPPER_URL = f"{API_URL}/obhadnoi/searchstudent/debt"
+VC_URL = f"{API_URL}/obhadnoi/searchActiveStudent"
 
 STUDENT_CS = "student"
 TEACHER_CS = "teacher"

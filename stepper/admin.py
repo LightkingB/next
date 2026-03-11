@@ -92,5 +92,5 @@ class IssuanceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(IssuanceHistory)
-
+admin.site.register(VacationCertificate)
 admin.site.register(UserActionLog)

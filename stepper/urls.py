@@ -13,6 +13,11 @@ urlpatterns = [
     path('student/<int:id>/step/remove/', step_remove, name='step-remove'),
     path('student/<int:id>/step/<int:trajectory_id>/rating/', step_rating, name='step-rating'),
 
+    path('vacation/certificate/view/', vacation_certificate_view, name='vacation-certificate-view'),
+    path('vacation/certificate/students/', vacation_certificate_students, name='vacation-certificate-students'),
+    path('vacation/certificate/history/', vacation_certificate_history, name='vacation-certificate-history'),
+    path('vacation/certificate/session/', vacation_certificate_session, name='vacation-certificate-session'),
+
     path('stage/employee/', stage_employee, name='stage-employee'),
     path('stage/employee/create/', stage_employee_create, name='stage-employee-create'),
     path('stage/employee/<int:pk>/update/', stage_employee_update, name='stage-employee-update'),

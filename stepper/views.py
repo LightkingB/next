@@ -17,14 +17,14 @@ from django.views.decorators.http import require_POST
 from bsadmin.consts import STADMIN
 from bsadmin.models import Faculty, Speciality
 from stepper.choices import TypeChoices
-from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS, CS_PROCESS
+from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS, CS_PROCESS, VC_URL
 from stepper.decorators import with_stepper
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
 from stepper.filters import StageEmployeeStudentFilter, CSFilter, CsHistoryFilter
 from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm, DiplomaForm
 from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep, StageEmployee, Issuance, \
-    IssuanceHistory, Diploma
+    IssuanceHistory, Diploma, VacationCertificate
 from utils.caches import EntityCache
 from utils.filter_pagination import Pagination
 from utils.myedu import MyEduService
@@ -1352,6 +1352,178 @@ def qr_code_status(request, qr_id):
         "trajectories": trajectories,
     }
     return render(request, "teachers/steppers/reports/qr-code-status.html", context)
+
+
+@with_stepper
+def vacation_certificate_students(request):
+    students_qs = []
+    search = ""
+    if request.method == "POST":
+        search = request.POST.get("search", "")
+
+        students_qs = MyEduService.get_vc_data_from_api(VC_URL, search)
+    context = {
+        "navbar": "vacation-certificate",
+        "title": "Каникулярная справка",
+        "search": search,
+        "students": students_qs
+    }
+    return render(request, "teachers/steppers/vacation/vacation_certificate_students.html", context)
+
+
+def vacation_certificate_view(request):
+    current_year = datetime.now().year
+    student_data = request.session.get('certificate_data')
+
+    if not student_data:
+        return redirect('stepper:vacation-certificate-students')
+
+    lang = student_data.get('lang', 'ru')
+    template_name = "teachers/steppers/vacation/vacation_certificate.html"
+    if lang == 'en':
+        template_name = "teachers/steppers/vacation/vacation_certificate_en.html"
+    elif lang == 'kg':
+        template_name = "teachers/steppers/vacation/vacation_certificate_ky.html"
+
+    if request.method == "POST":
+        cert = VacationCertificate.objects.create(
+            student_id=request.POST.get('student_id'),
+            student_name=request.POST.get('student_name'),
+            birth_info=request.POST.get('birth_info'),
+            faculty_info=request.POST.get('faculty_info'),
+            specialty_info=request.POST.get('specialty_info'),
+            study_form=request.POST.get('study_form'),
+            payment_form=request.POST.get('payment_form'),
+            study_period=request.POST.get('study_period'),
+            current_course=request.POST.get('current_course'),
+            order_info=request.POST.get('order_info'),
+            fall_semester=request.POST.get('fall_semester'),
+            spring_semester=request.POST.get('spring_semester'),
+            vacation_period=request.POST.get('vacation_period'),
+            edu_year=request.POST.get('edu_year'),
+            lang=lang,
+            created_by=request.user
+        )
+        student_data['is_saved'] = True
+        student_data['cert_id'] = cert.id
+        request.session['certificate_data'] = student_data
+        request.session.modified = True
+        return redirect('stepper:vacation-certificate-view')
+
+    if student_data.get('is_saved') and student_data.get('cert_id'):
+        cert = get_object_or_404(VacationCertificate, id=student_data.get('cert_id'))
+
+        saved_lang = cert.lang
+        template_name = "teachers/steppers/vacation/vacation_certificate.html"
+        if saved_lang == 'en':
+            template_name = "teachers/steppers/vacation/vacation_certificate_en.html"
+        elif saved_lang == 'kg':
+            template_name = "teachers/steppers/vacation/vacation_certificate_ky.html"
+
+        return render(request, template_name, {
+            'is_saved': True, 'cert_number': cert.cert_number, 'student_id': cert.student_id,
+            'student_name': cert.student_name, 'birth_info': cert.birth_info,
+            'faculty_info': cert.faculty_info, 'specialty_info': cert.specialty_info,
+            'study_form': cert.study_form, 'payment_form': cert.payment_form,
+            'study_period': cert.study_period, 'current_course': cert.current_course,
+            'order_info': cert.order_info, 'fall_semester': cert.fall_semester,
+            'spring_semester': cert.spring_semester, 'vacation_period': cert.vacation_period,
+            'edu_year': cert.edu_year,
+            "title": "Каникулярная справка", "navbar": "vacation-certificate"
+        })
+
+    c, spec, b_day = student_data.get('course', ''), student_data.get('speciality_name', ''), student_data.get(
+        'birthday', '')
+    m_info, m_date = student_data.get('movement_info', ''), student_data.get('movement_date', '')
+
+    birth_info = ""
+    order_info = ""
+    current_course = ""
+    course = ""
+    fall_semester = ""
+    spring_semester = ""
+    vacation_period = ""
+    specialty_info = f"«{spec}»"
+
+    if lang == 'ru':
+        birth_info = f"{b_day} года рождения"
+        current_course = f"{c} курсе"
+        course = f"{c} курса"
+        order_info = f"приказом №{m_info} от {m_date}"
+        fall_semester = f"с 01 сентября {current_year - 1} года по 24 января {current_year} года"
+        spring_semester = f"с 26 января {current_year} года по 13 июня {current_year} года"
+        vacation_period = f"с 15 июня {current_year} года по 31 августа {current_year} года"
+    elif lang == 'en':
+        birth_info = f"{b_day}"
+        current_course = f"{c}th year of study"
+        course = f"{c}-year"
+        order_info = f"Order No. {m_info} dated {m_date}"
+        fall_semester = f"from September 1, {current_year - 1} to January 24, {current_year}"
+        spring_semester = f"from January 26, {current_year} to June 13, {current_year}"
+        vacation_period = f"from June 15, {current_year} to August 31, {current_year}"
+    elif lang == 'kg':
+        birth_info = f"{b_day}-жылы туулган"
+        current_course = f"{c}-курста окуйт"
+        course = f"{c}-курстун"
+        order_info = f"№{m_info}"
+        fall_semester = f"{current_year - 1}-жылдын 1-сентябрынан {current_year}-жылдын 24-январына чейин"
+        spring_semester = f"{current_year}-жылдын 26-январынан {current_year}-жылдын 13-июнуна чейин"
+        vacation_period = f"{current_year}-жылдын 15-июнунан {current_year}-жылдын 31-августуна чейин"
+
+    context = {
+        'is_saved': False, 'student_id': student_data.get('student_id'),
+        'student_name': student_data.get('student_fio'), 'payment_form': student_data.get('payment_form'),
+        'study_period': student_data.get('license_year'), 'faculty_info': student_data.get('faculty_name'),
+        'study_form': student_data.get('edu_form'), 'lang': lang,
+        'birth_info': birth_info, 'specialty_info': specialty_info,
+        'current_course': current_course, 'course': course,
+        'order_info': order_info,
+        'fall_semester': fall_semester,
+        'spring_semester': spring_semester,
+        'vacation_period': vacation_period,
+        'edu_year': student_data.get('edu_year'),
+        "title": "Каниулярная справка", "navbar": "vacation-certificate"
+    }
+    return render(request, template_name, context)
+
+
+def vacation_certificate_history(request):
+    context = {
+        "title": "Каникулярная справка - История",
+        "navbar": "vacation-certificate"
+    }
+    return render(request, "teachers/steppers/vacation/vacation_certificate_history.html", context)
+
+
+def vacation_certificate_session(request):
+    if request.method == "POST":
+        lang = request.POST.get('lang', 'kg')
+
+        student_data = {
+            'student_id': request.POST.get('student_id'),
+            'student_fio': request.POST.get('student_fio'),
+            'birthday': request.POST.get('birthday'),
+            'course': request.POST.get('course'),
+
+            'movement_date': request.POST.get('movement_date'),
+            'movement_info': request.POST.get('movement_info'),
+
+            'faculty_name': request.POST.get(f'faculty_{lang}'),
+            'speciality_name': request.POST.get(f'speciality_{lang}'),
+            'edu_form': request.POST.get(f'edu_form_{lang}'),
+            'payment_form': request.POST.get(f'payment_form_{lang}'),
+            'license_year': request.POST.get(f'license_year_{lang}'),
+
+            'edu_year': request.POST.get('edu_year'),
+            'lang': lang,
+            'is_saved': False,
+            'cert_id': None
+        }
+
+        request.session['certificate_data'] = student_data
+        return redirect('stepper:vacation-certificate-view')
+
+    return redirect('stepper:vacation-certificate-students')
 
 
 def get_cs_filtered_paginated(request, queryset):

@@ -1,0 +1,562 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        /* Base Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #525659;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
+        }
+
+        /* Controls */
+        .controls {
+            background: #A00E07;
+            border-bottom: 1px solid #ddd;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .controls .title-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            color: #fff;
+            margin-left: 10px;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .main-layout-navbar {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        /* Info Panel (Right Side) */
+        .info-panel {
+            width: 300px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            font-family: sans-serif;
+            font-size: 13px;
+            position: sticky;
+            top: 90px; /* Below controls */
+            max-height: calc(100vh - 110px);
+            overflow-y: auto;
+        }
+
+        .info-panel h5 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-row {
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            color: #000;
+            word-wrap: break-word;
+        }
+
+        /* Page Wrapper */
+        .page-wrapper {
+            width: 210mm;
+            min-height: 297mm;
+            /* Margin removed here because handled by flex layout padding */
+            margin: 0;
+            background: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            padding: 20mm 15mm 20mm 30mm;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        /* Header */
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .header-side {
+            width: 43%;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            line-height: 1.15;
+        }
+
+        .cert-header-box {
+            padding: 8px 5px;
+            height: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cert-address-small {
+            font-size: 10px;
+            margin-top: 15px;
+            text-transform: none;
+            font-weight: normal;
+            line-height: 1.1;
+        }
+
+        .logo-container {
+            width: 14%;
+            text-align: center;
+        }
+
+        .logo-container img {
+            max-width: 65px;
+            height: auto;
+        }
+
+        .eng-header {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.2;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .eng-sub {
+            font-size: 9.5px;
+            line-height: 1.2;
+            text-align: center;
+            border-bottom: 2.5px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .meta-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .stamp-box {
+            width: 45px;
+            height: 45px;
+            border: 1px solid #000;
+            margin-right: 20px;
+        }
+
+        .cert-title {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+            margin: 15px 0 25px 0;
+            width: 100%;
+        }
+
+        /* Body Text */
+        .cert-body-text {
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: justify;
+            width: 100%;
+        }
+
+        .editable-text {
+            color: #000;
+            outline: none;
+            display: inline;
+            min-width: 20px;
+        }
+
+        {% if not is_saved %}
+            .editable-text {
+                background-color: #ffff00;
+                border-bottom: 1px dashed #666;
+                padding: 0 2px;
+            }
+            @media print {
+                body {
+                    display: none !important;
+                }
+            }
+        {% endif %}
+
+        .font-bold {
+            font-weight: bold;
+        }
+
+        .signature-block {
+            margin-top: auto;
+            padding-top: 30px;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+        }
+
+        .modal-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Print */
+        @media print {
+            @page {
+                size: A4;
+                margin: 0 !important;
+            }
+
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            .no-print, .controls, .modal-overlay, .info-panel {
+                display: none !important;
+            }
+
+            .main-layout {
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .page-wrapper {
+                width: 210mm !important;
+                height: 297mm !important;
+                margin: 0 !important;
+                padding: 20mm 15mm 20mm 30mm !important;
+                box-shadow: none !important;
+                border: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            .editable-text {
+                background-color: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="controls no-print cont main-layout-navbar">
+    <div class="title-text">{{ title }}</div>
+    <div>
+        {% if not is_saved %}
+            <button type="button" class="btn btn-success" onclick="showModal()">💾 Сохранить</button>
+        {% else %}
+            <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Печать (Ctrl+P)</button>
+        {% endif %}
+        <a href="{% url 'stepper:vacation-certificate-students' %}" class="btn btn-secondary">🔙 Назад</a>
+    </div>
+</div>
+
+<div class="main-layout">
+    <form id="certForm" action="{% url 'stepper:vacation-certificate-view' %}" method="POST" class="page-wrapper">
+        {% csrf_token %}
+        <input type="hidden" name="student_id" value="{{ student_id }}">
+        <input type="hidden" name="lang" value="ru">
+        <input type="hidden" name="payment_form" value="{{ payment_form }}">
+
+        <!-- Hidden inputs for submission -->
+        <input type="hidden" name="student_name" id="in_student_name">
+        <input type="hidden" name="birth_info" id="in_birth_info">
+        <input type="hidden" name="faculty_info" id="in_faculty_info">
+
+        <!-- Приказ сакталат, бирок текстте чыкпайт -->
+        <input type="hidden" name="order_info" value="{{ order_info }}">
+
+        <input type="hidden" name="course" id="in_course">
+        <input type="hidden" name="specialty_info" id="in_specialty_info">
+        <input type="hidden" name="study_form" id="in_study_form">
+        <input type="hidden" name="study_period" id="in_study_period">
+        <input type="hidden" name="current_course" id="in_current_course">
+        <input type="hidden" name="fall_semester" id="in_fall_semester">
+        <input type="hidden" name="spring_semester" id="in_spring_semester">
+        <input type="hidden" name="vacation_period" id="in_vacation_period">
+        <input type="hidden" name="edu_year" value="{{ edu_year }}">
+
+        <div class="header-container">
+            <div class="header-side">
+                <div class="cert-header-box">
+                    <div>Кыргыз Республикасынын<br>илим, жогорку билим берүү<br>жана инновациялар<br>министрлиги</div>
+                    <div>Ош мамлекеттик<br>университети</div>
+                </div>
+                <div class="cert-address-small">723500, Кыргыз Республикасы,<br>Ош ш., Алымбек датка к., 331</div>
+            </div>
+            <div class="logo-container">
+                <img src="https://www.oshsu.kg/main/images/logo/white-logo.svg" alt="OshSU Logo">
+            </div>
+            <div class="header-side">
+                <div class="cert-header-box">
+                    <div>Министерство науки,<br>высшего образования и<br>инноваций Кыргызской<br>Республики</div>
+                    <div>Ошский государственный<br>университет</div>
+                </div>
+                <div class="cert-address-small">723500, Кыргызская Республика,<br>г. Ош, ул. Алымбека датки, 331</div>
+            </div>
+        </div>
+
+        <div class="eng-header">Ministry of Science, Higher Education and Innovation of the Kyrgyz Republic<br>Osh State
+            University
+        </div>
+        <div class="eng-sub">Alymbek datka str., 331, Osh city, 723500, Kyrgyz Republic,<br>Тел./ tel.: (+996 3222)
+            70712, факс/ fax: (+996 3222) 70915, e-mail: edu@oshsu.kg, www.oshsu.kg
+        </div>
+
+        <div class="meta-row">
+            <div class="stamp-box"></div>
+            <div class="meta-info">
+                <div> __________№___________</div>
+                <div>№______________________</div>
+            </div>
+        </div>
+
+        <div class="cert-title">
+            СПРАВКА №
+            {% if is_saved %}{{ cert_number }}{% else %}<span style="color:gray;">[ГЕНЕРИРУЕТСЯ]</span>{% endif %}
+        </div>
+
+        <div class="cert-body-text">
+            <p style="text-align: center">
+                Настоящая справка выдана в подтверждение того, что <br/>
+                <span id="sp_student_name" class="editable-text font-bold"
+                      {% if not is_saved %}contenteditable="true"{% endif %}>{{ student_name }}</span>,
+                <span id="sp_birth_info" class="editable-text"
+                      {% if not is_saved %}contenteditable="true"{% endif %}>{{ birth_info }}</span>, <br/>
+                в соответствии с приказом о зачислении и на основании действующих внутренних нормативных актов
+                образовательной организации, является обучающимся
+                <span id="sp_course" class="editable-text"
+                      {% if not is_saved %}contenteditable="true"{% endif %}>{{ course }}</span> по специальности
+                <span id="sp_specialty_info" class="editable-text"
+                      {% if not is_saved %}contenteditable="true"{% endif %}>{{ specialty_info }}</span>,
+                <span id="sp_faculty_info" class="editable-text"
+                      {% if not is_saved %}contenteditable="true"{% endif %}>{{ faculty_info }}</span>.
+            </p>
+            <br>
+            <p>Форма обучения — <span id="sp_study_form" class="editable-text"
+                                      {% if not is_saved %}contenteditable="true"{% endif %}>{{ study_form }}</span>.
+            </p>
+            <p>Срок освоения образовательной программы — <span id="sp_study_period" class="editable-text"
+                                                               {% if not is_saved %}contenteditable="true"{% endif %}>{{ study_period }}</span>.
+            </p>
+            <p>В текущем {{ edu_year }} учебном году обучается на <span id="sp_current_course" class="editable-text"
+                                                                        {% if not is_saved %}contenteditable="true"{% endif %}>{{ current_course }}</span>.
+            </p>
+            <br>
+            <p>Сроки учебных периодов:</p>
+            <ul style="list-style: none; padding-left: 0;">
+                <li>— осенний семестр: <span id="sp_fall_semester" class="editable-text"
+                                             {% if not is_saved %}contenteditable="true"{% endif %}>{{ fall_semester }}</span>;
+                </li>
+                <li>— весенний семестр: <span id="sp_spring_semester" class="editable-text"
+                                              {% if not is_saved %}contenteditable="true"{% endif %}>{{ spring_semester }}</span>;
+                </li>
+                <li>— каникулярный период: <span id="sp_vacation_period" class="editable-text"
+                                                 {% if not is_saved %}contenteditable="true"{% endif %}>{{ vacation_period }}</span>.
+                </li>
+            </ul>
+            <br>
+            <p style="text-align: center;">Справка выдана для представления по месту требования.</p>
+            <br>
+            <p>Основание: данные автоматизированной информационной системы учета контингента студентов.</p>
+        </div>
+
+        <div class="signature-block">Подпись _____________________________ <br/> М. П.</div>
+    </form>
+
+    {% if not is_saved %}
+        <div class="info-panel no-print">
+            <h5>Данные API</h5>
+
+            <div class="info-row">
+                <span class="info-label">ФИО:</span>
+                <span class="info-value">{{ student_name }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Дата рождения:</span>
+                <span class="info-value">{{ birth_info }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Факультет:</span>
+                <span class="info-value">{{ faculty_info }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Специальность:</span>
+                <span class="info-value">{{ specialty_info }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Курс:</span>
+                <span class="info-value">{{ course }} ({{ current_course }})</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Форма обучения:</span>
+                <span class="info-value">{{ study_form }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Срок обучения:</span>
+                <span class="info-value">{{ study_period }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Приказ (Скрыт):</span>
+                <span class="info-value">{{ order_info }}</span>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div id="saveModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Сохранить справку?</h3>
+        <br>
+        <button type="button" class="btn btn-secondary"
+                onclick="document.getElementById('saveModal').style.display='none'">Отмена
+        </button>
+        <button type="button" class="btn btn-success" id="confirmBtn" onclick="submitForm()">Сохранить</button>
+    </div>
+</div>
+
+<script>
+    function showModal() {
+        document.getElementById('saveModal').style.display = 'flex';
+    }
+
+    function submitForm() {
+        document.getElementById('confirmBtn').disabled = true;
+        // order_info алынды тизмеден, анткени ал hidden input катары өзүнчө берилген
+        const fields = ['student_name', 'birth_info', 'faculty_info', 'course', 'specialty_info', 'study_form', 'study_period', 'current_course', 'fall_semester', 'spring_semester', 'vacation_period'];
+        fields.forEach(f => {
+            const el = document.getElementById('sp_' + f);
+            if (el) document.getElementById('in_' + f).value = el.innerText.trim();
+        });
+        document.getElementById('certForm').submit();
+    }
+    {% if not is_saved %}
+        window.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.keyCode === 80)) {
+                e.preventDefault();
+                alert("Для печати справки, пожалуйста, заранее нажмите кнопку «Сохранить»!");
+                return false;
+            }
+        });
+    {% endif %}
+    (function () {
+        history.pushState(null, null, location.href);
+
+        window.onpopstate = function () {
+            location.href = "https://next.oshsu.kg/stepper/vacation/certificate/students/";
+        };
+    })();
+</script>
+
+</body>
+</html>

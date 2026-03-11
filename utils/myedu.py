@@ -11,7 +11,7 @@ limits = httpx.Limits(
     max_keepalive_connections=20
 )
 
-timeouts = httpx.Timeout(7.0, connect=2.0, read=5.0)
+timeouts = httpx.Timeout(7.0, connect=2.0, read=5.0, write=5.0, pool=2.0)
 
 client = httpx.Client(
     limits=limits,
@@ -68,6 +68,18 @@ class MyEduService:
             "password": MYEDU_PASSWORD,
             "faculty_id": faculty_id,
             "speciality_id": specialty_id
+        }
+        if search:
+            payload["search"] = search
+
+        result = cls._safe_request("POST", url, data=payload)
+        return result if isinstance(result, list) else []
+
+    @classmethod
+    def get_vc_data_from_api(cls, url, search=None):
+        payload = {
+            "login": MYEDU_LOGIN,
+            "password": MYEDU_PASSWORD,
         }
         if search:
             payload["search"] = search

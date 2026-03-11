@@ -1,3 +1,6 @@
+import random
+import time
+
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models.signals import post_delete
@@ -293,6 +296,51 @@ class UserActionLog(models.Model):
 
     def __str__(self):
         return f"{self.timestamp} - {self.user or 'Anonymous'} - {self.path}"
+
+
+class VacationCertificate(models.Model):
+    cert_number = models.CharField(max_length=100, unique=True, blank=True, verbose_name="Номер справки")
+
+    student_id = models.CharField(max_length=50, verbose_name="ID Студента")
+    student_name = models.CharField(max_length=255, verbose_name="ФИО студента")
+    birth_info = models.CharField(max_length=150, verbose_name="Информация о рождении", blank=True, null=True)
+    faculty_info = models.CharField(max_length=255, verbose_name="Факультет", blank=True, null=True)
+    specialty_info = models.CharField(max_length=255, verbose_name="Специальность и уровень", blank=True, null=True)
+
+    study_form = models.CharField(max_length=100, verbose_name="Форма обучения", blank=True, null=True)
+    payment_form = models.CharField(max_length=100, verbose_name="Форма оплаты", blank=True, null=True)
+    study_period = models.CharField(max_length=100, verbose_name="Срок освоения программы", blank=True, null=True)
+    current_course = models.CharField(max_length=100, verbose_name="Текущий курс", blank=True, null=True)
+    order_info = models.CharField(max_length=255, verbose_name="Информация о приказе", blank=True, null=True)
+
+    fall_semester = models.CharField(max_length=255, verbose_name="Осенний семестр", blank=True, null=True)
+    spring_semester = models.CharField(max_length=255, verbose_name="Весенний семестр", blank=True, null=True)
+    vacation_period = models.CharField(max_length=255, verbose_name="Каникулярный период", blank=True, null=True)
+    edu_year = models.CharField(max_length=100, verbose_name="Уччебный год", blank=True, null=True)
+
+    lang = models.CharField(max_length=10, default="ru", verbose_name="Язык справки")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+    created_by = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = "Каникулярная справка"
+        verbose_name_plural = "Каникулярные справки"
+
+    def __str__(self):
+        return f'{self.student_name} - {self.cert_number}: {self.created_at}'
+
+    def save(self, *args, **kwargs):
+        if not self.cert_number:
+            while True:
+                timestamp = int(time.time())
+                random_num = random.randint(100000, 999999)
+                new_cert_number = f"{random.randint(1, 9)}-{timestamp}-{random_num}-{random.randint(1, 9)}"
+
+                if not type(self).objects.filter(cert_number=new_cert_number).exists():
+                    self.cert_number = new_cert_number
+                    break
+        super(VacationCertificate, self).save(*args, **kwargs)
 
 
 @receiver(post_delete, sender=Issuance)

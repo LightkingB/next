@@ -1,0 +1,164 @@
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
+
+
+{% block content %}
+    <div id="loading-overlay" style="
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+        text-align: center;
+        color: white;
+        font-size: 24px;
+        padding-top: 20%;
+    ">
+        <i class="fas fa-spinner fa-spin"></i> Загрузка...
+    </div>
+    <div class="container-fluid">
+        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
+        <hr/>
+
+        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+            <div class="row">
+                <div class="col-md-10 col-lg-8">
+                    <form action="" method="post" id="search-form">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="search">ФИО / MyEDU ID:</label>
+                                <input type="text" class="form-control form-control-sm" name="search"
+                                       placeholder="230795"
+                                       id="search" value="{{ search }}"/>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-search"></i> Поиск
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-2 col-lg-4 text-right mt-0 mt-md-4">
+
+                </div>
+            </div>
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-md">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">Действия</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">Приказ</th>
+
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for student in students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ student.student_fio }}</td>
+                            <td class="text-center">
+                                <form action="{% url 'stepper:vacation-certificate-session' %}" method="post">
+                                    {% csrf_token %}
+
+                                    <input type="hidden" name="student_id" value="{{ student.student_id }}">
+                                    <input type="hidden" name="student_fio" value="{{ student.student_fio }}">
+                                    <input type="hidden" name="birthday" value="{{ student.birthday }}">
+                                    <input type="hidden" name="course" value="{{ student.course }}">
+
+                                    <input type="hidden" name="movement_date" value="{{ student.movement_date }}">
+                                    <input type="hidden" name="movement_info" value="{{ student.movement_info }}">
+
+                                    <input type="hidden" name="faculty_kg" value="{{ student.faculty.name_kg }}">
+                                    <input type="hidden" name="faculty_ru" value="{{ student.faculty.name_ru }}">
+                                    <input type="hidden" name="faculty_en" value="{{ student.faculty.name_en }}">
+
+                                    <input type="hidden" name="speciality_kg" value="{{ student.speciality.name_kg }}">
+                                    <input type="hidden" name="speciality_ru" value="{{ student.speciality.name_ru }}">
+                                    <input type="hidden" name="speciality_en" value="{{ student.speciality.name_en }}">
+
+                                    <input type="hidden" name="edu_form_kg" value="{{ student.edu_form.name_kg }}">
+                                    <input type="hidden" name="edu_form_ru" value="{{ student.edu_form.name_ru }}">
+                                    <input type="hidden" name="edu_form_en" value="{{ student.edu_form.name_en }}">
+                                    <input type="hidden" name="edu_year" value="{{ student.edu_year.name_ru }}">
+
+                                    <input type="hidden" name="payment_form_kg"
+                                           value="{{ student.payment_form.name_kg }}">
+                                    <input type="hidden" name="payment_form_ru"
+                                           value="{{ student.payment_form.name_ru }}">
+                                    <input type="hidden" name="payment_form_en"
+                                           value="{{ student.payment_form.name_en }}">
+
+                                    <input type="hidden" name="license_year_kg"
+                                           value="{{ student.license.license_year.short_name_kg }}">
+                                    <input type="hidden" name="license_year_ru"
+                                           value="{{ student.license.license_year.short_name_ru }}">
+                                    <input type="hidden" name="license_year_en"
+                                           value="{{ student.license.license_year.short_name_en }}">
+
+                                    <div class="btn-group mt-2" role="group">
+                                        <button type="submit" name="lang" value="kg"
+                                                class="btn btn-sm btn-outline-primary">KG
+                                        </button>
+                                        <button type="submit" name="lang" value="ru"
+                                                class="btn btn-sm btn-outline-success">RU
+                                        </button>
+                                        <button type="submit" name="lang" value="en"
+                                                class="btn btn-sm btn-outline-danger">EN
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td>{{ student.faculty.name_ru }}</td>
+                            <td>{{ student.speciality.name_ru }}</td>
+                            <td>№ {{ student.movement_info }} <br/> Дата: {{ student.movement_date }}</td>
+
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            document.getElementById('search-form').addEventListener('submit', function (e) {
+                const btn = document.getElementById('search-btn');
+                const overlay = document.getElementById('loading-overlay');
+
+                // Показываем оверлей и блокируем все
+                overlay.style.display = 'block';
+                btn.disabled = true;
+
+                // Можно заблокировать всю страницу кликами
+                document.body.style.pointerEvents = 'none';
+                overlay.style.pointerEvents = 'auto';
+            });
+
+        });
+    </script>
+{% endblock %}
