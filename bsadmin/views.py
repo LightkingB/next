@@ -1,5 +1,3 @@
-import logging
-
 from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
@@ -287,7 +285,6 @@ def handle_manual_entry(request, user_service):
         return None, custom_data, True
 
 
-
 def save_academic_transcript_student(request):
     if request.method != "POST":
         messages.error(request, "Этот метод не поддерживается")
@@ -435,3 +432,7 @@ def specialities_by_faculty(request):
     faculty_id = request.GET.get("faculty_id", 0)
     specialities = user_service.specialities_values_by_faculty(faculty_id)
     return JsonResponse({"specialities": list(specialities)}, status=200)
+
+
+def auth_required_view(request):
+    return render(request, 'errors/auth_required.html')

@@ -12,8 +12,8 @@ from utils.myedu import MyEduService
 
 @with_stepper
 def student_index(request):
-    if not request.user.is_authenticated:
-        return redirect("students:next-student-login")
+    # if not request.user.is_authenticated:
+    #     return redirect("students:next-student-login")
 
     myedu_id = request.user.myedu_id
 
@@ -55,8 +55,8 @@ def student_cs_history_detail(request, cs_id):
 
 @with_stepper
 def sign_in_student_view(request):
-    if request.user.is_authenticated:
-        return redirect("students:index")
+    # if request.user.is_authenticated:
+    #     return redirect("students:index")
 
     if request.method == "POST":
         form = LoginForm(request.POST)

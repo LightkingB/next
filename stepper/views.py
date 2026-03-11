@@ -32,8 +32,8 @@ from utils.myedu import MyEduService
 
 
 def route(request):
-    if not request.user.is_authenticated:
-        return redirect("integrator:next-teacher-login")
+    # if not request.user.is_authenticated:
+    #     return redirect("integrator:next-teacher-login")
     roles = set(request.user.roles.values_list("name", flat=True))
     if STADMIN in roles:
         return redirect("stepper:index")
@@ -45,8 +45,8 @@ def cs_index(request):
     request.session['access'] = 'stepper'
     request.session['cs-nav'] = 'stepper'
 
-    if not request.user.is_authenticated:
-        return redirect("integrator:next-teacher-login")
+    # if not request.user.is_authenticated:
+    #     return redirect("integrator:next-teacher-login")
     students_qs = []
     if request.method == "POST":
         search = request.POST.get("search", "")
@@ -85,8 +85,8 @@ def cs_index(request):
 def spec(request):
     request.session['access'] = 'stepper'
     request.session['nav-spec'] = 'spec'
-    if not request.user.is_authenticated:
-        return redirect("integrator:next-teacher-login")
+    # if not request.user.is_authenticated:
+    #     return redirect("integrator:next-teacher-login")
 
     qs = request.stepper.get_clearance_students(TypeChoices.SPEC, 'has_spec',
                                                 extra_filter={'type_choices': TypeChoices.SPEC})
@@ -169,8 +169,8 @@ def spec_diploma(request):
 @with_stepper
 def archive(request):
     request.session['access'] = 'stepper'
-    if not request.user.is_authenticated:
-        return redirect("integrator:next-teacher-login")
+    # if not request.user.is_authenticated:
+    #     return redirect("integrator:next-teacher-login")
 
     qs = request.stepper.get_clearance_students(TypeChoices.OTHER, 'has_archive')
 

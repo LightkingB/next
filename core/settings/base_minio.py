@@ -30,6 +30,7 @@ THIRD_APPS = [
     'ckeditor',
     'ckeditor_uploader',
     'silk',
+    'storages',
 ]
 
 CUSTOM_APPS = [
@@ -39,6 +40,7 @@ CUSTOM_APPS = [
     'integrator.apps.IntegratorConfig',
     'student.apps.StudentConfig',
     'archives.apps.ArchivesConfig',
+    'djminio.apps.DjminioConfig'
 ]
 
 INSTALLED_APPS = FIRST_APPS + SYSTEM_APPS + CUSTOM_APPS + THIRD_APPS
@@ -49,7 +51,6 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'bsadmin.middleware.AuthRequiredMiddleware',
     'silk.middleware.SilkyMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -117,11 +118,12 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static", "static_dirs"),
 ]
 MEDIA_ROOT = os.path.join(BASE_DIR, "static", "media")
-MEDIA_URL = '/media/'
+# MEDIA_URL = '/media/'
 
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
+
 
 AUTH_USER_MODEL = "bsadmin.CustomUser"
 
@@ -179,6 +181,35 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
 )
+
+# ---------------- Minio ----------------
+AWS_ACCESS_KEY_ID = "oshsu_admin_storage"
+AWS_SECRET_ACCESS_KEY = "Portal20262026OSU"
+
+AWS_STORAGE_BUCKET_NAME = "next"
+AWS_S3_ENDPOINT_URL = "https://storage.oshsu.kg"
+AWS_S3_ADDRESSING_STYLE = "path"
+
+# --- ИЗМЕНЕНИЯ ДЛЯ ЗАКРЫТОГО БАКЕТА ---
+AWS_QUERYSTRING_AUTH = True
+AWS_QUERYSTRING_EXPIRE = 600
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_DEFAULT_ACL = None
+
+AWS_S3_FILE_OVERWRITE = True
+AWS_S3_MAX_MEMORY_SIZE = 1024 * 1024 * 10
+AWS_S3_REGION_NAME = 'osh-main'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
 
 # ---------------- Celery ----------------
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379/2'

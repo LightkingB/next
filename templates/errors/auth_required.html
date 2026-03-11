@@ -1,0 +1,23 @@
+{% extends 'students/base.html' %}
+{% load static %}
+
+{% block title %}Доступ ограничен{% endblock %}
+
+{% block content %}
+    <div class="container text-center my-5">
+        <h1 class="display-4 text-danger">Доступ ограничен</h1>
+        <p class="lead">
+            Для просмотра этой страницы необходимо войти в систему.
+        </p>
+        <div class="mt-4">
+            <a href="{% url 'integrator:next-teacher-login' %}" class="btn btn-danger btn-lg mx-2">Войти как
+                сотрудник</a>
+            <a href="{% url 'students:next-student-login' %}" class="btn btn-secondary btn-lg mx-2">Войти как
+                студент</a>
+        </div>
+        <p class="mt-5 text-muted">
+            Если вы считаете, что это ошибка, пожалуйста, свяжитесь с администратором.
+        </p>
+    </div>
+{% endblock %}
+    

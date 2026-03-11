@@ -4,13 +4,17 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
+from bsadmin.views import auth_required_view
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('bsheet/', include('bsadmin.urls'), name='bsheet'),
     path('stepper/', include('stepper.urls'), name='stepper'),
     path('integrator/', include('integrator.urls'), name='integrator'),
     path('archive/', include('archives.urls'), name='archive'),
+    # path('minio/', include('djminio.urls'), name='minio'),
     path('', include('student.urls'), name='student'),
+    path('auth-required/', auth_required_view, name='auth_required'),
 ]
 # urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
 if settings.DEBUG:

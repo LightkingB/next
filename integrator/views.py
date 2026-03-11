@@ -10,8 +10,8 @@ from utils.myedu import MyEduService
 
 @with_stepper
 def sign_in_teacher_view(request):
-    if request.user.is_authenticated:
-        return redirect("integrator:index")
+    # if request.user.is_authenticated:
+    #     return redirect("integrator:index")
 
     if request.method == "POST":
         form = LoginForm(request.POST)
@@ -50,8 +50,8 @@ def sign_out_teacher_view(request):
 
 
 def integrator_index(request):
-    if not request.user.is_authenticated:
-        return redirect("integrator:next-teacher-login")
+    # if not request.user.is_authenticated:
+    #     return redirect("integrator:next-teacher-login")
     context = {
         "navbar": "integrator"
     }
