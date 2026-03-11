@@ -442,28 +442,26 @@ def get_back_url(request):
     """
     Автоматически определяет, откуда пришел пользователь.
     """
-    # 1. Пытаемся достать из сессии (самый надежный вариант)
+    # 1. Достаем из сессии
     back_url = request.session.get('previous_url')
 
-    # 2. Если в сессии пусто, пробуем стандартный реферер
+    # 2. Если нет в сессии, берем реферер
     if not back_url:
         back_url = request.META.get('HTTP_REFERER')
 
-    # 3. Если ссылка нашлась, проверяем её
     if back_url:
-        # Получаем полный текущий URL (где мы сейчас находимся)
         current_url = request.build_absolute_uri()
 
-        # Проверяем, что ссылка ведет на наш же сайт
-        host = request.get_host()
-        if host in back_url:
-            # ГЛАВНОЕ ИСПРАВЛЕНИЕ:
-            # Сравниваем ссылки целиком. Если они разные - возвращаем кнопку "Назад".
-            if back_url != current_url:
-                return back_url
+        # Если ссылки полностью совпадают (мы на той же странице) -> не возвращаем кнопку
+        if back_url == current_url:
+            return None
+
+        # Проверка "свой/чужой".
+        # Если в сохраненной ссылке есть наш текущий хост (например next.oshsu.kg), то ссылка наша.
+        if request.get_host() in back_url:
+            return back_url
 
     return None
-
 
 def handler400(request, exception=None):
     """Ошибка 400: Неверный запрос"""

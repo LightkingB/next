@@ -83,19 +83,24 @@ class HistoryMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        # --- Улучшенная логика записи ---
-        # Запоминаем URL только если:
-        # 1. Это GET-запрос (а не POST, PUT, DELETE и т.д.)
-        # 2. Запрос был успешным (код 200)
-        # 3. Это не фоновый AJAX-запрос
+        # Проверяем условия для сохранения URL
         if (
                 request.method == 'GET' and
                 response.status_code == 200 and
                 not request.headers.get('x-requested-with') == 'XMLHttpRequest'
         ):
-            # Исключаем URL-ы, которые не нужно запоминать (админка, медиа и т.д.)
-            excluded_urls = ['/admin/', '/media/', '/static/', '/auth-required/']
-            if not any(request.path.startswith(url) for url in excluded_urls):
+            # Список исключений (расширенный)
+            # favicon.ico - критически важно исключить, иначе он перетирает историю
+            excluded_paths = [
+                '/admin/', '/media/', '/static/', '/auth-required/',
+                '/favicon.ico', '/robots.txt'
+            ]
+
+            # Также исключаем, если контент не HTML (например, картинки или JSON, которые случайно отдали 200)
+            content_type = response.get('Content-Type', '').lower()
+            is_html = 'text/html' in content_type
+
+            if is_html and not any(request.path.startswith(url) for url in excluded_paths):
                 request.session['previous_url'] = request.build_absolute_uri()
 
         return response

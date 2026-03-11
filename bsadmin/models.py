@@ -192,3 +192,8 @@ class RegHistoryTranscript(models.Model):
 def delete_faculty_transcript_file(sender, instance, *args, **kwargs):
     if instance.files:
         delete_file(instance.files.path)
+
+# @receiver(post_delete, sender=FacultyTranscript)
+# def delete_file_from_minio(sender, instance, **kwargs):
+#     if instance.files:
+#         instance.files.storage.delete(instance.files.name)
