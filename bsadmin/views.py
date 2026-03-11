@@ -436,3 +436,61 @@ def specialities_by_faculty(request):
 
 def auth_required_view(request):
     return render(request, 'errors/auth_required.html')
+
+
+def get_back_url(request):
+    """
+    Автоматически определяет, откуда пришел пользователь.
+    """
+    referer = request.META.get('HTTP_REFERER')
+    # Получаем текущий домен сайта, чтобы убедиться, что ссылка внутренняя
+    host = request.get_host()
+
+    # Если реферер есть и он содержит наш домен -> возвращаем его
+    if referer and host in referer:
+        return referer
+    return None
+
+
+def handler400(request, exception=None):
+    """Ошибка 400: Неверный запрос"""
+    context = {
+        'title': 'Неверный запрос',
+        'code': '400',
+        'message': 'Сервер не смог обработать ваш запрос.',
+        'back_url': get_back_url(request)  # <- Вот здесь мы передаем ссылку в шаблон
+    }
+    return render(request, 'errors/error_base.html', context, status=400)
+
+
+def handler403(request, exception=None):
+    """Ошибка 403: Доступ запрещен"""
+    context = {
+        'title': 'Доступ запрещен',
+        'code': '403',
+        'message': 'У вас нет прав для просмотра этой страницы.',
+        'back_url': get_back_url(request)
+    }
+    return render(request, 'errors/error_base.html', context, status=403)
+
+
+def handler404(request, exception):
+    """Ошибка 404: Страница не найдена"""
+    context = {
+        'title': 'Страница не найдена',
+        'code': '404',
+        'message': 'К сожалению, запрашиваемая страница не существует или была удалена.',
+        'back_url': get_back_url(request)
+    }
+    return render(request, 'errors/error_base.html', context, status=404)
+
+
+def handler500(request):
+    """Ошибка 500: Внутренняя ошибка сервера"""
+    context = {
+        'title': 'Ошибка сервера',
+        'code': '500',
+        'message': 'Произошла внутренняя ошибка. Мы уже работаем над её устранением.',
+        'back_url': get_back_url(request)
+    }
+    return render(request, 'errors/error_base.html', context, status=500)

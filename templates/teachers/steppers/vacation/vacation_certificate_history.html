@@ -1,10 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'admin_base.html' %}
+{% load static i18n custom_filters %}
 
-</body>
-</html>
+
+{% block content %}
+    <div id="loading-overlay" style="
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+        text-align: center;
+        color: white;
+        font-size: 24px;
+        padding-top: 20%;
+    ">
+        <i class="fas fa-spinner fa-spin"></i> Загрузка...
+    </div>
+    <div class="container-fluid">
+        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
+        <hr/>
+
+        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+            <div class="row">
+                <div class="col-md-10 col-lg-8">
+                    <form action="" method="post" id="search-form">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="search">ФИО / MyEDU ID / Справка №:</label>
+                                <input type="text" class="form-control form-control-sm" name="search"
+                                       placeholder="230795"
+                                       id="search" value="{{ search }}"/>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-search"></i> Поиск
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-2 col-lg-4 text-right mt-0 mt-md-4">
+
+                </div>
+            </div>
+            <hr/>
+            {% include 'utils/_messages.html' %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm table-responsive-md">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ФИО</th>
+                        <th scope="col">№ справки <br/> (Версия)</th>
+                        <th scope="col">Факультет</th>
+                        <th scope="col">Специальность</th>
+                        <th scope="col">Приказ</th>
+                        <th scope="col">Дата выдачи</th>
+                        <th scope="col">Выдан</th>
+                    </tr>
+                    </thead>
+                    <tbody class="order">
+                    {% for vc in vc_list %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td class="text-center">{{ vc.student_name }} ({{ vc.student_id }})</td>
+                            <td class="text-center">{{ vc.cert_number|default:"-" }} ({{ vc.lang|default:"-" }})</td>
+                            <td>{{ vc.faculty_info|default:"-" }}</td>
+                            <td>{{ vc.specialty_info|default:"-" }}</td>
+                            <td>{{ vc.order_info|default:"-" }} </td>
+                            <td>{{ vc.created_at|date:"d/m/Y" }} </td>
+                            <td>{{ vc.created_by|default:"-" }} </td>
+                        </tr>
+                    {% empty %}
+                        <tr class="table-warning nosort">
+                            <td colspan="100%" class="text-center">
+                                <small class="text-muted">{% trans 'Пусто' %}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% include "utils/_pagination.html" with page_obj=vc_list %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+
+
+{% endblock %}

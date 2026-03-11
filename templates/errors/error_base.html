@@ -1,0 +1,43 @@
+{% extends 'students/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 60vh;">
+        <div class="text-center">
+            <!-- Код ошибки (404, 500 и т.д.) -->
+            <h1 class="display-1 font-weight-bold text-secondary">{{ code }}</h1>
+
+            <!-- Заголовок ошибки -->
+            <h2 class="mb-4">{{ title }}</h2>
+
+            <!-- Описание ошибки -->
+            <p class="lead text-muted mb-5">
+                {{ message }}
+            </p>
+
+            <!-- Логика кнопок -->
+            <div class="d-flex justify-content-center gap-3">
+                {% if back_url %}
+                    <!-- Если мы знаем, откуда пришел пользователь -> Кнопка "Назад" -->
+                    <a href="{{ back_url }}" class="btn btn-primary btn-lg mx-2">
+                        <i class="fas fa-arrow-left"></i> Вернуться назад
+                    </a>
+                {% else %}
+                    <!-- Если не знаем (прямая ссылка) -> Кнопка "На главную" -->
+                    <!-- Проверяем, авторизован ли пользователь, чтобы отправить его на правильную главную -->
+                    {% if request.user.is_authenticated %}
+                        <a href="/" class="btn btn-primary btn-lg mx-2">
+                            <i class="fas fa-home"></i> На главную
+                        </a>
+                    {% else %}
+                        <!-- Если не авторизован - предлагаем войти -->
+                        <a href="{% url 'students:next-student-login' %}" class="btn btn-secondary btn-lg mx-2">
+                            Войти
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

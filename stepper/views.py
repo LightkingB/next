@@ -21,7 +21,7 @@ from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS,
 from stepper.decorators import with_stepper
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
-from stepper.filters import StageEmployeeStudentFilter, CSFilter, CsHistoryFilter
+from stepper.filters import StageEmployeeStudentFilter, CSFilter, CsHistoryFilter, VCFilter
 from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm, DiplomaForm
 from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep, StageEmployee, Issuance, \
     IssuanceHistory, Diploma, VacationCertificate
@@ -1363,6 +1363,7 @@ def vacation_certificate_students(request):
         search = request.POST.get("search", "")
 
         students_qs = MyEduService.get_vc_data_from_api(VC_URL, search)
+
     context = {
         "navbar": "vacation-certificate",
         "title": "Каникулярная справка",
@@ -1489,9 +1490,15 @@ def vacation_certificate_view(request):
 
 
 def vacation_certificate_history(request):
+    vc_qs = VacationCertificate.objects.all().select_related('created_by').order_by('-id', 'student_name')
+    filterset = VCFilter(request.POST or None, queryset=vc_qs)
+    paginator = Pagination(request, filterset)
+    page_number = request.GET.get('page', 1)
+
     context = {
         "title": "Каникулярная справка - История",
-        "navbar": "vacation-certificate"
+        "navbar": "vacation-certificate",
+        "vc_list": paginator.pagination_with_filters(page_number)
     }
     return render(request, "teachers/steppers/vacation/vacation_certificate_history.html", context)
 

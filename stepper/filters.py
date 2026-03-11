@@ -2,7 +2,7 @@ import django_filters
 from django import forms
 from django.db.models import Q
 
-from stepper.models import StageEmployee, TemplateStep, ClearanceSheet, Issuance
+from stepper.models import StageEmployee, TemplateStep, ClearanceSheet, Issuance, VacationCertificate
 
 
 class StageEmployeeStudentFilter(django_filters.FilterSet):
@@ -65,5 +65,20 @@ class CsHistoryFilter(django_filters.FilterSet):
         query |= Q(issuance_id__in=Issuance.objects.filter(
             Q(doc_number__icontains=value)
         ).values_list('id', flat=True))
+
+        return queryset.filter(query)
+
+
+class VCFilter(django_filters.FilterSet):
+    search = django_filters.CharFilter(method='filter_search', label='Поиск')
+
+    class Meta:
+        model = VacationCertificate
+        fields = ['search', ]
+
+    def filter_search(self, queryset, name, value):
+        query = Q(student_id__icontains=value) | Q(student_name__icontains=value) | Q(cert_number__icontains=value)
+        if value.isdigit():
+            query |= Q(id=int(value))
 
         return queryset.filter(query)
