@@ -2,6 +2,7 @@
 from django.shortcuts import redirect
 from django.urls import reverse, resolve, Resolver404
 
+
 # Получаем логгер. Имя 'bsheet.auth_access' будет использоваться в settings.py
 # logger = logging.getLogger('bsheet.auth_access')
 
@@ -69,3 +70,32 @@ class AuthRequiredMiddleware:
 
         # Перенаправляем пользователя на единую страницу "Доступ ограничен"
         return redirect(reverse('auth_required'))
+
+
+class HistoryMiddleware:
+    """
+    Запоминает URL последней успешно открытой GET-страницы.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        # --- Улучшенная логика записи ---
+        # Запоминаем URL только если:
+        # 1. Это GET-запрос (а не POST, PUT, DELETE и т.д.)
+        # 2. Запрос был успешным (код 200)
+        # 3. Это не фоновый AJAX-запрос
+        if (
+                request.method == 'GET' and
+                response.status_code == 200 and
+                not request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        ):
+            # Исключаем URL-ы, которые не нужно запоминать (админка, медиа и т.д.)
+            excluded_urls = ['/admin/', '/media/', '/static/', '/auth-required/']
+            if not any(request.path.startswith(url) for url in excluded_urls):
+                request.session['previous_url'] = request.build_absolute_uri()
+
+        return response
