@@ -1,11 +1,14 @@
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
 
 from bsadmin.forms import LoginForm
 from bsadmin.services import UserService
+from stepper.consts import STUDENT_STEPPER_URL
 from stepper.decorators import with_stepper
 from stepper.models import ClearanceSheet, Trajectory
+from utils.caches import EntityCache
 from utils.errors import handle_error
 from utils.myedu import MyEduService
 
@@ -17,8 +20,33 @@ def student_index(request):
 
     myedu_id = request.user.myedu_id
 
+    student = EntityCache.get_or_set(
+        entity_id=myedu_id,
+        fetch_func=MyEduService.get_stepper_data_from_api,
+        fetch_kwargs={
+            "url": STUDENT_STEPPER_URL,
+            "search": myedu_id,
+        },
+    )
+
     active_cs_qs = ClearanceSheet.objects.filter(myedu_id=myedu_id, completed_at__isnull=True)
     has_cs = active_cs_qs.exists()
+
+    if request.method == "POST" and student and not has_cs:
+        ClearanceSheet.objects.create(
+            myedu_id=myedu_id,
+            student_fio=student.get('student_fio', ''),
+            myedu_faculty_id=student.get('faculty_id', 0),
+            myedu_faculty=student.get('faculty_name', ''),
+            myedu_spec_id=student.get('speciality_id', 0),
+            myedu_spec=student.get('speciality_name', ''),
+            order_status=student.get('id_movement_info', ''),
+            order=student.get('info', ''),
+            order_date=student.get('date_movement', ''),
+            edu_year=request.stepper.active_edu_year()
+        )
+        messages.success(request, "Заявка успешно отправлена")
+        has_cs = True
 
     trajectory_prefetch = Prefetch(
         'trajectory_set',
@@ -34,7 +62,7 @@ def student_index(request):
     return render(request, "students/index.html", {
         "cs_list": cs_list,
         "has_cs": has_cs,
-        # "student": student
+        "student": student
     })
 
 
