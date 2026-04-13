@@ -31,7 +31,14 @@ admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Role)
 admin.site.register(Faculty)
 admin.site.register(Speciality)
-admin.site.register(FacultyTranscript)
+
+
+@admin.register(FacultyTranscript)
+class FacultyTranscriptAdmin(admin.ModelAdmin):
+    list_display = ('transcript_number', 'faculty',)
+    search_fields = ('transcript_number',)
+
+
 admin.site.register(CategoryTranscript)
 admin.site.register(RegHistoryTranscript)
 
