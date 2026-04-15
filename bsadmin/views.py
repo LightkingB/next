@@ -1,6 +1,15 @@
+import base64
+import io
+import os
+import random
+import re
+import string
+
+from PIL import Image, ImageDraw, ImageFont
+from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView
@@ -463,6 +472,7 @@ def get_back_url(request):
 
     return None
 
+
 def handler400(request, exception=None):
     """Ошибка 400: Неверный запрос"""
     context = {
@@ -505,3 +515,70 @@ def handler500(request):
         'back_url': get_back_url(request)
     }
     return render(request, 'errors/error_base.html', context, status=500)
+
+
+def invitation_view(request):
+    # --- НАСТРОЙКИ ---
+    X_OFFSET = 480
+    Y_COORDINATE = 742
+    FONT_SIZE = 40
+    # -----------------
+
+    guest_name = ""
+    img_str = None
+
+    if request.method == "POST":
+        guest_name = request.POST.get("guest_name", "").strip()
+        # Твой путь к картинке
+        image_path = os.path.join(settings.BASE_DIR, 'static', 'static_dirs', 'img', 'invite.jpg')
+
+        try:
+            img = Image.open(image_path).convert("RGB")
+            draw = ImageDraw.Draw(img)
+
+            # Шрифт (Ubuntu)
+            font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+            try:
+                font = ImageFont.truetype(font_path, FONT_SIZE)
+            except:
+                font = ImageFont.load_default()
+
+            # Рисуем
+            draw.text((X_OFFSET, Y_COORDINATE), guest_name, fill=(101, 80, 46), font=font, anchor="ls")
+
+            # --- ЛОГИКА СКАЧИВАНИЯ ---
+            if 'download_action' in request.POST:
+                # Генерим хвост
+                suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
+
+                # Чистим имя: оставляем буквы и цифры, остальное нахер, пробелы в нижнее подчеркивание
+                # Фильтр re.U позволяет корректно работать с кириллицей
+                clean_name = re.sub(r'[^\w\s]', '', guest_name, flags=re.U).strip().replace(" ", "_")
+
+                if not clean_name:
+                    clean_name = "invitation"
+
+                filename = f"{clean_name}_{suffix}.jpg"
+
+                buffer = io.BytesIO()
+                img.save(buffer, format="JPEG", quality=100)
+                buffer.seek(0)
+
+                # Используем FileResponse — он сам выставит нужные заголовки для скачивания
+                response = FileResponse(buffer, as_attachment=True, filename=filename)
+                # Явно прописываем тип, чтобы браузер не тупил
+                response['Content-Type'] = 'image/jpeg'
+                return response
+
+            # --- ПРЕДПРОСМОТР ---
+            preview_buffer = io.BytesIO()
+            img.save(preview_buffer, format="JPEG")
+            img_str = base64.b64encode(preview_buffer.getvalue()).decode()
+
+        except Exception as e:
+            print(f"Ошибка: {e}")
+
+    return render(request, 'errors/invitation.html', {
+        'preview_img': img_str,
+        'guest_name': guest_name
+    })

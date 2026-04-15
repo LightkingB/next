@@ -13,6 +13,7 @@ class AuthRequiredMiddleware:
         # Список ИМЕН URL-адресов, которые являются публичными.
         # Эти URL-адреса доступны без аутентификации.
         self.public_urls = [
+            'invitation',
             'auth_required',  # Наша страница "Доступ ограничен"
             'students:next-student-login',  # Страница входа для студентов
             'integrator:next-teacher-login',  # Страница входа для преподавателей
