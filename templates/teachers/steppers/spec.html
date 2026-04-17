@@ -41,6 +41,8 @@
                         <th scope="col">№ Обх. листа</th>
                         {% if history %}
                             <th scope="col">№ диплома</th>
+                            <th scope="col">Рег. номер</th>
+                            <th scope="col">Дата выдачи</th>
                         {% endif %}
                         <th scope="col">Приказ</th>
                         <th scope="col">Дата приказа</th>
@@ -62,6 +64,8 @@
                             <td>{{ student.id }}</td>
                             {% if history %}
                                 <td>{{ student.issuance_doc_number }}</td>
+                                <td>{{ student.issuance_reg_number }}</td>
+                                <td>{{ student.issuance_date_issue|date:"d-m-Y" }}</td>
                             {% endif %}
                             <td>{{ student.order|default:"-" }}</td>
                             <td>{{ student.order_date|default:"-" }}</td>
