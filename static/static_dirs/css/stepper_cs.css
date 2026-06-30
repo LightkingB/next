@@ -1,0 +1,583 @@
+/* Stepper — список обходных листов (/stepper/cs/) */
+
+.stepper-cs {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 0 1.5rem;
+    font-family: var(--am-font-body, 'Roboto', sans-serif);
+    font-size: 0.875rem;
+    color: var(--am-text, #333);
+}
+
+.stepper-cs__overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 1rem;
+}
+
+.stepper-cs__overlay.is-visible {
+    display: flex;
+}
+
+/* ── Шапка ── */
+.stepper-cs__header {
+    margin-bottom: 0.85rem;
+    padding: 0.85rem 1rem;
+    background: var(--am-paper, #fcfbfa);
+    border: 1px solid var(--am-line, #ddd9d4);
+    border-left: 4px solid var(--am-red, #A00E07);
+    border-radius: var(--am-radius, 8px);
+    box-shadow: var(--am-shadow, 0 1px 4px rgba(30, 24, 20, 0.06));
+}
+
+.stepper-cs__header h1 {
+    margin: 0;
+    font-family: var(--am-font-heading, 'Roboto Slab', serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--am-ink, #1c1c1c);
+    line-height: 1.35;
+}
+
+.stepper-cs__header h1 i {
+    margin-right: 0.4rem;
+    color: var(--am-red, #A00E07);
+    font-size: 0.9em;
+}
+
+.stepper-cs__header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    color: var(--am-muted, #6b6b6b);
+}
+
+.stepper-cs__header-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.12rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--am-red, #A00E07);
+    background: var(--am-red-soft, #faf5f4);
+    border: 1px solid var(--am-red-line, #e8d4d4);
+    border-radius: 4px;
+}
+
+/* ── Панель фильтров (компактная) ── */
+.stepper-cs__toolbar {
+    margin-bottom: 0.85rem;
+    padding: 0.75rem 1rem;
+    background: var(--am-paper, #fcfbfa);
+    border: 1px solid var(--am-line, #ddd9d4);
+    border-radius: var(--am-radius, 8px);
+    box-shadow: var(--am-shadow, 0 1px 4px rgba(30, 24, 20, 0.06));
+}
+
+.stepper-cs__toolbar-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.65rem;
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+}
+
+.stepper-cs__search-form {
+    display: flex;
+    flex: 1 1 16rem;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.stepper-cs__search-form .form-control {
+    flex: 1;
+    min-height: 34px;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    border-color: #d0ccc7;
+}
+
+.stepper-cs__search-form .btn-danger {
+    min-height: 34px;
+    padding: 0 0.85rem;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.stepper-cs__toolbar-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+}
+
+.stepper-cs__toolbar-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.stepper-cs__toolbar-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--am-muted, #6b6b6b);
+    margin-right: 0.15rem;
+    white-space: nowrap;
+}
+
+.stepper-cs__chip-form {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+.stepper-cs__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    font-family: inherit;
+    line-height: 1.2;
+    color: var(--am-text, #333);
+    background: #fff;
+    border: 1px solid var(--am-line, #ddd9d4);
+    border-radius: 5px;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.stepper-cs__chip:hover {
+    border-color: var(--am-red, #A00E07);
+    color: var(--am-red, #A00E07);
+}
+
+.stepper-cs__chip.is-active {
+    color: #fff;
+    background: var(--am-red, #A00E07);
+    border-color: var(--am-red-dark, #8a0c06);
+}
+
+.stepper-cs__chip.is-active:hover {
+    color: #fff;
+    background: var(--am-red-dark, #8a0c06);
+}
+
+/* ── Таблица ── */
+.stepper-cs__results {
+    background: var(--am-paper, #fcfbfa);
+    border: 1px solid var(--am-line, #ddd9d4);
+    border-radius: var(--am-radius, 8px);
+    overflow: hidden;
+    box-shadow: var(--am-shadow, 0 1px 4px rgba(30, 24, 20, 0.06));
+}
+
+.stepper-cs__table-wrap {
+    overflow-x: auto;
+}
+
+.stepper-cs__table {
+    width: 100%;
+    margin: 0;
+    table-layout: auto;
+    font-size: 0.8125rem;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.stepper-cs__table thead th {
+    padding: 0.55rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--am-red, #A00E07);
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.stepper-cs__table thead th:last-child {
+    border-right: none;
+}
+
+.stepper-cs__table tbody td {
+    padding: 0.75rem 0.8rem;
+    vertical-align: top;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+    background: #fff;
+    line-height: 1.45;
+    overflow: hidden;
+    word-wrap: break-word;
+}
+
+.stepper-cs__table tbody .stepper-cs__col-num,
+.stepper-cs__table tbody .stepper-cs__col-survey,
+.stepper-cs__table tbody .stepper-cs__col-actions {
+    vertical-align: middle;
+}
+
+.stepper-cs__table tbody tr:nth-child(even) td {
+    background: var(--am-table-row, #f3f1ee);
+}
+
+.stepper-cs__table tbody tr:hover td {
+    background: #ebe8e4;
+}
+
+.stepper-cs__row--clickable {
+    cursor: pointer;
+}
+
+.stepper-cs__row--clickable:focus {
+    outline: none;
+}
+
+.stepper-cs__row--clickable:focus td {
+    box-shadow: inset 0 0 0 2px rgba(160, 14, 7, 0.3);
+}
+
+.stepper-cs__col-num {
+    width: 3rem;
+    min-width: 3rem;
+    text-align: center;
+    color: var(--am-muted, #6b6b6b);
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.stepper-cs__col-status {
+    width: 10rem;
+    min-width: 10rem;
+    max-width: 11rem;
+}
+
+.stepper-cs__col-student {
+    min-width: 14rem;
+}
+
+.stepper-cs__col-report {
+    width: 5.5rem;
+    min-width: 5.5rem;
+    text-align: center;
+}
+
+.stepper-cs__col-survey {
+    width: 6.5rem;
+    min-width: 6.5rem;
+    text-align: center;
+}
+
+.stepper-cs__col-order {
+    min-width: 9rem;
+    max-width: 14rem;
+}
+
+.stepper-cs__col-actions {
+    width: 5.5rem;
+    min-width: 5.5rem;
+    text-align: center;
+}
+
+.stepper-cs__table thead .stepper-cs__col-num,
+.stepper-cs__table thead .stepper-cs__col-report,
+.stepper-cs__table thead .stepper-cs__col-survey,
+.stepper-cs__table thead .stepper-cs__col-actions {
+    text-align: center;
+}
+
+.stepper-cs__table tbody .stepper-cs__col-num,
+.stepper-cs__table tbody .stepper-cs__col-report,
+.stepper-cs__table tbody .stepper-cs__col-survey,
+.stepper-cs__table tbody .stepper-cs__col-actions {
+    vertical-align: middle;
+}
+
+/* Отчёт с QR */
+.stepper-cs__report-btn {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    min-width: 3.5rem;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--am-red, #A00E07);
+    background: var(--am-red-soft, #faf5f4);
+    border: 1px solid var(--am-red-line, #e8d4d4);
+    border-radius: 5px;
+    text-decoration: none !important;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.stepper-cs__report-btn i {
+    font-size: 0.95rem;
+}
+
+.stepper-cs__report-btn:hover {
+    color: #fff;
+    background: var(--am-red, #A00E07);
+    border-color: var(--am-red-dark, #8a0c06);
+}
+
+/* Статус */
+.stepper-cs__status-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+}
+
+.stepper-cs__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: 4px;
+    max-width: 100%;
+    white-space: normal;
+}
+
+.stepper-cs__badge--done {
+    color: #1a5c32;
+    background: #e8f5ec;
+}
+
+.stepper-cs__badge--progress {
+    color: #1a4f78;
+    background: #e8f2fa;
+}
+
+.stepper-cs__badge-meta {
+    display: block;
+    font-size: 0.68rem;
+    line-height: 1.35;
+    color: var(--am-muted, #6b6b6b);
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* Студент */
+.stepper-cs__student-name {
+    display: block;
+    font-weight: 600;
+    font-size: 0.84rem;
+    color: var(--am-ink, #1c1c1c);
+    line-height: 1.4;
+    margin-bottom: 0.3rem;
+    word-break: break-word;
+}
+
+.stepper-cs__student-line {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--am-muted, #6b6b6b);
+    line-height: 1.45;
+    margin-top: 0.15rem;
+    word-break: break-word;
+}
+
+.stepper-cs__student-line strong {
+    color: var(--am-text, #333);
+    font-weight: 600;
+}
+
+/* Анкета */
+.stepper-cs__survey-pill {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.15rem 0;
+    border: 0;
+    background: transparent;
+    line-height: 1.2;
+    max-width: 100%;
+}
+
+.stepper-cs__survey-pill--clickable {
+    cursor: pointer;
+}
+
+.stepper-cs__survey-icon--ok {
+    color: #1e7e34;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.stepper-cs__survey-icon--no {
+    color: #c0c4c9;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.stepper-cs__survey-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--am-muted, #6b6b6b);
+    white-space: nowrap;
+}
+
+.stepper-cs__survey-label--ok {
+    color: #1e7e34;
+}
+
+/* Приказ */
+.stepper-cs__order-num {
+    display: block;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--am-ink, #1c1c1c);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.stepper-cs__order-sub {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--am-muted, #6b6b6b);
+    word-break: break-word;
+}
+
+/* Действия */
+.stepper-cs__actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+}
+
+.stepper-cs__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.85rem;
+    height: 1.85rem;
+    padding: 0;
+    font-size: 0.8rem;
+    border-radius: 5px;
+    border: 1px solid var(--am-line, #ddd9d4);
+    background: #fff;
+    color: var(--am-muted, #6b6b6b);
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.stepper-cs__action:hover {
+    border-color: var(--am-red, #A00E07);
+    color: var(--am-red, #A00E07);
+    background: var(--am-red-soft, #faf5f4);
+}
+
+.stepper-cs__action--danger:hover {
+    border-color: #c0392b;
+    color: #c0392b;
+    background: #fdf2f2;
+}
+
+.stepper-cs__empty {
+    padding: 2rem 1rem !important;
+    text-align: center;
+    color: var(--am-muted, #6b6b6b);
+}
+
+/* ── Пагинация (всегда видна) ── */
+.stepper-cs__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.65rem 1rem;
+    background: var(--am-head, #ebe8e4);
+    border-top: 1px solid var(--am-line, #ddd9d4);
+}
+
+.stepper-cs__footer-meta {
+    font-size: 0.78rem;
+    color: var(--am-muted, #6b6b6b);
+}
+
+.stepper-cs__footer-meta strong {
+    color: var(--am-text, #333);
+    font-weight: 600;
+}
+
+.stepper-cs__footer .pagination {
+    margin: 0;
+}
+
+.stepper-cs__footer .page-link {
+    font-size: 0.8125rem;
+    padding: 0.32rem 0.6rem;
+    border-radius: 5px !important;
+    border-color: var(--am-line, #ddd9d4);
+    color: var(--am-text, #333);
+    background: #fff;
+    min-width: 2rem;
+    text-align: center;
+}
+
+.stepper-cs__footer .page-item.active .page-link {
+    background: var(--am-red, #A00E07);
+    border-color: var(--am-red, #A00E07);
+    color: #fff;
+    font-weight: 600;
+}
+
+.stepper-cs__footer .page-link:hover {
+    background: var(--am-red-soft, #faf5f4);
+    border-color: #ccc6c0;
+    color: var(--am-red, #A00E07);
+}
+
+.stepper-cs__footer .page-item.disabled .page-link {
+    background: var(--am-surface, #f7f5f2);
+    color: #b0b0b0;
+}
+
+@media (max-width: 991px) {
+    .stepper-cs__toolbar-top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .stepper-cs__footer {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .stepper-cs__table {
+        min-width: 860px;
+    }
+}
