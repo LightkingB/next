@@ -1,151 +1,253 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_cs.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_issuance.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h4 class="text-center mb-0">{{ title }}</h4>
-        <hr/>
-
+    <div class="stepper-cs stepper-issuance">
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
-            <div class="row justify-content-between">
-                <div class="col-md-5">
-                    <form action="" method="get">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <input type="number" name="search" class="form-control form-control-sm mb-2 mb-md-0"
-                                       placeholder="Введите номер справки"/>
-                            </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-search"></i> Поиск
-                                </button>
-                            </div>
+            <div class="stepper-issuance__shell">
+                <div class="stepper-issuance__shell-head">
+                    <h1><i class="fas fa-certificate" aria-hidden="true"></i>{{ title }}</h1>
+                    <p class="stepper-issuance__header-desc">
+                        Справки о выдаче диплома после обходного листа — спецчасть и архив.
+                    </p>
+                    {% if issuance.paginator.count or type_filter or request.GET.search %}
+                        <div class="stepper-issuance__header-meta">
+                            {% if issuance.paginator.count %}
+                                <span>Записей: <strong>{{ issuance.paginator.count }}</strong></span>
+                            {% endif %}
+                            {% if type_filter == 'speciality' %}
+                                <span class="stepper-issuance__header-badge">Спец. часть</span>
+                            {% elif type_filter == 'other' %}
+                                <span class="stepper-issuance__header-badge">Архив</span>
+                            {% endif %}
+                            {% if request.GET.search %}
+                                <span class="stepper-issuance__header-badge">Поиск: {{ request.GET.search }}</span>
+                            {% endif %}
                         </div>
+                    {% endif %}
+                </div>
+
+                <div class="stepper-issuance__toolbar">
+                    <form action="" method="get" class="stepper-issuance__search-form">
+                        <input type="number"
+                               name="search"
+                               class="form-control form-control-sm"
+                               value="{{ request.GET.search|default:'' }}"
+                               placeholder="№ справки или обходного"
+                               min="1"
+                               step="1"
+                               inputmode="numeric"
+                               aria-label="Поиск по номеру"/>
+                        {% if type_filter %}
+                            <input type="hidden" name="type" value="{{ type_filter }}">
+                        {% endif %}
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-search" aria-hidden="true"></i> Найти
+                        </button>
                     </form>
+                    <div class="stepper-issuance__filters">
+                        <span class="stepper-issuance__filters-label">Раздел</span>
+                        <a href="{% url 'stepper:cs-issuance' %}{% if request.GET.search %}?search={{ request.GET.search|urlencode }}{% endif %}"
+                           class="stepper-issuance__chip{% if not type_filter %} is-active{% endif %}">Все</a>
+                        <a href="{% url 'stepper:cs-issuance' %}?type=speciality{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}"
+                           class="stepper-issuance__chip{% if type_filter == 'speciality' %} is-active{% endif %}">Спец. часть</a>
+                        <a href="{% url 'stepper:cs-issuance' %}?type=other{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}"
+                           class="stepper-issuance__chip{% if type_filter == 'other' %} is-active{% endif %}">Архив</a>
+                    </div>
                 </div>
-                <div class="col-md-7 text-right">
 
+                <div class="stepper-issuance__messages">
+                    {% include 'utils/_messages.html' %}
                 </div>
-            </div>
-            <hr/>
-            {% include 'utils/_messages.html' %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-md">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">№ справки</th>
-                        <th scope="col">Документ</th>
-                        <th scope="col">Об. лист №</th>
-                        <th scope="col">Категория</th>
-                        <th scope="col">Факультет</th>
-                        <th scope="col">Специальность</th>
-                        <th scope="col">MyEDU / AVN</th>
-                        <th scope="col">Дата создания</th>
-                        <th scope="col">Операции</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for doc in issuance %}
-                        <tr id="row-{{ doc.id }}">
-                            <td class="text-center">{{ doc.id }}</td>
-                            <td>{{ doc.doc_number }}</td>
-                            <td>{{ doc.cs_id|default:"-" }}</td>
-                            <td>
-                                {% if doc.type_choices == 'speciality' %}
-                                    Спец. часть
-                                {% else %}
-                                    Архив / Отдел кадров
-                                {% endif %}
-                            </td>
-                            <td>{{ doc.faculty.title|default:"-" }}</td>
-                            <td>{{ doc.speciality.title|default:"-" }}</td>
-                            <td>
-                                {% if doc.student == 0 %}
-                                    AVN
-                                {% else %}
-                                    MyEDU
-                                {% endif %}
-                            </td>
-                            <td>{{ doc.created_at|date:"d/m/Y H:i" }} </td>
-                            <td class="text-center">
-                                <button class="btn btn-danger btn-sm btn-issuance-delete"
-                                        data-id="{{ doc.id }}"
-                                        data-number="{{ doc.doc_number }}"
-                                        data-toggle="modal"
-                                        data-target="#deleteModal">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
 
+                <div class="stepper-issuance__table-wrap">
+                    <table class="stepper-issuance__table">
+                        <thead>
+                        <tr>
+                            <th class="stepper-issuance__col-cert">Справка</th>
+                            <th class="stepper-issuance__col-student">Студент</th>
+                            <th class="stepper-issuance__col-doc">Диплом</th>
+                            <th class="stepper-issuance__col-cs">Обходной</th>
+                            <th class="stepper-issuance__col-type">Раздел</th>
+                            <th class="stepper-issuance__col-date">Записано</th>
+                            <th class="stepper-issuance__col-actions" title="Удалить"><i class="fas fa-trash-alt" aria-hidden="true"></i></th>
                         </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% include "utils/_pagination.html" with page_obj=issuance %}
+                        </thead>
+                        <tbody>
+                        {% for doc in issuance %}
+                            <tr id="row-{{ doc.id }}">
+                                <td class="stepper-issuance__col-cert">
+                                    <span class="stepper-issuance__cert-num">{{ doc.id }}</span>
+                                </td>
+                                <td class="stepper-issuance__col-student">
+                                    {% if doc.fio %}
+                                        <span class="stepper-issuance__student-name" title="{{ doc.fio }}">{{ doc.fio }}</span>
+                                    {% else %}
+                                        <span class="stepper-issuance__student-name stepper-issuance__student-name--muted">ФИО не указано</span>
+                                    {% endif %}
+                                    <span class="stepper-issuance__student-meta">
+                                        {% if doc.student == '0' or doc.student == 0 %}
+                                            <span class="stepper-issuance__badge stepper-issuance__badge--avn">AVN</span>
+                                        {% else %}
+                                            ID <strong>{{ doc.student }}</strong>
+                                        {% endif %}
+                                        {% if doc.faculty %} · {{ doc.faculty.title }}{% endif %}
+                                        {% if doc.speciality %} · {{ doc.speciality.title }}{% endif %}
+                                    </span>
+                                </td>
+                                <td class="stepper-issuance__col-doc">
+                                    <span class="stepper-issuance__doc-line">
+                                        Диплом <strong>№{{ doc.doc_number }}</strong>
+                                        {% if doc.reg_number %} · рег. {{ doc.reg_number }}{% endif %}
+                                    </span>
+                                    {% if doc.date_issue %}
+                                        <span class="stepper-issuance__doc-sub">Выдан {{ doc.date_issue|date:"d.m.Y" }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="stepper-issuance__col-cs">
+                                    {% if doc.cs_id %}
+                                        <a href="{% url 'stepper:cs-report' cs_id=doc.cs_id %}"
+                                           class="stepper-issuance__cs-link"
+                                           title="Отчёт №{{ doc.cs_id }}">
+                                            <i class="fas fa-qrcode" aria-hidden="true"></i>{{ doc.cs_id }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="stepper-issuance__col-type">
+                                    {% if doc.type_choices == 'speciality' %}
+                                        <span class="stepper-issuance__badge stepper-issuance__badge--spec" title="Спец. часть">
+                                            <i class="fas fa-graduation-cap" aria-hidden="true"></i> Спец.
+                                        </span>
+                                    {% else %}
+                                        <span class="stepper-issuance__badge stepper-issuance__badge--archive" title="Архив">
+                                            <i class="fas fa-archive" aria-hidden="true"></i> Архив
+                                        </span>
+                                    {% endif %}
+                                    {% if doc.status == 'double' %}
+                                        <span class="stepper-issuance__badge stepper-issuance__badge--double">Дубликат</span>
+                                    {% endif %}
+                                </td>
+                                <td class="stepper-issuance__col-date">
+                                    <span class="stepper-issuance__date-main">{{ doc.created_at|date:"d.m.Y" }}</span>
+                                    <span class="stepper-issuance__date-sub">{{ doc.created_at|date:"H:i" }}</span>
+                                </td>
+                                <td class="stepper-issuance__col-actions">
+                                    <button type="button"
+                                            class="stepper-issuance__delete-btn btn-issuance-delete"
+                                            data-id="{{ doc.id }}"
+                                            data-cert="{{ doc.id }}"
+                                            data-number="{{ doc.doc_number }}"
+                                            data-fio="{{ doc.fio|default:'—' }}"
+                                            data-toggle="modal"
+                                            data-target="#deleteModal"
+                                            title="Удалить">
+                                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                        <span class="sr-only">Удалить</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="stepper-issuance__empty">
+                                    {% if request.GET.search or type_filter %}
+                                        По вашему запросу записей не найдено
+                                    {% else %}
+                                        Записей о выдаче документов пока нет
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="stepper-issuance__footer">
+                    <div>
+                        {% if issuance.paginator.count %}
+                            Показано <strong>{{ issuance.start_index }}–{{ issuance.end_index }}</strong>
+                            из <strong>{{ issuance.paginator.count }}</strong>
+                            · стр. <strong>{{ issuance.number }}</strong>/<strong>{{ issuance.paginator.num_pages }}</strong>
+                        {% else %}
+                            Записей нет
+                        {% endif %}
+                    </div>
+                    {% include "utils/_pagination.html" with page_obj=issuance %}
+                </div>
             </div>
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document">
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Подтвердите удаление</h5>
+                    <h5 class="modal-title" id="deleteModalLabel">Удалить запись?</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    Вы уверены, что хотите удалить документ № <strong id="docNumber"></strong>?
+                    <p class="mb-0">Справка и связанные данные будут удалены без возможности восстановления.</p>
+                    <div class="stepper-issuance__modal-detail">
+                        Справка № <strong id="docCertId"></strong> ·
+                        диплом № <strong id="docNumber"></strong><br>
+                        <span id="docFio"></span>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-sm btn-danger" id="confirmDelete">Удалить</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="confirmDelete">
+                        <i class="fas fa-trash-alt" aria-hidden="true"></i> Удалить
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 {% endblock %}
+
 {% block scripts %}
     <script type="text/javascript">
         let deleteDocId = null;
 
         $(document).on('click', '.btn-issuance-delete', function () {
             deleteDocId = $(this).data('id');
-            const docNumber = $(this).data('number');
-            $('#docNumber').text(docNumber);
+            $('#docCertId').text($(this).data('cert'));
+            $('#docNumber').text($(this).data('number'));
+            $('#docFio').text($(this).data('fio'));
         });
 
         $('#confirmDelete').on('click', function () {
-            if (deleteDocId) {
-                $.ajax({
-                    url: '{% url "stepper:issuance-delete" %}',
-                    type: 'POST',
-                    data: {
-                        'id': deleteDocId,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function (response) {
-                        $('#deleteModal').modal('hide');
-                        $('#row-' + deleteDocId).remove();
-                    },
-                    error: function () {
-                        alert('Ошибка при удалении документа.');
-                    }
-                });
-            }
+            if (!deleteDocId) return;
+            const $btn = $(this);
+            $btn.prop('disabled', true);
+            $.ajax({
+                url: '{% url "stepper:issuance-delete" %}',
+                type: 'POST',
+                data: { id: deleteDocId, csrfmiddlewaretoken: '{{ csrf_token }}' },
+                success: function () {
+                    $('#deleteModal').modal('hide');
+                    $('#row-' + deleteDocId).remove();
+                    deleteDocId = null;
+                },
+                error: function () {
+                    alert('Ошибка при удалении записи.');
+                },
+                complete: function () {
+                    $btn.prop('disabled', false);
+                }
+            });
         });
     </script>
-
 {% endblock %}

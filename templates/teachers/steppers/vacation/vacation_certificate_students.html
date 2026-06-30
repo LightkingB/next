@@ -1,172 +1,150 @@
 {% extends 'admin_base.html' %}
 {% load static i18n custom_filters %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/vacation_certificate_students.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div id="loading-overlay" style="
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.4);
-        z-index: 9999;
-        text-align: center;
-        color: white;
-        font-size: 24px;
-        padding-top: 20%;
-    ">
-        <i class="fas fa-spinner fa-spin"></i> Загрузка...
+    <div id="loading-overlay" class="vc-students__overlay" aria-hidden="true">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <span>Загрузка данных MyEDU…</span>
     </div>
-    <div class="container-fluid">
-        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
-        <hr/>
 
+    <div class="container-fluid vc-students">
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
-            <div class="row">
-                <div class="col-md-10 col-lg-8">
-                    <form action="" method="post" id="search-form">
-                        {% csrf_token %}
+            <header class="vc-students__header">
+                <h1><i class="fas fa-umbrella-beach" aria-hidden="true"></i>{{ title }}</h1>
+                <p class="vc-students__header-desc">
+                    Найдите студента по ФИО или MyEDU ID и сформируйте каникулярную справку на нужном языке.
+                    После открытия справки можно отредактировать поля и сохранить для печати.
+                </p>
+            </header>
 
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label for="search">ФИО / MyEDU ID:</label>
-                                <input type="text" class="form-control form-control-sm" name="search"
-                                       placeholder="230795"
-                                       id="search" value="{{ search }}"/>
-                            </div>
-                            <div class="col-md-5">
-                                <div class="mt-4">
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-search"></i> Поиск
-                                    </button>
-                                    <a href="{% url 'stepper:vacation-certificate-history' %}"
-                                       class="btn btn-sm btn-success ml-2">
-                                        <i class="fas fa-history"></i> История
-                                    </a>
-                                </div>
-                            </div>
-
-                        </div>
-                    </form>
-                </div>
-                <div class="col-md-2 col-lg-4 text-right mt-0 mt-md-4">
-
-                </div>
+            <div class="vc-students__toolbar">
+                <form action="" method="post" id="search-form" class="vc-students__search-form">
+                    {% csrf_token %}
+                    <label class="sr-only" for="search">ФИО или MyEDU ID</label>
+                    <input type="text"
+                           class="form-control form-control-sm vc-students__search-input"
+                           name="search"
+                           id="search"
+                           value="{{ search }}"
+                           placeholder="ФИО или MyEDU ID — например: 230795"/>
+                    <button type="submit" id="search-btn" class="btn btn-sm btn-danger vc-students__btn-primary">
+                        <i class="fas fa-search" aria-hidden="true"></i> Найти
+                    </button>
+                </form>
+                <a href="{% url 'stepper:vacation-certificate-history' %}" class="vc-students__btn-history">
+                    <i class="fas fa-history" aria-hidden="true"></i> История справок
+                </a>
             </div>
-            <hr/>
+            <p class="vc-students__search-hint">Поиск в MyEDU — введите ID или часть ФИО.</p>
+
             {% include 'utils/_messages.html' %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-md">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">ФИО</th>
-                        <th scope="col">Действия</th>
-                        <th scope="col">Факультет</th>
-                        <th scope="col">Специальность</th>
-                        <th scope="col">Приказ</th>
 
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for student in students %}
+            <div class="vc-students__results">
+                <div class="vc-students__table-wrap">
+                    <table class="vc-students__table">
+                        <thead>
                         <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td class="text-center">
-                                {{ student.student_fio }} <br/>
-                                <span class="text-primary"> ({{ student.student_id }})</span>
-                            </td>
-                            <td class="text-center">
-                                <form action="{% url 'stepper:vacation-certificate-session' %}" method="post">
-                                    {% csrf_token %}
-
-                                    <input type="hidden" name="student_id" value="{{ student.student_id }}">
-                                    <input type="hidden" name="student_fio" value="{{ student.student_fio }}">
-                                    <input type="hidden" name="birthday" value="{{ student.birthday }}">
-                                    <input type="hidden" name="course" value="{{ student.course }}">
-
-                                    <input type="hidden" name="movement_date" value="{{ student.movement_date }}">
-                                    <input type="hidden" name="movement_info" value="{{ student.movement_info }}">
-
-                                    <input type="hidden" name="faculty_kg" value="{{ student.faculty.name_kg }}">
-                                    <input type="hidden" name="faculty_ru" value="{{ student.faculty.name_ru }}">
-                                    <input type="hidden" name="faculty_en" value="{{ student.faculty.name_en }}">
-
-                                    <input type="hidden" name="speciality_kg" value="{{ student.speciality.name_kg }}">
-                                    <input type="hidden" name="speciality_ru" value="{{ student.speciality.name_ru }}">
-                                    <input type="hidden" name="speciality_en" value="{{ student.speciality.name_en }}">
-
-                                    <input type="hidden" name="edu_form_kg" value="{{ student.edu_form.name_kg }}">
-                                    <input type="hidden" name="edu_form_ru" value="{{ student.edu_form.name_ru }}">
-                                    <input type="hidden" name="edu_form_en" value="{{ student.edu_form.name_en }}">
-                                    <input type="hidden" name="edu_year" value="{{ student.edu_year.name_ru }}">
-
-                                    <input type="hidden" name="payment_form_kg"
-                                           value="{{ student.payment_form.name_kg }}">
-                                    <input type="hidden" name="payment_form_ru"
-                                           value="{{ student.payment_form.name_ru }}">
-                                    <input type="hidden" name="payment_form_en"
-                                           value="{{ student.payment_form.name_en }}">
-
-                                    <input type="hidden" name="license_year_kg"
-                                           value="{{ student.license.license_year.short_name_kg }}">
-                                    <input type="hidden" name="license_year_ru"
-                                           value="{{ student.license.license_year.short_name_ru }}">
-                                    <input type="hidden" name="license_year_en"
-                                           value="{{ student.license.license_year.short_name_en }}">
-
-                                    <div class="btn-group mt-2" role="group">
-                                        <button type="submit" name="lang" value="kg"
-                                                class="btn btn-sm btn-outline-primary">KG
-                                        </button>
-                                        <button type="submit" name="lang" value="ru"
-                                                class="btn btn-sm btn-outline-success">RU
-                                        </button>
-                                        <button type="submit" name="lang" value="en"
-                                                class="btn btn-sm btn-outline-danger">EN
-                                        </button>
-                                    </div>
-                                </form>
-                            </td>
-                            <td>{{ student.faculty.name_ru }}</td>
-                            <td>{{ student.speciality.name_ru }}</td>
-                            <td>№ {{ student.movement_info }} <br/> Дата: {{ student.movement_date }}</td>
-
+                            <th class="vc-students__col-num">№</th>
+                            <th class="vc-students__col-student">Студент</th>
+                            <th class="vc-students__col-faculty">Факультет</th>
+                            <th class="vc-students__col-spec">Специальность</th>
+                            <th class="vc-students__col-order">Приказ</th>
+                            <th class="vc-students__col-lang">Язык справки</th>
                         </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        {% for student in students %}
+                            <tr>
+                                <td class="vc-students__col-num">{{ forloop.counter }}</td>
+                                <td class="vc-students__col-student">
+                                    <span class="vc-students__student-name">{{ student.student_fio }}</span>
+                                    <span class="vc-students__student-id">
+                                        MyEDU ID: <strong>{{ student.student_id }}</strong>
+                                        {% if student.course %} · {{ student.course }} курс{% endif %}
+                                    </span>
+                                </td>
+                                <td class="vc-students__col-faculty">{{ student.faculty.name_ru }}</td>
+                                <td class="vc-students__col-spec">{{ student.speciality.name_ru }}</td>
+                                <td class="vc-students__col-order">
+                                    <span class="vc-students__order-main">№ {{ student.movement_info }}</span>
+                                    <span class="vc-students__order-sub">{{ student.movement_date }}</span>
+                                </td>
+                                <td class="vc-students__col-lang">
+                                    <form action="{% url 'stepper:vacation-certificate-session' %}"
+                                          method="post"
+                                          class="vc-students__lang-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="student_id" value="{{ student.student_id }}">
+                                        <input type="hidden" name="student_fio" value="{{ student.student_fio }}">
+                                        <input type="hidden" name="birthday" value="{{ student.birthday }}">
+                                        <input type="hidden" name="course" value="{{ student.course }}">
+                                        <input type="hidden" name="movement_date" value="{{ student.movement_date }}">
+                                        <input type="hidden" name="movement_info" value="{{ student.movement_info }}">
+                                        <input type="hidden" name="faculty_kg" value="{{ student.faculty.name_kg }}">
+                                        <input type="hidden" name="faculty_ru" value="{{ student.faculty.name_ru }}">
+                                        <input type="hidden" name="faculty_en" value="{{ student.faculty.name_en }}">
+                                        <input type="hidden" name="speciality_kg" value="{{ student.speciality.name_kg }}">
+                                        <input type="hidden" name="speciality_ru" value="{{ student.speciality.name_ru }}">
+                                        <input type="hidden" name="speciality_en" value="{{ student.speciality.name_en }}">
+                                        <input type="hidden" name="edu_form_kg" value="{{ student.edu_form.name_kg }}">
+                                        <input type="hidden" name="edu_form_ru" value="{{ student.edu_form.name_ru }}">
+                                        <input type="hidden" name="edu_form_en" value="{{ student.edu_form.name_en }}">
+                                        <input type="hidden" name="edu_year" value="{{ student.edu_year.name_ru }}">
+                                        <input type="hidden" name="payment_form_kg" value="{{ student.payment_form.name_kg }}">
+                                        <input type="hidden" name="payment_form_ru" value="{{ student.payment_form.name_ru }}">
+                                        <input type="hidden" name="payment_form_en" value="{{ student.payment_form.name_en }}">
+                                        <input type="hidden" name="license_year_kg" value="{{ student.license.license_year.short_name_kg }}">
+                                        <input type="hidden" name="license_year_ru" value="{{ student.license.license_year.short_name_ru }}">
+                                        <input type="hidden" name="license_year_en" value="{{ student.license.license_year.short_name_en }}">
+                                        <div class="vc-students__lang-group" role="group" aria-label="Выбор языка справки">
+                                            <button type="submit" name="lang" value="kg" class="vc-students__lang-btn vc-students__lang-btn--kg" title="Кыргызча">KG</button>
+                                            <button type="submit" name="lang" value="ru" class="vc-students__lang-btn vc-students__lang-btn--ru" title="Русский">RU</button>
+                                            <button type="submit" name="lang" value="en" class="vc-students__lang-btn vc-students__lang-btn--en" title="English">EN</button>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="vc-students__empty">
+                                    <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                                    {% if search %}
+                                        По запросу «{{ search }}» студенты не найдены
+                                    {% else %}
+                                        Введите ФИО или MyEDU ID и нажмите «Найти»
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
-
-
 {% endblock %}
 
 {% block scripts %}
     <script type="text/javascript">
-        $(document).ready(function () {
-            document.getElementById('search-form').addEventListener('submit', function (e) {
+        const searchForm = document.getElementById('search-form');
+        if (searchForm) {
+            searchForm.addEventListener('submit', function () {
                 const btn = document.getElementById('search-btn');
                 const overlay = document.getElementById('loading-overlay');
-
-                // Показываем оверлей и блокируем все
-                overlay.style.display = 'block';
+                overlay.classList.add('is-visible');
                 btn.disabled = true;
-
-                // Можно заблокировать всю страницу кликами
                 document.body.style.pointerEvents = 'none';
                 overlay.style.pointerEvents = 'auto';
             });
-
-        });
+        }
     </script>
 {% endblock %}

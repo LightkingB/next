@@ -738,20 +738,27 @@ def cs_status(request):
 @with_stepper
 def cs_issuance(request):
     search_id = request.GET.get('search')
+    type_filter = request.GET.get('type', '')
+
+    issuance_qs = Issuance.objects.all().select_related('faculty', 'speciality', 'cs').order_by('-id')
+
     if search_id:
-        issuance_qs = (Issuance.objects.filter(Q(id=search_id) | Q(cs_id=search_id))
-                       .select_related('faculty', 'speciality').order_by('id'))
+        issuance_qs = issuance_qs.filter(Q(id=search_id) | Q(cs_id=search_id))
+
+    if type_filter in (Issuance.SPEC, Issuance.OTHER):
+        issuance_qs = issuance_qs.filter(type_choices=type_filter)
     else:
-        issuance_qs = Issuance.objects.all().select_related('faculty', 'speciality').order_by('id')
+        type_filter = ''
 
     paginator = Pagination(request, issuance_qs)
     page_number = request.GET.get('page', 1)
     issuance = paginator.pagination(page_number)
 
     context = {
-        "title": "Перечень студентов, получивших документы",
+        "title": "Выданные документы",
         "issuance": issuance,
-        "navbar": "issuance"
+        "navbar": "issuance",
+        "type_filter": type_filter,
     }
     return render(request, "teachers/steppers/cs-issuance.html", context)
 
