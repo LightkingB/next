@@ -88,8 +88,8 @@
                                     <span class="stepper-issuance__cert-num">{{ doc.id }}</span>
                                 </td>
                                 <td class="stepper-issuance__col-student">
-                                    {% if doc.fio %}
-                                        <span class="stepper-issuance__student-name" title="{{ doc.fio }}">{{ doc.fio }}</span>
+                                    {% if doc.display_fio %}
+                                        <span class="stepper-issuance__student-name">{{ doc.display_fio }}</span>
                                     {% else %}
                                         <span class="stepper-issuance__student-name stepper-issuance__student-name--muted">ФИО не указано</span>
                                     {% endif %}
@@ -97,17 +97,21 @@
                                         {% if doc.student == '0' or doc.student == 0 %}
                                             <span class="stepper-issuance__badge stepper-issuance__badge--avn">AVN</span>
                                         {% else %}
-                                            ID <strong>{{ doc.student }}</strong>
+                                            MyEDU ID <strong>{{ doc.student }}</strong>
                                         {% endif %}
-                                        {% if doc.faculty %} · {{ doc.faculty.title }}{% endif %}
-                                        {% if doc.speciality %} · {{ doc.speciality.title }}{% endif %}
                                     </span>
+                                    {% if doc.faculty %}
+                                        <span class="stepper-issuance__student-sub">{{ doc.faculty.title }}</span>
+                                    {% endif %}
+                                    {% if doc.speciality %}
+                                        <span class="stepper-issuance__student-sub">{{ doc.speciality.title }}</span>
+                                    {% endif %}
                                 </td>
                                 <td class="stepper-issuance__col-doc">
-                                    <span class="stepper-issuance__doc-line">
-                                        Диплом <strong>№{{ doc.doc_number }}</strong>
-                                        {% if doc.reg_number %} · рег. {{ doc.reg_number }}{% endif %}
-                                    </span>
+                                    <span class="stepper-issuance__doc-main">№ {{ doc.doc_number }}</span>
+                                    {% if doc.reg_number %}
+                                        <span class="stepper-issuance__doc-sub">Рег. № {{ doc.reg_number }}</span>
+                                    {% endif %}
                                     {% if doc.date_issue %}
                                         <span class="stepper-issuance__doc-sub">Выдан {{ doc.date_issue|date:"d.m.Y" }}</span>
                                     {% endif %}
@@ -147,7 +151,7 @@
                                             data-id="{{ doc.id }}"
                                             data-cert="{{ doc.id }}"
                                             data-number="{{ doc.doc_number }}"
-                                            data-fio="{{ doc.fio|default:'—' }}"
+                                            data-fio="{{ doc.display_fio|default:'—' }}"
                                             data-toggle="modal"
                                             data-target="#deleteModal"
                                             title="Удалить">

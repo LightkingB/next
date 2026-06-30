@@ -1,7 +1,7 @@
 /* Stepper — журнал выданных документов (/stepper/cs/issuance/) */
 
 .stepper-issuance {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 0 1rem 1.5rem;
 }
@@ -168,7 +168,7 @@
 .stepper-issuance__table {
     width: 100%;
     margin: 0;
-    table-layout: fixed;
+    table-layout: auto;
     font-size: 0.8125rem;
     border-collapse: collapse;
 }
@@ -193,11 +193,12 @@
 
 .stepper-issuance__table tbody td {
     padding: 0.6rem 0.65rem;
-    vertical-align: middle;
+    vertical-align: top;
     border-bottom: 1px solid var(--am-line-soft, #eceae6);
     background: #fff;
-    line-height: 1.4;
-    overflow: hidden;
+    line-height: 1.45;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
 }
 
 .stepper-issuance__table tbody tr:nth-child(even) td {
@@ -213,22 +214,27 @@
 }
 
 /* ширины колонок */
-.stepper-issuance__col-cert   { width: 4.5rem; }
-.stepper-issuance__col-student { width: 28%; }
-.stepper-issuance__col-doc    { width: 18%; }
-.stepper-issuance__col-cs     { width: 7rem; }
-.stepper-issuance__col-type   { width: 8.5rem; }
-.stepper-issuance__col-date   { width: 7rem; }
+.stepper-issuance__col-cert   { width: 4.5rem; white-space: nowrap; }
+.stepper-issuance__col-student { min-width: 11rem; width: 24%; }
+.stepper-issuance__col-doc    { min-width: 9rem; width: 16%; }
+.stepper-issuance__col-cs     { width: 6.5rem; white-space: nowrap; }
+.stepper-issuance__col-type   { width: 7.5rem; }
+.stepper-issuance__col-date   { width: 6.5rem; white-space: nowrap; }
 .stepper-issuance__col-actions { width: 3rem; }
 
 .stepper-issuance__table thead .stepper-issuance__col-cert,
 .stepper-issuance__table thead .stepper-issuance__col-cs,
 .stepper-issuance__table thead .stepper-issuance__col-date,
-.stepper-issuance__table thead .stepper-issuance__col-actions,
+.stepper-issuance__table thead .stepper-issuance__col-actions {
+    text-align: center;
+}
+
 .stepper-issuance__table tbody .stepper-issuance__col-cert,
 .stepper-issuance__table tbody .stepper-issuance__col-cs,
 .stepper-issuance__table tbody .stepper-issuance__col-date,
-.stepper-issuance__table tbody .stepper-issuance__col-actions {
+.stepper-issuance__table tbody .stepper-issuance__col-actions,
+.stepper-issuance__table tbody .stepper-issuance__col-type {
+    vertical-align: middle;
     text-align: center;
 }
 
@@ -245,9 +251,8 @@
     font-weight: 600;
     font-size: 0.8125rem;
     color: var(--am-ink, #1c1c1c);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.35;
+    word-break: break-word;
 }
 
 .stepper-issuance__student-name--muted {
@@ -258,12 +263,10 @@
 
 .stepper-issuance__student-meta {
     display: block;
-    margin-top: 0.15rem;
-    font-size: 0.7rem;
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
     color: var(--am-muted, #6b6b6b);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
 }
 
 .stepper-issuance__student-meta strong {
@@ -271,28 +274,29 @@
     font-weight: 600;
 }
 
-.stepper-issuance__doc-line {
+.stepper-issuance__student-sub {
     display: block;
-    font-size: 0.78rem;
-    color: var(--am-text, #333);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-top: 0.12rem;
+    font-size: 0.7rem;
+    color: var(--am-muted, #6b6b6b);
+    line-height: 1.4;
+    word-break: break-word;
 }
 
-.stepper-issuance__doc-line strong {
-    color: var(--am-ink, #1c1c1c);
+.stepper-issuance__doc-main {
+    display: block;
     font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--am-ink, #1c1c1c);
+    word-break: break-word;
 }
 
 .stepper-issuance__doc-sub {
     display: block;
     margin-top: 0.12rem;
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     color: var(--am-muted, #6b6b6b);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
 }
 
 .stepper-issuance__cs-link {
@@ -322,17 +326,13 @@
 .stepper-issuance__badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 0.25rem;
-    max-width: 100%;
     padding: 0.22rem 0.45rem;
     font-size: 0.68rem;
     font-weight: 600;
     line-height: 1.2;
     border-radius: 4px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .stepper-issuance__badge--spec {

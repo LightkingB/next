@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.db import transaction, IntegrityError
-from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery, Value, CharField, Count
+from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery, Value, CharField, Count, Max
 from django.db.models.functions import RowNumber, Concat
 from django.http import Http404
 from django.utils.timezone import make_aware
@@ -68,6 +68,11 @@ class StepperService:
         if myedu.get('cs_id', None):
             instance.cs_id = myedu['cs_id']
 
+        if not (instance.fio or '').strip() and instance.cs_id:
+            cs_fio = ClearanceSheet.objects.filter(pk=instance.cs_id).values_list('student_fio', flat=True).first()
+            if cs_fio:
+                instance.fio = cs_fio.strip()
+
         signature_file = save_signature_image(signature_base64)
 
         if signature_file:
@@ -83,6 +88,44 @@ class StepperService:
         instance.save()
 
         return instance, None
+
+    @staticmethod
+    def enrich_issuance_page(page):
+        """ФИО для списка выдач: issuance.fio → cs.student_fio → последний обходной по MyEDU ID."""
+        items = list(page.object_list)
+        if not items:
+            return page
+
+        need_myedu_lookup = []
+        for doc in items:
+            fio = (doc.fio or '').strip()
+            if not fio and doc.cs_id and getattr(doc, 'cs', None):
+                fio = (doc.cs.student_fio or '').strip()
+            doc.display_fio = fio or None
+            if not doc.display_fio and doc.student and str(doc.student) not in ('0', ''):
+                need_myedu_lookup.append(str(doc.student))
+
+        if need_myedu_lookup:
+            myedu_ids = list(set(need_myedu_lookup))
+            latest_rows = (
+                ClearanceSheet.objects
+                .filter(myedu_id__in=myedu_ids)
+                .values('myedu_id')
+                .annotate(latest_id=Max('id'))
+            )
+            latest_ids = [row['latest_id'] for row in latest_rows]
+            if latest_ids:
+                fio_map = {
+                    sheet.myedu_id: (sheet.student_fio or '').strip()
+                    for sheet in ClearanceSheet.objects.filter(id__in=latest_ids).only('myedu_id', 'student_fio')
+                    if (sheet.student_fio or '').strip()
+                }
+                for doc in items:
+                    if not doc.display_fio:
+                        doc.display_fio = fio_map.get(str(doc.student))
+
+        page.object_list = items
+        return page
 
     @staticmethod
     def active_cs():

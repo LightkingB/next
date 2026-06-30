@@ -468,9 +468,11 @@ def spec_sync(request, id, myedu_id):
 
             with transaction.atomic():
                 if not issuance and diploma:
+                    cs_sheet = ClearanceSheet.objects.filter(pk=id).only('student_fio').first()
                     Issuance.objects.create(
                         student=diploma.student,
                         cs_id=id,
+                        fio=cs_sheet.student_fio if cs_sheet else None,
                         doc_number=diploma.doc_number,
                         reg_number=diploma.reg_number,
                         faculty=diploma.faculty,
@@ -740,7 +742,17 @@ def cs_issuance(request):
     search_id = request.GET.get('search')
     type_filter = request.GET.get('type', '')
 
-    issuance_qs = Issuance.objects.all().select_related('faculty', 'speciality', 'cs').order_by('-id')
+    issuance_qs = (
+        Issuance.objects
+        .select_related('faculty', 'speciality', 'cs')
+        .only(
+            'id', 'fio', 'student', 'doc_number', 'reg_number', 'date_issue',
+            'cs_id', 'type_choices', 'status', 'created_at',
+            'faculty__title', 'speciality__title',
+            'cs__student_fio',
+        )
+        .order_by('-id')
+    )
 
     if search_id:
         issuance_qs = issuance_qs.filter(Q(id=search_id) | Q(cs_id=search_id))
@@ -752,7 +764,7 @@ def cs_issuance(request):
 
     paginator = Pagination(request, issuance_qs)
     page_number = request.GET.get('page', 1)
-    issuance = paginator.pagination(page_number)
+    issuance = StepperService.enrich_issuance_page(paginator.pagination(page_number))
 
     context = {
         "title": "Выданные документы",

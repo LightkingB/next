@@ -1,28 +1,63 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/transcript_admin.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
+    <div class="transcript transcript--search">
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <div class="login-form">
-                <div class="py-2 logo-wrapper text-center">
-                    <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" class="mb-2" alt="">
+            <div class="transcript__search-page">
+                <div class="transcript__shell transcript__shell--search">
+                    <div class="transcript__search-hero">
+                        <div class="transcript__search-brand">
+                            <img src="https://oshsu.kg/main/images/logo/logo-ru.svg"
+                                 class="transcript__search-logo"
+                                 alt="ОшГУ">
+                        </div>
+                        <h1>Поиск академической справки</h1>
+                        <p class="transcript__search-lead">
+                            Проверка выданной справки по полному номеру, указанному на бланке.
+                        </p>
+                    </div>
+
+                    <div class="transcript__search-body">
+                        <form action="" method="post" class="transcript__search-form">
+                            {% csrf_token %}
+                            <label for="custom_transcript_number">Номер академической справки</label>
+                            <div class="transcript__search-row">
+                                <input type="text"
+                                       class="form-control"
+                                       name="transcript_number"
+                                       id="custom_transcript_number"
+                                       placeholder="Введите номер целиком"
+                                       required
+                                       autofocus
+                                       inputmode="numeric"
+                                       autocomplete="off"/>
+                                <button type="submit" id="teacher_login" class="transcript__search-submit">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <span>{% trans 'Поиск' %}</span>
+                                </button>
+                            </div>
+                            <p class="transcript__search-hint">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                Номер указывается полностью, без пробелов и дополнительных символов.
+                            </p>
+                        </form>
+
+                        <div class="transcript__search-messages">
+                            {% include 'utils/_messages.html' %}
+                        </div>
+                    </div>
                 </div>
-                <form action="" method="post">
-                    {% csrf_token %}
-                    <label for="custom_transcript_number" class="form-label">Введите № выданной академической справки
-                        (полностью*)</label>
-                    <input type="text" class="form-control mb-3" name="transcript_number" id="custom_transcript_number"
-                           placeholder="12345678" required/>
-                    <input type="submit" id="teacher_login" class="btn btn-danger btn-block btn-lg"
-                           value="{% trans 'Поиск' %}">
-                </form>
-                {% include 'utils/_messages.html' %}
             </div>
         {% else %}
-           {% include 'utils/_access.html' %}
+            {% include 'utils/_access.html' %}
         {% endif %}
     </div>
-
 {% endblock %}

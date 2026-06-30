@@ -1,55 +1,81 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/faculty_directory.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        {% include 'utils/_messages.html' %}
-        <div class="d-flex flex-wrap">
-            <div class="mb-md-0 mb-2">
-                <a href="{% url 'bsadmin:faculty' %}" class="btn btn-sm btn-danger mr-2">
-                    <i class="fa fa-arrow-left"></i> Список факультетов
-                </a>
+    <div class="faculty-dir">
+        <header class="admin-module__header">
+            <h1><i class="fas fa-graduation-cap" aria-hidden="true"></i>{% trans 'Специальности факультета' %}</h1>
+            <p class="faculty-dir__header-meta">
+                <strong>{{ faculty.title }}</strong>
+                {% if faculty.short_name %}({{ faculty.short_name }}){% endif %}
+                {% if specialities %} · записей: <strong>{{ specialities|length }}</strong>{% endif %}
+            </p>
+        </header>
+
+        <div class="faculty-dir__shell">
+            <div class="faculty-dir__toolbar">
+                <div class="faculty-dir__toolbar-group">
+                    <a href="{% url 'bsadmin:faculty' %}" class="faculty-dir__btn faculty-dir__btn--back">
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i> {% trans 'Список факультетов' %}
+                    </a>
+                </div>
+                {% if CUSTOM_ROLES.ADMIN in DB_ROLES %}
+                    <form method="post" action="" class="faculty-dir__toolbar-group">
+                        {% csrf_token %}
+                        <button type="submit" class="faculty-dir__btn faculty-dir__btn--sync">
+                            <i class="fas fa-sync-alt" aria-hidden="true"></i> {% trans 'Синхронизировать' %}
+                        </button>
+                    </form>
+                {% endif %}
             </div>
-            {% if CUSTOM_ROLES.ADMIN in DB_ROLES %}
 
-                <form method="post" action="">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-danger">{% trans 'Синхронизировать' %}</button>
-                </form>
+            <div class="faculty-dir__messages">
+                {% include 'utils/_messages.html' %}
+            </div>
 
+            {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+                <div class="faculty-dir__table-wrap">
+                    <table class="faculty-dir__table">
+                        <thead>
+                        <tr>
+                            <th class="faculty-dir__col-num">№</th>
+                            <th>{% trans 'Название' %}</th>
+                            <th class="faculty-dir__col-code">{% trans 'Код' %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for speciality in specialities %}
+                            <tr>
+                                <th scope="row" class="faculty-dir__col-num">{{ forloop.counter }}</th>
+                                <td>{{ speciality.title }}</td>
+                                <td class="faculty-dir__col-code">
+                                    {% if speciality.code %}
+                                        <span class="faculty-dir__code">{{ speciality.code }}</span>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="faculty-dir__empty">{% trans 'Нет данных' %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="faculty-dir__access">
+                    {% include 'utils/_access.html' %}
+                </div>
             {% endif %}
         </div>
-
-        <hr/>
-        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <h4 class="mb-3">{% trans 'Список специальностей факультета' %} "{{ faculty.title }}"</h4>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">{% trans 'Название' %}</th>
-                        <th scope="col">{% trans 'Код' %}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for speciality in specialities %}
-                        <tr>
-                            <th scope="row">{{ forloop.counter }}</th>
-                            <td>{{ speciality.title }}</td>
-                            <td>{{ speciality.code|default:"-" }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center">{% trans 'Нет данных' %}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            {% include 'utils/_access.html' %}
-        {% endif %}
     </div>
 {% endblock %}

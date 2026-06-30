@@ -1,54 +1,78 @@
 {% extends 'admin_base.html' %}
 {% load static i18n crispy_forms_tags cms_tags %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/transcript_admin.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
+    <div class="transcript">
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <h4 class="mb-4 text-center">{% trans 'Общий отчет по академическим справкам всех факультетов' %}</h4>
-            <hr/>
-            <a class="add_tabledata addBtn btn btn-danger btn-sm"
-               href="{% url 'bsadmin:index' %}">
-                <i class="fa fa-arrow-left"></i> {% trans 'Назад' %}
-            </a>
-            <hr/>
-            <div class="table-responsive">
+            <div class="transcript__shell">
+                <div class="transcript__header">
+                    <h1><i class="fas fa-chart-bar" aria-hidden="true"></i>{% trans 'Общий отчёт по справкам' %}</h1>
+                    <p class="transcript__header-desc">
+                        Академические справки по всем факультетам.
+                        {% if regtranscripts.paginator.count %}
+                            Всего записей: <strong>{{ regtranscripts.paginator.count }}</strong>
+                        {% endif %}
+                    </p>
+                </div>
 
-                <table class="table table-bordered table-sm table-responsive-md">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">{% trans '№ академической справки' %}</th>
-                        <th scope="col">{% trans 'ФИО студента' %}</th>
-                        <th scope="col">{% trans 'Факультет' %}</th>
-                        <th scope="col">{% trans 'Специальность' %}</th>
-                        <th scope="col">{% trans 'Дата получения' %}</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for report in regtranscripts %}
-                        <tr data-id="{{ report.id }}">
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ report.faculty_transcript.transcript_number }}</td>
-                            <td>{{ report.student_fio }}</td>
-                            <td>{{ report.faculty_history|default_if_none:"-" }}</td>
-                            <td>{{ report.speciality_history|default_if_none:"-" }}</td>
-                            <td>{{ report.create_date|date:"d-m-Y" }}</td>
+                <div class="transcript__toolbar">
+                    <a class="transcript__btn transcript__btn--ghost" href="{% url 'bsadmin:index' %}">
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i> {% trans 'Назад' %}
+                    </a>
+                </div>
+
+                <div class="transcript__table-wrap">
+                    <table class="transcript__table">
+                        <thead>
+                        <tr>
+                            <th class="transcript__col-num">№</th>
+                            <th>{% trans '№ академической справки' %}</th>
+                            <th>{% trans 'ФИО студента' %}</th>
+                            <th>{% trans 'Факультет' %}</th>
+                            <th>{% trans 'Специальность' %}</th>
+                            <th>{% trans 'Дата получения' %}</th>
                         </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% include "utils/_pagination.html" with page_obj=regtranscripts %}
+                        </thead>
+                        <tbody class="order">
+                        {% for report in regtranscripts %}
+                            <tr data-id="{{ report.id }}">
+                                <td class="transcript__col-num">{{ forloop.counter0|add:regtranscripts.start_index }}</td>
+                                <td class="transcript__num-cell">{{ report.faculty_transcript.transcript_number }}</td>
+                                <td class="transcript__student-cell">{{ report.student_fio }}</td>
+                                <td>{{ report.faculty_history|default_if_none:"—" }}</td>
+                                <td>{{ report.speciality_history|default_if_none:"—" }}</td>
+                                <td>{{ report.create_date|date:"d.m.Y" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="transcript__empty">{% trans 'Пусто' %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="transcript__footer">
+                    <div class="transcript__report-count">
+                        {% if regtranscripts.paginator.count %}
+                            Показано <strong>{{ regtranscripts.start_index }}–{{ regtranscripts.end_index }}</strong>
+                            из <strong>{{ regtranscripts.paginator.count }}</strong>
+                        {% else %}
+                            Записей нет
+                        {% endif %}
+                    </div>
+                    {% include "utils/_pagination.html" with page_obj=regtranscripts %}
+                </div>
             </div>
         {% else %}
-           {% include 'utils/_access.html' %}
+            {% include 'utils/_access.html' %}
         {% endif %}
     </div>
-
 {% endblock %}
