@@ -48,7 +48,7 @@
                     </div>
                 </div>
 
-                <div class="transcript__section" style="padding-top: 0;">
+                <div class="transcript__section transcript__section--journal">
                     <h2 class="transcript__section-title">Журнал академических справок</h2>
                 </div>
 
@@ -113,8 +113,18 @@
                                 </td>
                             </tr>
                         {% empty %}
-                            <tr>
-                                <td colspan="4" class="transcript__empty">Записей нет</td>
+                            <tr class="transcript__empty-row">
+                                <td colspan="4" class="transcript__empty">
+                                    <div class="transcript__empty-state">
+                                        <span class="transcript__empty-state__icon" aria-hidden="true">
+                                            <i class="fas fa-inbox"></i>
+                                        </span>
+                                        <p class="transcript__empty-state__title">Записей нет</p>
+                                        <p class="transcript__empty-state__text">
+                                            В журнале пока нет зарегистрированных академических справок.
+                                        </p>
+                                    </div>
+                                </td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -159,15 +169,17 @@
                         </div>
                         <div class="transcript-modal__field">
                             <label for="files">Файл повреждённой справки</label>
-                            <div class="transcript-modal__file">
+                            <div class="transcript-modal__file-zone">
                                 <input type="file"
                                        class="transcript-modal__file-input"
                                        id="files"
                                        name="files"
                                        accept=".pdf,.jpg,.jpeg,.png"
                                        required>
-                                <label for="files" class="transcript-modal__file-btn">
-                                    <i class="fas fa-paperclip" aria-hidden="true"></i> Выбрать файл
+                                <label for="files" class="transcript-modal__file-zone-label">
+                                    <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                                    <span class="transcript-modal__file-zone-title">Выберите файл</span>
+                                    <span class="transcript-modal__file-zone-hint">PDF, JPG или PNG</span>
                                 </label>
                                 <span class="transcript-modal__file-name" id="files-name">Файл не выбран</span>
                             </div>

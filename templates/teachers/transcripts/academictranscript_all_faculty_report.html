@@ -51,8 +51,18 @@
                                 <td>{{ report.create_date|date:"d.m.Y" }}</td>
                             </tr>
                         {% empty %}
-                            <tr>
-                                <td colspan="6" class="transcript__empty">{% trans 'Пусто' %}</td>
+                            <tr class="transcript__empty-row">
+                                <td colspan="6" class="transcript__empty">
+                                    <div class="transcript__empty-state">
+                                        <span class="transcript__empty-state__icon" aria-hidden="true">
+                                            <i class="fas fa-inbox"></i>
+                                        </span>
+                                        <p class="transcript__empty-state__title">{% trans 'Пусто' %}</p>
+                                        <p class="transcript__empty-state__text">
+                                            По всем факультетам пока нет выданных академических справок.
+                                        </p>
+                                    </div>
+                                </td>
                             </tr>
                         {% endfor %}
                         </tbody>

@@ -14,7 +14,7 @@
         <span>Загрузка данных MyEDU…</span>
     </div>
 
-    <div class="transcript">
+    <div class="transcript transcript--student">
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
             <div class="transcript__shell">
                 <div class="transcript__header">
@@ -36,7 +36,7 @@
                             <button type="submit"
                                     name="search_myedu"
                                     id="search-btn"
-                                    class="btn btn-danger">
+                                    class="transcript__search-btn">
                                 <i class="fas fa-search" aria-hidden="true"></i> {% trans 'Поиск из MyEDU' %}
                             </button>
                         </div>
