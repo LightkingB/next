@@ -39,7 +39,7 @@ CUSTOM_APPS = [
     'integrator.apps.IntegratorConfig',
     'student.apps.StudentConfig',
     'archives.apps.ArchivesConfig',
-    'djminio'
+    # 'djminio'
 ]
 
 INSTALLED_APPS = FIRST_APPS + SYSTEM_APPS + CUSTOM_APPS + THIRD_APPS
