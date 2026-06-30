@@ -1,84 +1,140 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block body_class %}integrator-hub-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/integrator.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 mb-2">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Академическая справка</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-                            <a href="{% url 'bsadmin:index' %}" class="btn btn-sm btn-danger">
-                                Перейти <i class="fa fa-arrow-right"></i>
-                            </a>
-                        {% else %}
-                            <h5 class="text-center">{% trans 'Нет доступа' %}</h5>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-2">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Обходной лист</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
-                            <a href="{% url 'stepper:index' %}" class="btn btn-sm btn-danger">
-                                Перейти <i class="fa fa-arrow-right"></i>
-                            </a>
-                        {% elif CUSTOM_ROLES.STDEBT in DB_ROLES %}
-                            <a href="{% url 'stepper:debts' %}" class="btn btn-sm btn-danger">
-                                Перейти <i class="fa fa-arrow-right"></i>
-                            </a>
-                        {% elif CUSTOM_ROLES.STSPEC in DB_ROLES %}
-                            <a href="{% url 'stepper:spec' %}" class="btn btn-sm btn-danger">
-                                Перейти <i class="fa fa-arrow-right"></i>
-                            </a>
-                        {% elif CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
-                            <a href="{% url 'stepper:archive' %}" class="btn btn-sm btn-danger">
-                                Перейти <i class="fa fa-arrow-right"></i>
-                            </a>
-                        {% else %}
-                            <h5 class="text-center">{% trans 'Нет доступа' %}</h5>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {#            <div class="col-md-6 mb-2">#}
-            {#                <div class="card">#}
-            {#                    <div class="card-header">#}
-            {#                        <h5 class="card-title mb-0">Преподаватель (Обход. лист)</h5>#}
-            {#                    </div>#}
-            {#                    <div class="card-body">#}
-            {#                        {% if CUSTOM_ROLES.STTEACHER in DB_ROLES %}#}
-            {#                            <a href="{% url 'stepper:teachers' %}" class="btn btn-sm btn-danger">#}
-            {#                                Перейти <i class="fa fa-arrow-right"></i>#}
-            {#                            </a>#}
-            {#                        {% elif CUSTOM_ROLES.STLIB in DB_ROLES or CUSTOM_ROLES.STECONOM in DB_ROLES or CUSTOM_ROLES.STACNT in DB_ROLES %}#}
-            {#                            <a href="{% url 'stepper:teacher-debts' %}" class="btn btn-sm btn-danger">#}
-            {#                                Перейти <i class="fa fa-arrow-right"></i>#}
-            {#                            </a>#}
-            {#                        {% else %}#}
-            {#                            <h5 class="text-center">{% trans 'Нет доступа' %}</h5>#}
-            {#                        {% endif %}#}
-            {#                    </div>#}
-            {#                </div>#}
-            {#            </div>#}
-            <div class="col-md-4 mb-2">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Мои данные</h5>
-                    </div>
-                    <div class="card-body">
-                        <a href="{% url 'students:index' %}" class="btn btn-sm btn-danger">
-                            Перейти <i class="fa fa-arrow-right"></i>
+    <div class="integrator-page">
+        {% include 'component/portal_scene.html' with soft=True %}
+
+        <div class="integrator-page__content">
+            <div class="module-hub">
+                <header class="module-hub__head">
+                    <h1 class="module-hub__title">{% trans 'Сервисы ОшГУ' %}</h1>
+                    <p class="module-hub__lead">{% trans 'Выберите модуль для работы' %}</p>
+                </header>
+
+                <div class="module-hub__grid">
+                    {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+                        <a href="{% url 'bsadmin:index' %}" class="module-card module-card--action">
+                            <div class="module-card__inner">
+                                <div class="module-card__top">
+                                    <div class="module-card__icon" aria-hidden="true">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <h2 class="module-card__title">{% trans 'Академическая справка' %}</h2>
+                                </div>
+                                <p class="module-card__desc">
+                                    {% trans 'Специальности, факультеты и выдача академических справок студентам.' %}
+                                </p>
+                            </div>
                         </a>
-                    </div>
+                    {% else %}
+                        <div class="module-card module-card--locked" role="group" aria-label="{% trans 'Академическая справка' %} — {% trans 'Нет доступа' %}">
+                            <div class="module-card__inner">
+                                <div class="module-card__top">
+                                    <div class="module-card__icon" aria-hidden="true">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <h2 class="module-card__title">{% trans 'Академическая справка' %}</h2>
+                                </div>
+                                <p class="module-card__desc">
+                                    {% trans 'Специальности, факультеты и выдача академических справок студентам.' %}
+                                </p>
+                                <div class="module-card__badge module-card__badge--locked">
+                                    <i class="fas fa-lock" aria-hidden="true"></i>
+                                    {% trans 'Нет доступа' %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+                        <a href="{% url 'stepper:index' %}" class="module-card module-card--action">
+                    {% elif CUSTOM_ROLES.STDEBT in DB_ROLES %}
+                        <a href="{% url 'stepper:debts' %}" class="module-card module-card--action">
+                    {% elif CUSTOM_ROLES.STSPEC in DB_ROLES %}
+                        <a href="{% url 'stepper:spec' %}" class="module-card module-card--action">
+                    {% elif CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
+                        <a href="{% url 'stepper:archive' %}" class="module-card module-card--action">
+                    {% else %}
+                        <div class="module-card module-card--locked" role="group" aria-label="{% trans 'Обходной лист' %} — {% trans 'Нет доступа' %}">
+                    {% endif %}
+                            <div class="module-card__inner">
+                                <div class="module-card__top">
+                                    <div class="module-card__icon" aria-hidden="true">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    <h2 class="module-card__title">{% trans 'Обходной лист' %}</h2>
+                                </div>
+                                <p class="module-card__desc">
+                                    {% trans 'Администрирование обходных листов, этапов и статусов прохождения.' %}
+                                </p>
+                                {% if CUSTOM_ROLES.STADMIN not in DB_ROLES and CUSTOM_ROLES.STDEBT not in DB_ROLES and CUSTOM_ROLES.STSPEC not in DB_ROLES and CUSTOM_ROLES.STARCHIVE not in DB_ROLES %}
+                                    <div class="module-card__badge module-card__badge--locked">
+                                        <i class="fas fa-lock" aria-hidden="true"></i>
+                                        {% trans 'Нет доступа' %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                    {% if CUSTOM_ROLES.STADMIN in DB_ROLES or CUSTOM_ROLES.STDEBT in DB_ROLES or CUSTOM_ROLES.STSPEC in DB_ROLES or CUSTOM_ROLES.STARCHIVE in DB_ROLES %}
+                        </a>
+                    {% else %}
+                        </div>
+                    {% endif %}
+
+                    <a href="{% url 'students:index' %}" class="module-card module-card--action">
+                        <div class="module-card__inner">
+                            <div class="module-card__top">
+                                <div class="module-card__icon" aria-hidden="true">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <h2 class="module-card__title">{% trans 'Мои данные' %}</h2>
+                            </div>
+                            <p class="module-card__desc">
+                                {% trans 'Личный кабинет студента: обходные листы и заявки.' %}
+                            </p>
+                        </div>
+                    </a>
+
+                    {% if 'stsurve' in DB_ROLES %}
+                        <a href="{% url 'students:survey-admin-list' %}" class="module-card module-card--action">
+                            <div class="module-card__inner">
+                                <div class="module-card__top">
+                                    <div class="module-card__icon" aria-hidden="true">
+                                        <i class="fas fa-poll"></i>
+                                    </div>
+                                    <h2 class="module-card__title">{% trans 'Анкетирование' %}</h2>
+                                </div>
+                                <p class="module-card__desc">
+                                    {% trans 'Создание анкет, вопросов и просмотр результатов прохождения.' %}
+                                </p>
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="module-card module-card--locked" role="group" aria-label="{% trans 'Анкетирование' %} — {% trans 'Нет доступа' %}">
+                            <div class="module-card__inner">
+                                <div class="module-card__top">
+                                    <div class="module-card__icon" aria-hidden="true">
+                                        <i class="fas fa-poll"></i>
+                                    </div>
+                                    <h2 class="module-card__title">{% trans 'Анкетирование' %}</h2>
+                                </div>
+                                <p class="module-card__desc">
+                                    {% trans 'Создание анкет, вопросов и просмотр результатов прохождения.' %}
+                                </p>
+                                <div class="module-card__badge module-card__badge--locked">
+                                    <i class="fas fa-lock" aria-hidden="true"></i>
+                                    {% trans 'Нет доступа' %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

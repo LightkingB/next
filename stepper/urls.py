@@ -6,6 +6,7 @@ app_name = 'stepper'
 urlpatterns = [
     path('', route, name='route'),
     path('students/', cs_index, name='index'),
+    path('students/survey-submissions/', student_survey_submissions, name='student-survey-submissions'),
     path('student/<int:myedu_id>/detail/', cs_detail, name='cs-detail'),
     path('student/<int:myedu_id>/force/', cs_force, name='cs-force'),
     path('student/<int:myedu_id>/order/done/', order_done, name='order-done'),

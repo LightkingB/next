@@ -39,6 +39,7 @@ numpy==2.2.4
 openai==2.9.0
 packaging==25.0
 pdfkit==1.0.0
+reportlab==4.4.2
 pillow==11.2.1
 prompt_toolkit==3.0.52
 PyAutoGUI==0.9.54

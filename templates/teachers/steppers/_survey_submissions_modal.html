@@ -1,0 +1,46 @@
+{% load i18n %}
+{% if submissions %}
+    <div class="survey-modal-meta">
+        <span class="survey-modal-chip">MyEDU ID: <strong>{{ myedu_id }}</strong></span>
+        {% if edu_year %}
+            <span class="survey-modal-chip">Учебный год: <strong>{{ edu_year.title }}</strong></span>
+        {% endif %}
+    </div>
+
+    {% for submission in submissions %}
+        <article class="survey-modal-card">
+            <header class="survey-modal-card__head">
+                <h6>{{ submission.survey.title }}</h6>
+                <span class="survey-modal-card__meta">
+                    {{ submission.edu_year.title }} · {{ submission.submitted_at|date:"d.m.Y H:i" }}
+                </span>
+            </header>
+
+            {% if submission.answers.all %}
+                <dl class="survey-modal-qa">
+                    {% regroup submission.answers.all by question as grouped_answers %}
+                    {% for group in grouped_answers %}
+                        <div class="survey-modal-qa__row">
+                            <dt>{{ group.grouper.text }}</dt>
+                            <dd>
+                                {% for answer in group.list %}
+                                    {{ answer.option.text }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </dd>
+                        </div>
+                    {% endfor %}
+                </dl>
+            {% else %}
+                <p class="survey-modal-empty mb-0">Ответы не сохранены.</p>
+            {% endif %}
+        </article>
+    {% endfor %}
+{% else %}
+    <p class="survey-modal-empty">
+        {% if edu_year %}
+            Студент не проходил анкетирование за учебный год {{ edu_year.title }}.
+        {% else %}
+            Прохождения анкет не найдены.
+        {% endif %}
+    </p>
+{% endif %}

@@ -1,110 +1,64 @@
-{% extends 'admin_base.html' %}
-{% load static i18n %}
+{% extends 'portal_login_base.html' %}
+{% load i18n %}
 
+{% block title %}Вход сотрудника | ОшГУ{% endblock %}
 
-{% block content %}
-    <!-- Индикатор загрузки -->
-    <div id="loading-overlay" style="
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.4);
-        z-index: 9999;
-        text-align: center;
-        color: white;
-        font-size: 24px;
-        padding-top: 20%;
-    ">
-        <i class="fas fa-spinner fa-spin"></i> Загрузка...
-    </div>
-    <div class="container">
-        <div class="login-form">
-            {% include 'utils/_messages.html' %}
-            <div class="py-2 logo-wrapper text-center">
-                <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" class="mb-2" alt="">
-            </div>
-            <form action="{% url 'integrator:next-teacher-login' %}" method="post" id="signin-form">
-                {% csrf_token %}
+{% block login_heading %}
+    <h1 class="portal-login__title">Вход для сотрудников</h1>
+    <p class="portal-login__lead">Административный портал ОшГУ</p>
+{% endblock %}
 
-                {{ form.as_p }}
-                <div class="agreement-wrapper mb-3">
-                    <input type="checkbox" id="agreement"/>
-                    <a href="#agreement" data-toggle="modal" data-target="#agreementModalScrollable">
-                        Пользовательское соглашение
-                    </a>
-                </div>
-                <input type="submit" id="teacher_login" class="btn btn-danger btn-block btn-lg"
-                       value="{% trans 'Войти' %}" disabled>
-            </form>
+{% block login_content %}
+    <form action="{% url 'integrator:next-teacher-login' %}" method="post" id="signin-form" class="portal-login__form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="portal-login__agreement">
+            <input type="checkbox" id="agreement"/>
+            <a href="#agreement" data-toggle="modal" data-target="#agreementModalScrollable">
+                Пользовательское соглашение
+            </a>
         </div>
-    </div>
-    <div class="modal fade" id="agreementModalScrollable" tabindex="-1" role="dialog"
-         aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalScrollableTitle">Пользовательское соглашение!</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <b>Я ознакомлен(а) с тем, что: </b>
-                    <ol>
-                        <li>согласие на обработку персональных данных действует с даты подписания настоящего
-                            согласия
-                            в течение всего срока предоставления мне государственной (муниципальной) услуги и
-                            хранения
-                            данных об оказанной услуге в соответствии с законодательством Кыргызской Республики;
-                        </li>
-                        <li>
-                            согласие на обработку персональных данных может быть отозвано на основании письменного
-                            заявления в произвольной форме;
-                        </li>
-                        <li>
-                            в случае отзыва согласия на обработку персональных данных обработка моих персональных
-                            данных полностью или частично может быть продолжена в соответствии со статьями 5 и 15
-                            Закона Кыргызской Республики "Об информации персонального характера".
-                        </li>
-                    </ol>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal" id="acceptAgreement">
-                        Согласен(-на)
-                    </button>
-                </div>
-            </div>
-        </div>
+        <button type="submit" id="login_submit" class="portal-login__submit" disabled>
+            {% trans 'Войти' %}
+        </button>
+    </form>
+{% endblock %}
+
+{% block login_switch %}
+    <div class="portal-login__switch">
+        Вы студент?
+        <a href="{% url 'students:next-student-login' %}">Войти как студент</a>
     </div>
 {% endblock %}
 
+{% block modals %}
+    {% include 'component/login_agreement_modal.html' %}
+{% endblock %}
+
 {% block scripts %}
-    <script type="text/javascript">
-        var checker = document.getElementById('agreement');
-        var sendbtn = document.getElementById('teacher_login');
-        var acceptBtn = document.getElementById('acceptAgreement');
+    <script>
+        (function () {
+            var checker = document.getElementById('agreement');
+            var sendbtn = document.getElementById('login_submit');
+            var acceptBtn = document.getElementById('acceptAgreement');
+            var form = document.getElementById('signin-form');
+            var overlay = document.getElementById('loading-overlay');
 
-        checker.onchange = function () {
-            sendbtn.disabled = !this.checked;
-        };
+            checker.onchange = function () {
+                sendbtn.disabled = !this.checked;
+            };
 
-        acceptBtn.onclick = function () {
-            checker.checked = true;
-            sendbtn.disabled = false;
-        };
+            acceptBtn.onclick = function () {
+                checker.checked = true;
+                sendbtn.disabled = false;
+            };
 
-        document.getElementById('signin-form').addEventListener('submit', function (e) {
-            const btn = document.getElementById('search-btn');
-            const overlay = document.getElementById('loading-overlay');
-
-            // Показываем оверлей и блокируем все
-            overlay.style.display = 'block';
-            btn.disabled = true;
-
-            // Можно заблокировать всю страницу кликами
-            document.body.style.pointerEvents = 'none';
-            overlay.style.pointerEvents = 'auto';
-        });
+            form.addEventListener('submit', function () {
+                overlay.classList.add('is-visible');
+                sendbtn.disabled = true;
+                document.body.style.pointerEvents = 'none';
+                overlay.style.pointerEvents = 'auto';
+            });
+        })();
     </script>
 {% endblock %}

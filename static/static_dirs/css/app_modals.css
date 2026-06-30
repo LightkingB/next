@@ -1,0 +1,231 @@
+/* ── Единый дизайн модальных окон ── */
+
+.modal-content {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
+    background: #fff;
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    background: #fff;
+    border-bottom: 2px solid #A00E07;
+    padding: 0.85rem 1.15rem;
+}
+
+.modal-header .modal-title,
+.modal-header h4,
+.modal-header h5 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #222;
+    line-height: 1.4;
+    margin: 0;
+    flex: 1;
+    padding-right: 0.75rem;
+}
+
+.modal-header .modal-title i,
+.modal-header h4 i,
+.modal-header h5 i,
+.modal-icon {
+    color: #A00E07;
+}
+
+.modal-header .close {
+    color: #888;
+    opacity: 1;
+    text-shadow: none;
+    font-size: 1.35rem;
+    line-height: 1;
+    padding: 0.2rem 0.4rem;
+    margin: -0.1rem -0.2rem 0 0;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.modal-header .close:hover {
+    color: #A00E07;
+    background: #f0f0f0;
+}
+
+.modal-body {
+    text-align: left;
+    padding: 1.15rem 1.25rem;
+    background: #fff;
+}
+
+.modal-body.text-center {
+    text-align: center;
+}
+
+.modal-body .lead {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #444;
+    margin-bottom: 0;
+}
+
+.modal-body .form-group {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+
+.modal-body .form-group label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 0.35rem;
+}
+
+.modal-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fafafa;
+    border-top: 1px solid #ddd;
+    padding: 0.75rem 1.15rem;
+}
+
+.modal-footer .btn-secondary {
+    background: #fff;
+    border-color: #ccc;
+    color: #444;
+}
+
+.modal-footer .btn-secondary:hover {
+    background: #f5f5f5;
+    border-color: #bbb;
+    color: #222;
+}
+
+/* ── Stepper: модалка анкетирования ── */
+.app-modal .modal-footer .btn-secondary {
+    min-width: 5.5rem;
+}
+
+.survey-modal-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.survey-modal-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    color: #555;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.survey-modal-chip strong {
+    color: #222;
+    font-weight: 600;
+    margin-left: 0.15rem;
+}
+
+.survey-modal-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.survey-modal-card + .survey-modal-card {
+    margin-top: 0.75rem;
+}
+
+.survey-modal-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.35rem 0.75rem;
+    padding: 0.65rem 0.85rem;
+    background: #fafafa;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.survey-modal-card__head h6 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #A00E07;
+}
+
+.survey-modal-card__meta {
+    font-size: 0.78rem;
+    color: #777;
+    white-space: nowrap;
+}
+
+.survey-modal-qa {
+    margin: 0;
+    padding: 0.5rem 0.85rem 0.65rem;
+}
+
+.survey-modal-qa__row {
+    display: grid;
+    grid-template-columns: minmax(0, 38%) minmax(0, 1fr);
+    gap: 0.5rem 0.85rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.survey-modal-qa__row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.survey-modal-qa__row dt {
+    margin: 0;
+    font-weight: 600;
+    color: #444;
+}
+
+.survey-modal-qa__row dd {
+    margin: 0;
+    color: #333;
+}
+
+.survey-modal-empty {
+    margin: 0;
+    padding: 1rem;
+    text-align: center;
+    color: #777;
+    font-size: 0.92rem;
+    background: #fafafa;
+    border: 1px dashed #ddd;
+    border-radius: 6px;
+}
+
+@media (max-width: 575px) {
+    .survey-modal-qa__row {
+        grid-template-columns: 1fr;
+        gap: 0.2rem;
+    }
+
+    .modal-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 0.65rem 1rem;
+    }
+}

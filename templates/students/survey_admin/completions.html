@@ -1,0 +1,264 @@
+{% extends 'students/survey_admin/base.html' %}
+
+{% block content %}
+    <div class="container survey-admin">
+        {% if 'stsurve' in DB_ROLES %}
+            <div class="survey-page-header d-flex justify-content-between align-items-start flex-wrap">
+                <div>
+                    <h3 class="mb-1"><i class="fas fa-users mr-2"></i>Прошедшие студенты</h3>
+                    <p class="mb-0 text-muted">{{ survey.title }}</p>
+                </div>
+                <a href="{% url 'students:survey-admin-detail' survey_id=survey.id %}"
+                   class="btn btn-sm btn-survey-outline mt-2 mt-md-0">
+                    <i class="fas fa-arrow-left"></i> К анкете
+                </a>
+            </div>
+
+            <div class="survey-panel survey-filters-panel">
+                <div class="survey-filters-head">
+                    <div class="survey-filters-head__title">
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                        <span>Фильтр</span>
+                    </div>
+                    {% if filters_active %}
+                        <a href="{% url 'students:survey-admin-completions' survey_id=survey.id %}"
+                           class="survey-filters-head__reset">
+                            <i class="fas fa-times" aria-hidden="true"></i> Сбросить всё
+                        </a>
+                    {% endif %}
+                </div>
+
+                <form method="get" class="survey-filters-form" id="survey-completions-filter"
+                      action="{% url 'students:survey-admin-completions' survey_id=survey.id %}">
+                    <div class="survey-filters-grid">
+                        <div class="survey-filter-field">
+                            <label for="{{ filter_form.edu_year.id_for_label }}">
+                                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                                {{ filter_form.edu_year.label }}
+                            </label>
+                            {{ filter_form.edu_year }}
+                        </div>
+                        <div class="survey-filter-field survey-filter-field--date">
+                            <label for="{{ filter_form.date_from.id_for_label }}">
+                                <i class="fas fa-calendar" aria-hidden="true"></i>
+                                {{ filter_form.date_from.label }}
+                            </label>
+                            {{ filter_form.date_from }}
+                        </div>
+                        <div class="survey-filter-field survey-filter-field--date">
+                            <label for="{{ filter_form.date_to.id_for_label }}">
+                                <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                                {{ filter_form.date_to.label }}
+                            </label>
+                            {{ filter_form.date_to }}
+                        </div>
+                        <div class="survey-filter-field">
+                            <label for="{{ filter_form.group.id_for_label }}">
+                                <i class="fas fa-users" aria-hidden="true"></i>
+                                {{ filter_form.group.label }}
+                            </label>
+                            {{ filter_form.group }}
+                            <datalist id="survey-group-list">
+                                {% for group in group_suggestions %}
+                                    <option value="{{ group }}"></option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <div class="survey-filter-field survey-filter-field--search">
+                            <label for="{{ filter_form.search.id_for_label }}">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                                {{ filter_form.search.label }}
+                            </label>
+                            {{ filter_form.search }}
+                        </div>
+                        <div class="survey-filter-field survey-filter-field--actions">
+                            <span class="survey-filter-actions-label" aria-hidden="true">Действия</span>
+                            <div class="survey-filter-buttons">
+                                <button type="submit" class="btn btn-sm btn-survey">
+                                    <i class="fas fa-search"></i> Применить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if filters_active %}
+                        <div class="survey-filters-chips" aria-label="Активные фильтры">
+                            {% if filter_form.edu_year.value %}
+                                <span class="survey-filter-chip">Год: {{ filter_form.cleaned_data.edu_year.title }}</span>
+                            {% endif %}
+                            {% if filter_form.date_from.value %}
+                                <span class="survey-filter-chip">С: {{ filter_form.date_from.value }}</span>
+                            {% endif %}
+                            {% if filter_form.date_to.value %}
+                                <span class="survey-filter-chip">По: {{ filter_form.date_to.value }}</span>
+                            {% endif %}
+                            {% if filter_form.group.value %}
+                                <span class="survey-filter-chip">Группа: {{ filter_form.group.value }}</span>
+                            {% endif %}
+                            {% if filter_form.search.value %}
+                                <span class="survey-filter-chip">Поиск: {{ filter_form.search.value }}</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if filter_form.non_field_errors %}
+                        <div class="survey-filters-error">{{ filter_form.non_field_errors }}</div>
+                    {% endif %}
+                </form>
+            </div>
+
+            <div class="survey-panel">
+                <div class="survey-panel-toolbar survey-results-toolbar">
+                    <div class="survey-results-title">
+                        <h5 class="mb-0 font-weight-bold">Результаты</h5>
+                        <span class="survey-results-badge">{{ submissions_count }}</span>
+                        {% if filters_active %}
+                            <span class="survey-results-hint">по фильтру</span>
+                        {% endif %}
+                        {% if page_obj.paginator.count %}
+                            <span class="survey-results-range">
+                                {{ page_obj.start_index }}–{{ page_obj.end_index }} из {{ page_obj.paginator.count }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="survey-export-actions">
+                        <button type="submit"
+                                form="survey-completions-filter"
+                                name="export"
+                                value="pdf"
+                                class="btn btn-sm btn-survey-outline"
+                                {% if not submissions_count %}disabled{% endif %}>
+                            <i class="fas fa-file-pdf"></i> PDF — список
+                        </button>
+                        <button type="button"
+                                id="survey-export-answers-pdf"
+                                class="btn btn-sm btn-survey"
+                                {% if not submissions_count %}disabled{% endif %}>
+                            <i class="fas fa-file-pdf"></i> PDF — с ответами
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm survey-table mb-0">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ФИО</th>
+                            <th>Логин</th>
+                            <th>Группа</th>
+                            <th>Дата прохождения</th>
+                            <th>Учебный год</th>
+                            <th class="text-center" style="width: 7rem;">Ответы</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for submission in page_obj %}
+                            <tr class="survey-completion-row">
+                                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                                <td>{{ submission.student_fio }}</td>
+                                <td>{{ submission.student_login }}</td>
+                                <td>{{ submission.student_group|default:"-" }}</td>
+                                <td>{{ submission.submitted_at|date:"d.m.Y H:i" }}</td>
+                                <td>{{ submission.edu_year.title }}</td>
+                                <td class="text-center">
+                                    <button type="button"
+                                            class="btn btn-sm btn-survey-outline survey-completion-toggle"
+                                            aria-expanded="false"
+                                            aria-controls="submission-answers-{{ submission.id }}"
+                                            data-answers-url="{% url 'students:survey-submission-answers' survey_id=survey.id submission_id=submission.id %}">
+                                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                        <span class="survey-completion-toggle__label">Показать</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="survey-completion-answers-row"
+                                id="submission-answers-{{ submission.id }}"
+                                hidden>
+                                <td colspan="7">
+                                    <div class="survey-completion-answers-panel">
+                                        <div class="survey-completion-answers-panel__title">
+                                            Ответы — {{ submission.student_fio }}
+                                        </div>
+                                        <div class="survey-completion-answers-panel__body"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="survey-empty">
+                                    {% if filters_active %}
+                                        По выбранным фильтрам записей нет.
+                                    {% else %}
+                                        Пока никто не прошёл эту анкету.
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if page_obj.paginator.num_pages > 1 %}
+                    <div class="survey-pagination">
+                        {% include "utils/_pagination.html" with page_obj=page_obj %}
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        (function () {
+            const form = document.getElementById('survey-completions-filter');
+            const answersBtn = document.getElementById('survey-export-answers-pdf');
+            if (answersBtn && form) {
+                answersBtn.addEventListener('click', function () {
+                    const params = new URLSearchParams(new FormData(form));
+                    params.set('export', 'pdf');
+                    params.set('include_answers', '1');
+                    window.location = form.action + '?' + params.toString();
+                });
+            }
+
+            document.querySelectorAll('.survey-completion-toggle').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const panelId = btn.getAttribute('aria-controls');
+                    const row = document.getElementById(panelId);
+                    const label = btn.querySelector('.survey-completion-toggle__label');
+                    const body = row ? row.querySelector('.survey-completion-answers-panel__body') : null;
+                    if (!row || !label) return;
+
+                    if (row.hasAttribute('hidden')) {
+                        row.removeAttribute('hidden');
+                        btn.setAttribute('aria-expanded', 'true');
+                        label.textContent = 'Скрыть';
+
+                        if (body && !body.dataset.loaded) {
+                            const url = btn.getAttribute('data-answers-url');
+                            body.innerHTML = '<div class="text-muted py-2"><i class="fas fa-spinner fa-spin"></i> Загрузка…</div>';
+                            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                                .then(function (response) {
+                                    if (!response.ok) throw new Error('load failed');
+                                    return response.text();
+                                })
+                                .then(function (html) {
+                                    body.innerHTML = html;
+                                    body.dataset.loaded = '1';
+                                })
+                                .catch(function () {
+                                    body.innerHTML = '<p class="survey-completion-qa__empty mb-0">Не удалось загрузить ответы.</p>';
+                                });
+                        }
+                    } else {
+                        row.setAttribute('hidden', '');
+                        btn.setAttribute('aria-expanded', 'false');
+                        label.textContent = 'Показать';
+                    }
+                });
+            });
+        })();
+    </script>
+{% endblock %}

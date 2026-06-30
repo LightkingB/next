@@ -1,20 +1,78 @@
-{% extends 'students/base.html' %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Доступ ограничен | ОшГУ</title>
+    <link rel="icon" type="image/png" href="https://oshsu.kg/main/images/logo/white-logo.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        *,*::before,*::after{box-sizing:border-box}
+        html,body{height:100%;margin:0}
+        body{font-family:'Roboto',-apple-system,BlinkMacSystemFont,sans-serif;background:#4a0805;color:#3a3a3a}
+        .auth-required{position:relative;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+        .auth-required__scene{position:fixed;inset:0;z-index:0;pointer-events:none}
+        .auth-required__scene-base{position:absolute;inset:0;background:linear-gradient(118deg,#1f0504 0%,#6b0b07 30%,#A00E07 50%,#d4a99e 75%,#f6efe9 100%)}
+        .auth-required__shell{position:relative;z-index:1;display:flex;width:100%;max-width:860px;margin:0 auto;background:#fff;border:1px solid rgba(255,255,255,.7);border-radius:12px;overflow:hidden}
+        .auth-required__brand{flex:1;background:linear-gradient(145deg,#b5120a,#A00E07 45%,#8a0c06);color:#fff;padding:2.5rem 2rem;display:flex;flex-direction:column;justify-content:center}
+        .auth-required__logo img{height:52px;filter:brightness(0) invert(1);margin-bottom:1.5rem}
+        .auth-required__brand-title{margin:0 0 .6rem;font-family:'Roboto Slab',Georgia,serif;font-size:1.45rem;font-weight:700}
+        .auth-required__brand-text{margin:0;font-size:.92rem;line-height:1.6;color:rgba(255,255,255,.9)}
+        .auth-required__panel{flex:1;background:#fff;padding:2.5rem 2.25rem;display:flex;flex-direction:column;justify-content:center}
+        .auth-required__title{margin:0 0 .45rem;font-family:'Roboto Slab',Georgia,serif;font-size:1.35rem;font-weight:700;color:#222}
+        .auth-required__text{margin:0 0 1.6rem;font-size:.9375rem;line-height:1.6;color:#76777a}
+        .auth-required__actions{display:flex;flex-direction:column;gap:.65rem;max-width:340px}
+        .auth-required__btn{display:flex;align-items:center;justify-content:center;gap:.55rem;width:100%;padding:.78rem 1.15rem;border-radius:8px;font-size:.9375rem;font-weight:500;text-decoration:none}
+        .auth-required__btn--primary{background:#A00E07;border:1px solid #A00E07;color:#fff}
+        .auth-required__btn--secondary{background:#fff;border:1px solid #ddd;color:#444}
+        @media(max-width:767px){.auth-required{padding:1rem;align-items:center}.auth-required__shell{flex-direction:column;width:100%;max-width:420px;border-radius:12px;overflow:hidden}.auth-required__brand{padding:1.65rem 1.25rem 1.4rem;text-align:center}.auth-required__panel{padding:1.5rem 1.25rem 1.65rem;margin-top:0;border-radius:0}}
+    </style>
+    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}">
+    <link rel="stylesheet" href="{% static 'css/auth_required.css' %}">
+</head>
+<body class="portal-page-body">
+<main class="auth-required">
+    {% include 'component/portal_scene.html' %}
+    <div class="auth-required__shell">
+        <aside class="auth-required__brand" aria-hidden="false">
+            <div class="auth-required__brand-inner">
+                <div class="auth-required__logo">
+                    <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" alt="ОшГУ" width="160" height="64">
+                </div>
+                <h2 class="auth-required__brand-title">Обходной лист</h2>
+                <p class="auth-required__brand-text">
+                    Портал ОшГУ для студентов и сотрудников. Войдите, чтобы продолжить.
+                </p>
+            </div>
+        </aside>
 
-{% block title %}Доступ ограничен{% endblock %}
+        <section class="auth-required__panel">
+            <div class="auth-required__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/>
+                </svg>
+            </div>
 
-{% block content %}
-    <div class="container text-center my-5">
-        <h1 class="display-4 text-danger">Доступ ограничен</h1>
-        <p class="lead">
-            Для просмотра этой страницы необходимо войти в систему.
-        </p>
-        <div class="mt-4">
-            <a href="{% url 'integrator:next-teacher-login' %}" class="btn btn-danger btn-lg mx-2">Войти как
-                сотрудник</a>
-            <a href="{% url 'students:next-student-login' %}" class="btn btn-secondary btn-lg mx-2">Войти как
-                студент</a>
-        </div>
+            <h1 class="auth-required__title">Доступ ограничен</h1>
+            <p class="auth-required__text">
+                Для просмотра этой страницы необходимо войти в систему. Выберите тип аккаунта.
+            </p>
+
+            <div class="auth-required__actions">
+                <a href="{% url 'integrator:next-teacher-login' %}" class="auth-required__btn auth-required__btn--primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    Войти как сотрудник
+                </a>
+                <a href="{% url 'students:next-student-login' %}" class="auth-required__btn auth-required__btn--secondary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13.2h14v-2.4H5v2.4zM5 8.4h14V6H5v2.4zm0 9.6h14v-2.4H5v2.4z"/></svg>
+                    Войти как студент
+                </a>
+            </div>
+        </section>
     </div>
-{% endblock %}
-    
+</main>
+</body>
+</html>

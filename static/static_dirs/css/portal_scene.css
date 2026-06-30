@@ -1,0 +1,488 @@
+/* Общий образовательный фон портала ОшГУ */
+
+.portal-page-body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #3d0806;
+    color: #3a3a3a;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+    margin: 0;
+}
+
+.portal-scene {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.portal-scene__base {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 65% 55% at 82% 45%, rgba(255, 252, 248, 0.92) 0%, transparent 58%),
+        radial-gradient(ellipse 50% 40% at 15% 20%, rgba(255, 200, 175, 0.15) 0%, transparent 50%),
+        linear-gradient(
+            118deg,
+            #1a0403 0%,
+            #3d0806 16%,
+            #6b0b07 30%,
+            #8f0e07 42%,
+            #A00E07 50%,
+            #b45e54 60%,
+            #cfa399 72%,
+            #e5cfc5 84%,
+            #f5ebe3 94%,
+            #faf6f1 100%
+        );
+}
+
+.portal-scene__cell {
+    position: absolute;
+    inset: 0;
+    --cell: 22px;
+    --cell-bold: calc(var(--cell) * 5);
+}
+
+.portal-scene__cell--dark {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+    background-size:
+        var(--cell) var(--cell),
+        var(--cell) var(--cell),
+        var(--cell-bold) var(--cell-bold),
+        var(--cell-bold) var(--cell-bold);
+    mask-image: linear-gradient(118deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 42%, transparent 58%);
+    -webkit-mask-image: linear-gradient(118deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 42%, transparent 58%);
+}
+
+.portal-scene__cell--paper {
+    background-image:
+        linear-gradient(rgba(160, 14, 7, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(160, 14, 7, 0.07) 1px, transparent 1px),
+        linear-gradient(rgba(160, 14, 7, 0.16) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(160, 14, 7, 0.16) 1px, transparent 1px);
+    background-size:
+        var(--cell) var(--cell),
+        var(--cell) var(--cell),
+        var(--cell-bold) var(--cell-bold),
+        var(--cell-bold) var(--cell-bold);
+    mask-image: linear-gradient(118deg, transparent 38%, rgba(0, 0, 0, 0.65) 52%, rgba(0, 0, 0, 1) 68%);
+    -webkit-mask-image: linear-gradient(118deg, transparent 38%, rgba(0, 0, 0, 0.65) 52%, rgba(0, 0, 0, 1) 68%);
+}
+
+.portal-scene__lined {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 27px,
+        rgba(160, 14, 7, 0.065) 27px,
+        rgba(160, 14, 7, 0.065) 28px
+    );
+    mask-image: linear-gradient(118deg, transparent 44%, rgba(0, 0, 0, 0.45) 58%, rgba(0, 0, 0, 0.85) 100%);
+    -webkit-mask-image: linear-gradient(118deg, transparent 44%, rgba(0, 0, 0, 0.45) 58%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+.portal-scene__band {
+    position: absolute;
+    top: -25%;
+    left: -20%;
+    right: -20%;
+    bottom: -25%;
+    background: linear-gradient(
+        108deg,
+        transparent 28%,
+        rgba(255, 255, 255, 0.03) 38%,
+        rgba(255, 255, 255, 0.09) 50%,
+        rgba(255, 255, 255, 0.04) 62%,
+        transparent 72%
+    );
+    transform: rotate(-8deg);
+}
+
+.portal-scene__deco--sheet {
+    position: absolute;
+    width: 180px;
+    height: 230px;
+    border-radius: 4px 12px 12px 4px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+    background-size: 18px 18px, 18px 18px, 100% 100%;
+    box-shadow: 4px 8px 24px rgba(0, 0, 0, 0.12);
+    transform: rotate(-14deg);
+    top: 12%;
+    left: 6%;
+    opacity: 0.55;
+}
+
+.portal-scene__deco--sheet-2 {
+    width: 140px;
+    height: 185px;
+    top: auto;
+    left: auto;
+    bottom: 10%;
+    right: 7%;
+    transform: rotate(11deg);
+    border-color: rgba(160, 14, 7, 0.12);
+    background:
+        linear-gradient(rgba(160, 14, 7, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(160, 14, 7, 0.06) 1px, transparent 1px),
+        linear-gradient(160deg, rgba(255, 252, 248, 0.55) 0%, rgba(245, 235, 228, 0.35) 100%);
+    background-size: 18px 18px, 18px 18px, 100% 100%;
+    opacity: 0.7;
+}
+
+.portal-scene__orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.6;
+}
+
+.portal-scene__orb--1 {
+    width: 380px;
+    height: 380px;
+    top: -100px;
+    left: -80px;
+    background: rgba(90, 8, 5, 0.45);
+}
+
+.portal-scene__orb--2 {
+    width: 320px;
+    height: 320px;
+    bottom: -60px;
+    right: 12%;
+    background: rgba(255, 210, 185, 0.28);
+}
+
+@media (max-width: 767px) {
+    .portal-scene__base {
+        background:
+            radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255, 210, 190, 0.18) 0%, transparent 55%),
+            radial-gradient(ellipse 80% 45% at 50% 100%, rgba(255, 252, 248, 0.75) 0%, transparent 52%),
+            linear-gradient(
+                180deg,
+                #1a0403 0%,
+                #4a0805 18%,
+                #7a0a05 32%,
+                #A00E07 42%,
+                #b85e54 52%,
+                #cfa399 68%,
+                #e8d5cc 82%,
+                #f5ebe3 94%,
+                #faf6f1 100%
+            );
+    }
+
+    .portal-scene__cell--dark {
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.5) 38%, transparent 58%);
+        -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.5) 38%, transparent 58%);
+    }
+
+    .portal-scene__cell--paper {
+        mask-image: linear-gradient(180deg, transparent 32%, rgba(0, 0, 0, 0.45) 52%, rgba(0, 0, 0, 0.95) 100%);
+        -webkit-mask-image: linear-gradient(180deg, transparent 32%, rgba(0, 0, 0, 0.45) 52%, rgba(0, 0, 0, 0.95) 100%);
+    }
+
+    .portal-scene__lined {
+        mask-image: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.35) 58%, rgba(0, 0, 0, 0.8) 100%);
+        -webkit-mask-image: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.35) 58%, rgba(0, 0, 0, 0.8) 100%);
+    }
+
+    .portal-scene__band {
+        transform: rotate(0deg);
+        top: -10%;
+        bottom: -10%;
+        left: -10%;
+        right: -10%;
+    }
+
+    .portal-scene__orb--1 {
+        width: 240px;
+        height: 240px;
+        top: -50px;
+        left: -40px;
+    }
+
+    .portal-scene__orb--2 {
+        width: 200px;
+        height: 200px;
+        bottom: 8%;
+        right: -20px;
+    }
+
+    .portal-scene__deco--sheet {
+        width: 100px;
+        height: 130px;
+        top: 6%;
+        left: 3%;
+        opacity: 0.4;
+    }
+
+    .portal-scene__deco--sheet-2 {
+        width: 88px;
+        height: 115px;
+        bottom: 10%;
+        right: 3%;
+        opacity: 0.5;
+    }
+
+    .portal-scene__cell {
+        --cell: 18px;
+    }
+}
+
+/* ── Мягкий фон для авторизованных страниц (/, /survey/, /integrator/) ── */
+.portal-scene--soft .portal-scene__base {
+    background:
+        radial-gradient(ellipse 70% 50% at 88% 12%, rgba(255, 252, 250, 0.55) 0%, transparent 52%),
+        radial-gradient(ellipse 55% 45% at 6% 88%, rgba(160, 14, 7, 0.06) 0%, transparent 48%),
+        radial-gradient(ellipse 45% 40% at 50% 45%, rgba(160, 14, 7, 0.035) 0%, transparent 55%),
+        linear-gradient(
+            168deg,
+            #ddd8d3 0%,
+            #e4e0db 18%,
+            #ebe7e3 38%,
+            #f0ece9 58%,
+            #f4f1ee 78%,
+            #f7f5f3 100%
+        );
+}
+
+.portal-scene--soft .portal-scene__cell--dark {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.portal-scene--soft .portal-scene__cell--paper {
+    --cell: 24px;
+    background-image:
+        linear-gradient(rgba(160, 14, 7, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(160, 14, 7, 0.04) 1px, transparent 1px),
+        linear-gradient(rgba(160, 14, 7, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(160, 14, 7, 0.08) 1px, transparent 1px);
+    mask-image: linear-gradient(165deg, transparent 0%, rgba(0, 0, 0, 0.2) 30%, rgba(0, 0, 0, 0.45) 65%, rgba(0, 0, 0, 0.55) 100%);
+    -webkit-mask-image: linear-gradient(165deg, transparent 0%, rgba(0, 0, 0, 0.2) 30%, rgba(0, 0, 0, 0.45) 65%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.portal-scene--soft .portal-scene__lined {
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 31px,
+        rgba(160, 14, 7, 0.028) 31px,
+        rgba(160, 14, 7, 0.028) 32px
+    );
+    mask-image: linear-gradient(165deg, transparent 30%, rgba(0, 0, 0, 0.12) 55%, rgba(0, 0, 0, 0.28) 100%);
+    -webkit-mask-image: linear-gradient(165deg, transparent 30%, rgba(0, 0, 0, 0.12) 55%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+.portal-scene--soft .portal-scene__band {
+    background: linear-gradient(
+        108deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.35) 45%,
+        rgba(255, 255, 255, 0.5) 50%,
+        rgba(255, 255, 255, 0.35) 55%,
+        transparent 70%
+    );
+    opacity: 0.5;
+}
+
+.portal-scene--soft .portal-scene__deco--sheet,
+.portal-scene--soft .portal-scene__deco--sheet-2 {
+    display: none;
+}
+
+.portal-scene--soft .portal-scene__orb {
+    filter: blur(120px);
+    opacity: 0.22;
+}
+
+.portal-scene--soft .portal-scene__orb--1 {
+    width: 420px;
+    height: 420px;
+    top: -120px;
+    left: -100px;
+    background: rgba(160, 14, 7, 0.08);
+}
+
+.portal-scene--soft .portal-scene__orb--2 {
+    width: 360px;
+    height: 360px;
+    bottom: -80px;
+    right: 5%;
+    background: rgba(210, 170, 155, 0.12);
+}
+
+@media (max-width: 767px) {
+    .portal-scene--soft .portal-scene__base {
+        background:
+            radial-gradient(ellipse 100% 45% at 50% 0%, rgba(255, 252, 250, 0.45) 0%, transparent 48%),
+            radial-gradient(ellipse 80% 40% at 50% 100%, rgba(160, 14, 7, 0.05) 0%, transparent 42%),
+            linear-gradient(
+                180deg,
+                #ddd8d3 0%,
+                #e4e0db 25%,
+                #ebe7e3 55%,
+                #f2efec 85%,
+                #f5f2f0 100%
+            );
+    }
+
+    .portal-scene--soft .portal-scene__cell--paper {
+        mask-image: linear-gradient(180deg, transparent 20%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.25) 100%);
+        -webkit-mask-image: linear-gradient(180deg, transparent 20%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.25) 100%);
+    }
+
+    .portal-scene--soft .portal-scene__lined {
+        mask-image: linear-gradient(180deg, transparent 35%, rgba(0, 0, 0, 0.08) 60%, rgba(0, 0, 0, 0.2) 100%);
+        -webkit-mask-image: linear-gradient(180deg, transparent 35%, rgba(0, 0, 0, 0.08) 60%, rgba(0, 0, 0, 0.2) 100%);
+    }
+
+    .portal-scene--soft .portal-scene__orb--1 {
+        width: 280px;
+        height: 280px;
+    }
+
+    .portal-scene--soft .portal-scene__orb--2 {
+        width: 220px;
+        height: 220px;
+    }
+
+    .portal-scene--soft .portal-scene__cell {
+        --cell: 20px;
+    }
+}
+
+/* ── Тёплый фирменный фон студенческого портала (/, /survey/) ── */
+.portal-scene--warm .portal-scene__base {
+    background:
+        radial-gradient(ellipse 72% 58% at 10% 6%, rgba(160, 14, 7, 0.16) 0%, transparent 54%),
+        radial-gradient(ellipse 65% 50% at 92% 88%, rgba(255, 228, 218, 0.65) 0%, transparent 50%),
+        radial-gradient(ellipse 55% 45% at 50% 42%, rgba(255, 252, 250, 0.9) 0%, transparent 58%),
+        linear-gradient(
+            168deg,
+            #f0e0dd 0%,
+            #f5e8e5 14%,
+            #f8eeeb 32%,
+            #fbf3f1 52%,
+            #fdf7f5 74%,
+            #fffdfc 100%
+        );
+}
+
+.portal-scene--warm .portal-scene__cell--dark {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.portal-scene--warm .portal-scene__cell--paper {
+    --cell: 24px;
+    background-image:
+        linear-gradient(rgba(160, 14, 7, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(160, 14, 7, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(160, 14, 7, 0.11) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(160, 14, 7, 0.11) 1px, transparent 1px);
+    mask-image: linear-gradient(165deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.5) 100%);
+    -webkit-mask-image: linear-gradient(165deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+.portal-scene--warm .portal-scene__lined {
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 31px,
+        rgba(160, 14, 7, 0.045) 31px,
+        rgba(160, 14, 7, 0.045) 32px
+    );
+    mask-image: linear-gradient(165deg, rgba(0, 0, 0, 0.08) 20%, rgba(0, 0, 0, 0.2) 55%, rgba(0, 0, 0, 0.35) 100%);
+    -webkit-mask-image: linear-gradient(165deg, rgba(0, 0, 0, 0.08) 20%, rgba(0, 0, 0, 0.2) 55%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+.portal-scene--warm .portal-scene__band {
+    background: linear-gradient(
+        108deg,
+        transparent 28%,
+        rgba(255, 255, 255, 0.4) 44%,
+        rgba(255, 255, 255, 0.55) 50%,
+        rgba(255, 255, 255, 0.4) 56%,
+        transparent 72%
+    );
+    opacity: 0.55;
+}
+
+.portal-scene--warm .portal-scene__deco--sheet,
+.portal-scene--warm .portal-scene__deco--sheet-2 {
+    display: none;
+}
+
+.portal-scene--warm .portal-scene__orb {
+    filter: blur(100px);
+    opacity: 0.38;
+}
+
+.portal-scene--warm .portal-scene__orb--1 {
+    width: 440px;
+    height: 440px;
+    top: -130px;
+    left: -110px;
+    background: rgba(160, 14, 7, 0.14);
+}
+
+.portal-scene--warm .portal-scene__orb--2 {
+    width: 380px;
+    height: 380px;
+    bottom: -90px;
+    right: 4%;
+    background: rgba(255, 200, 175, 0.22);
+}
+
+@media (max-width: 767px) {
+    .portal-scene--warm .portal-scene__base {
+        background:
+            radial-gradient(ellipse 100% 48% at 50% 0%, rgba(160, 14, 7, 0.12) 0%, transparent 50%),
+            radial-gradient(ellipse 85% 42% at 50% 100%, rgba(255, 228, 218, 0.55) 0%, transparent 45%),
+            linear-gradient(
+                180deg,
+                #f0e0dd 0%,
+                #f5e8e5 22%,
+                #f9f0ee 50%,
+                #fcf6f4 78%,
+                #fffdfc 100%
+            );
+    }
+
+    .portal-scene--warm .portal-scene__cell--paper {
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 15%, rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0.38) 100%);
+        -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 15%, rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0.38) 100%);
+    }
+
+    .portal-scene--warm .portal-scene__lined {
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.06) 30%, rgba(0, 0, 0, 0.15) 60%, rgba(0, 0, 0, 0.28) 100%);
+        -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.06) 30%, rgba(0, 0, 0, 0.15) 60%, rgba(0, 0, 0, 0.28) 100%);
+    }
+
+    .portal-scene--warm .portal-scene__orb--1 {
+        width: 300px;
+        height: 300px;
+    }
+
+    .portal-scene--warm .portal-scene__orb--2 {
+        width: 240px;
+        height: 240px;
+    }
+
+    .portal-scene--warm .portal-scene__cell {
+        --cell: 20px;
+    }
+}

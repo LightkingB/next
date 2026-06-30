@@ -50,8 +50,32 @@ p {
 }
 
 .header .logo {
+    letter-spacing: 0.02em;
+    font-size: 15px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 80px);
+}
+
+.header .logo .logo-default {
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+.header .logo .logo-current {
+    display: none;
+    text-transform: none;
+    font-weight: 600;
+}
+
+.header .logo.has-section .logo-default {
+    display: none;
+}
+
+.header .logo.has-section .logo-current {
+    display: inline;
 }
 
 .header #menu-action {
@@ -91,15 +115,12 @@ p {
 
 .header #menu-action.active {
     width: 250px;
-    -webkit-transition: all 0.2s ease-in-out;
-    transition: all 0.2s ease-in-out;
+    background: rgba(0, 0, 0, 0.25);
 }
 
 .header #menu-action.active span {
     display: inline;
     width: auto;
-    -webkit-transition: all 0.2s ease-in-out;
-    transition: all 0.2s ease-in-out;
 }
 
 .sidebar {
@@ -139,8 +160,8 @@ p {
     position: relative;
     white-space: nowrap;
     overflow: hidden;
-    border-bottom: 1px solid #ddd;
-    color: #444;
+    border-bottom: 1px solid #e8e8e8;
+    color: #333;
     text-align: left;
 }
 
@@ -158,6 +179,7 @@ p {
     -moz-animation-fill-mode: both;
     -o-animation-fill-mode: both;
     animation-fill-mode: both;
+    color: #666;
 }
 
 .sidebar ul li a span {
@@ -166,8 +188,12 @@ p {
     line-height: 60px;
 }
 
+.sidebar ul li.active > a i {
+    color: #A00E07;
+}
+
 .sidebar ul li a:hover {
-    background-color: #eee;
+    background-color: #f5f5f5;
 }
 
 .sidebar ul li a:hover i {
@@ -175,6 +201,18 @@ p {
     -moz-animation-name: swing;
     -o-animation-name: swing;
     animation-name: swing;
+}
+
+.sidebar ul li.active > a {
+    color: #8B0A05 !important;
+    background: #fafafa;
+    box-shadow: inset 3px 0 0 #A00E07;
+    font-weight: 600;
+}
+
+.sidebar ul li.active > a:hover {
+    color: #8B0A05 !important;
+    background: #f3f3f3;
 }
 
 .main {
@@ -459,17 +497,6 @@ label {
     border-color: #A00E07;
 }
 
-
-.active a {
-    color: #fff !important;
-    background: #A00E07;
-}
-
-.active a:hover {
-    color: #000 !important;
-    background: #fff;
-}
-
 #custom_transcript_student {
     display: none;
 }
@@ -517,16 +544,7 @@ label {
 }
 
 
-.modal-header {
-    border-bottom: none;
-}
-
-.modal-body {
-    text-align: center;
-    padding: 30px;
-    background-color: #f1f1f1;
-    /*border-radius: 15px;*/
-}
+/* legacy: camera / centered modals keep .text-center on .modal-body */
 
 #camera {
     position: relative;
@@ -682,4 +700,99 @@ table.no-border th {
 
 .report-table tr {
     line-height: 18px;
+}
+
+/* ── Stepper: анкетирование в таблице ── */
+.survey-status-cell .survey-status-btn {
+    line-height: 1;
+}
+
+/* stepper survey modal: см. app_modals.css */
+
+/* ── Admin sidebar: mobile ── */
+.sidebar-backdrop {
+    display: none;
+}
+
+body.admin-menu-open {
+    overflow: hidden;
+}
+
+@media (max-width: 991px) {
+    .header {
+        z-index: 1002;
+    }
+
+    .sidebar {
+        left: -260px;
+        width: 260px !important;
+        z-index: 1001;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+        transition: left 0.28s ease;
+    }
+
+    .sidebar:hover,
+    .sidebar.active,
+    .sidebar.hovered {
+        width: 260px !important;
+    }
+
+    .sidebar.active,
+    .sidebar.hovered {
+        left: 0;
+    }
+
+    .sidebar ul li a span {
+        display: inline-block !important;
+    }
+
+    .sidebar ul li a:hover i {
+        animation: none;
+    }
+
+    .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        top: 50px;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.28s ease, visibility 0.28s ease;
+    }
+
+    .sidebar-backdrop.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .main {
+        padding-left: 15px !important;
+        padding-right: 10px;
+    }
+
+    .header #menu-action {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .header #menu-action.active {
+        width: 60px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .header #menu-action.active span {
+        display: none !important;
+        width: 0;
+    }
+
+    .btn-group {
+        flex-wrap: wrap;
+    }
+
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+    }
 }

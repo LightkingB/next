@@ -1,0 +1,37 @@
+<form method="post" action="{{ action_url }}" class="survey-ajax-form survey-modal">
+    {% csrf_token %}
+    <div class="modal-header survey-modal-header">
+        <div class="survey-modal-header-text">
+            <h5 class="modal-title">
+                {% if survey %}Редактирование анкеты{% else %}Новая анкета{% endif %}
+            </h5>
+        </div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body survey-modal-body">
+        <div class="survey-form-group">
+            <label class="survey-label" for="id_title">Название <span class="survey-required">*</span></label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div class="survey-field-error">{{ form.title.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div class="survey-form-group">
+            <label class="survey-label" for="id_description">Описание</label>
+            {{ form.description }}
+            <small class="survey-hint">Необязательное поле</small>
+        </div>
+        <div class="survey-form-group survey-form-group--checkbox mb-0">
+            <div class="survey-checkbox-row">
+                {{ form.is_active }}
+                <label class="survey-checkbox-label" for="id_is_active">Анкета активна</label>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer survey-modal-footer">
+        <button type="button" class="btn btn-sm survey-btn-cancel" data-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-sm btn-survey">Сохранить</button>
+    </div>
+</form>

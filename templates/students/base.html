@@ -12,8 +12,12 @@
 
     <link rel="stylesheet" type="text/css" href="{% static 'css/main_styles.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/responsive.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/student_nav.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/student_portal.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+{% block portal_scene %}{% endblock %}
 
 <div class="super_container">
 
@@ -62,9 +66,14 @@
                             <nav class="main_nav_contaner ml-auto">
                                 <ul class="main_nav">
                                     {% if request.user.is_authenticated %}
-                                        <li class="active">
+                                        <li class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">
                                             <a href="{% url 'students:index' %}">
                                                 <i class="fas fa-home"></i> Главная
+                                            </a>
+                                        </li>
+                                        <li class="{% if 'survey' in request.resolver_match.url_name %}active{% endif %}">
+                                            <a href="{% url 'students:survey' %}">
+                                                <i class="fas fa-poll"></i> Анкетирование
                                             </a>
                                         </li>
                                         <li>
@@ -74,7 +83,7 @@
                                         </li>
                                         <li>
                                             <a href="{% url 'students:next-student-logout' %}">
-                                                Выйти({{ request.user.email }})
+                                                <i class="fas fa-sign-out-alt"></i> Выйти
                                             </a>
                                         </li>
                                     {% else %}
@@ -85,9 +94,9 @@
                                 </ul>
 
                                 <!-- Hamburger -->
-                                <div class="hamburger menu_mm">
+                                <button type="button" class="hamburger student-hamburger menu_mm" aria-label="Открыть меню">
                                     <i class="fa fa-bars menu_mm" aria-hidden="true"></i>
-                                </div>
+                                </button>
                             </nav>
 
                         </div>
@@ -115,46 +124,69 @@
         </div>
     </header>
 
+    <!-- Menu backdrop -->
+    <div class="menu_backdrop" aria-hidden="true"></div>
+
     <!-- Menu -->
-    <div class="menu d-flex flex-column align-items-end justify-content-start text-right menu_mm trans_400">
-        <div class="menu_close_container">
-            <div class="menu_close">
-                <div></div>
-                <div></div>
+    <div class="menu student-mobile-menu d-flex flex-column menu_mm trans_400">
+        <div class="student-mobile-menu__header">
+            <div class="student-mobile-menu__header-top">
+                <a href="{% url 'students:index' %}" class="student-mobile-menu__brand">
+                    Ош<span class="student-mobile-menu__brand-accent">ГУ</span>
+                </a>
+                <button type="button" class="student-mobile-menu__close menu_close_container" aria-label="Закрыть меню">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+            {% if request.user.is_authenticated %}
+                <div class="student-mobile-menu__profile">
+                    <div class="student-mobile-menu__avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="student-mobile-menu__profile-text">
+                        <span class="student-mobile-menu__email">{{ request.user.email }}</span>
+                    </div>
+                </div>
+            {% endif %}
         </div>
 
-        <nav class="menu_nav">
+        {% if request.user.is_authenticated %}
+            <nav class="menu_nav student-mobile-menu__nav">
+                <a href="{% url 'students:index' %}"
+                   class="student-mobile-menu__item menu_mm {% if request.resolver_match.url_name == 'index' %}is-active{% endif %}">
+                    <span class="student-mobile-menu__icon"><i class="fas fa-home"></i></span>
+                    <span>Главная</span>
+                </a>
+                <a href="{% url 'students:survey' %}"
+                   class="student-mobile-menu__item menu_mm {% if 'survey' in request.resolver_match.url_name %}is-active{% endif %}">
+                    <span class="student-mobile-menu__icon"><i class="fas fa-poll"></i></span>
+                    <span>Анкетирование</span>
+                </a>
+                <a href="{% url 'integrator:index' %}" class="student-mobile-menu__item menu_mm">
+                    <span class="student-mobile-menu__icon"><i class="fas fa-project-diagram"></i></span>
+                    <span>Модули</span>
+                </a>
+            </nav>
 
-            <ul class="menu_mm">
-                {% if request.user.is_authenticated %}
-                    <li class="menu_mm active">
-                        <a href="{% url 'students:index' %}">
-                            <i class="fas fa-home"></i> Главная
-                        </a>
-                    </li>
-                    <li class="menu_mm">
-                        <a href="{% url 'integrator:index' %}">
-                            <i class="fas fa-project-diagram"></i> Модули
-                        </a>
-                    </li>
-                    <li class="menu_mm">
-                        <a href="{% url 'students:next-student-logout' %}">
-                            Выйти({{ request.user.email }})
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="menu_mm active">
-                        <a href="{% url 'students:next-student-login' %}">Войти</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
+            <div class="student-mobile-menu__footer">
+                <a href="{% url 'students:next-student-logout' %}" class="student-mobile-menu__logout menu_mm">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Выйти из аккаунта</span>
+                </a>
+            </div>
+        {% else %}
+            <nav class="menu_nav student-mobile-menu__nav">
+                <a href="{% url 'students:next-student-login' %}" class="student-mobile-menu__login menu_mm">
+                    Войти
+                </a>
+            </nav>
+        {% endif %}
     </div>
 
     <!-- Home -->
     <div class="home">
         <div class="container">
+            {% include 'utils/_messages.html' %}
             {% block content %}
 
             {% endblock %}

@@ -81,6 +81,7 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">ФИО</th>
+                        <th scope="col" title="Анкетирование">Анк.</th>
                         <th scope="col">Отчёт (Печать)</th>
                         <th scope="col">Об. лист №</th>
 
@@ -110,6 +111,7 @@
                                         {{ student.fio }} ({{ student.myedu_id }})
                                     </a>
                                 </td>
+                                {% include 'teachers/steppers/_survey_status_cell.html' with myedu_id=student.myedu_id student_fio=student.fio survey_has_submissions=student.survey_has_submissions survey_submission_count=student.survey_submission_count %}
                                 <td class="text-center">
                                     <a href="{% url 'stepper:cs-report' cs_id=student.id %}"
                                        class="btn btn-sm btn-primary">
@@ -140,6 +142,7 @@
                                         {{ student.student_fio }} ({{ student.myedu_id }})
                                     </a>
                                 </td>
+                                {% include 'teachers/steppers/_survey_status_cell.html' with myedu_id=student.myedu_id student_fio=student.student_fio survey_has_submissions=student.survey_has_submissions survey_submission_count=student.survey_submission_count %}
                                 <td class="text-center">
                                     <a href="{% url 'stepper:cs-report' cs_id=student.id %}"
                                        class="btn btn-sm btn-primary">
@@ -181,6 +184,7 @@
         {% endif %}
     </div>
 
+    {% include 'teachers/steppers/_survey_modal_shell.html' %}
 
     <!-- Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
@@ -210,6 +214,7 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="{% static 'js/stepper_survey.js' %}"></script>
     <script type="text/javascript">
         $('#deleteModal').on('show.bs.modal', function (event) {
             let button = $(event.relatedTarget);

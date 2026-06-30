@@ -1,0 +1,7 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block head_css_link %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/survey_admin.css' %}"/>
+{% endblock %}

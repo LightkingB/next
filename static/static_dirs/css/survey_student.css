@@ -1,0 +1,690 @@
+/* Студенческий раздел анкет — классический стиль ОшГУ */
+
+:root {
+    --sv-red: #A00E07;
+    --sv-red-dark: #7a0a05;
+    --sv-ink: #1c1c1c;
+    --sv-text: #3a3a3a;
+    --sv-muted: #6b6b6b;
+    --sv-line: #e8d4d2;
+    --sv-bg: #f3ebe9;
+    --sv-surface: #fffcfb;
+    --sv-paper: #ffffff;
+    --sv-cream: #f8f0ee;
+    --sv-red-soft: #fce8e6;
+    --sv-font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --sv-font-heading: 'Roboto Slab', Georgia, 'Times New Roman', serif;
+    --sv-radius: 8px;
+    --sv-radius-sm: 6px;
+}
+
+.survey-student {
+    width: 100%;
+    padding-bottom: 1.5rem;
+    color: var(--sv-text);
+    font-family: var(--sv-font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Index: шапка страницы (legacy — используйте student-portal-page__head) ── */
+.survey-student--index {
+    max-width: none;
+    margin: 0;
+    padding-bottom: 0;
+}
+
+.survey-student-page-head {
+    margin-bottom: 1rem;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.survey-student-page-title {
+    font-family: var(--sv-font-heading);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--sv-ink);
+    margin: 0 0 0.3rem;
+    line-height: 1.3;
+}
+
+.survey-student-page-lead {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--sv-muted);
+    line-height: 1.5;
+}
+
+/* ── Секции внутри панели ── */
+.survey-student-block {
+    margin-bottom: 1.15rem;
+}
+
+.survey-student-block__title {
+    display: none;
+}
+
+/* ── Список записей ── */
+.survey-student-entries {
+    display: flex;
+    flex-direction: column;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+}
+
+.survey-student-entries--flat {
+    border: none;
+    border-radius: 0;
+}
+
+.survey-student-entries--flat .survey-student-entry {
+    border-bottom: 1px solid var(--sv-line);
+}
+
+.survey-student-entries--flat .survey-student-entry:last-child {
+    border-bottom: none;
+}
+
+.survey-student-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--sv-line);
+    background: var(--sv-red-soft);
+}
+
+.survey-student-entry:last-child {
+    border-bottom: none;
+}
+
+.survey-student-entry--history {
+    background: var(--sv-surface);
+}
+
+.survey-student-option input[type="radio"],
+.survey-student-option input[type="checkbox"] {
+    accent-color: var(--sv-red);
+}
+
+.survey-student-entry__body {
+    min-width: 0;
+}
+
+.survey-student-entry__title {
+    font-family: var(--sv-font-body);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--sv-ink);
+    margin: 0 0 0.3rem;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.survey-student-entry__desc {
+    margin: 0 0 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--sv-muted);
+    line-height: 1.5;
+}
+
+.survey-student-entry__meta {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--sv-muted);
+}
+
+.survey-student-entry__meta-sep {
+    margin: 0 0.35rem;
+    color: #c5c0b8;
+}
+
+.survey-student-entry__aside {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.survey-student-entry__status {
+    display: inline-block;
+    font-family: var(--sv-font-body);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--sv-line);
+    border-radius: 5px;
+    background: var(--sv-cream);
+    color: var(--sv-muted);
+    line-height: 1.3;
+}
+
+.survey-student-entry__status time {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--sv-muted);
+}
+
+.survey-student-entry__status--open {
+    border-color: rgba(160, 14, 7, 0.28);
+    background: #fff;
+    color: var(--sv-red);
+    font-weight: 600;
+}
+
+.survey-student-entry__status--done {
+    border-color: #c5c5c5;
+    background: #f5f5f5;
+    color: #444;
+}
+
+.survey-student-entry__status--muted {
+    border-style: dashed;
+    background: transparent;
+}
+
+.survey-student-entry__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.85rem;
+    font-family: var(--sv-font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    text-decoration: none !important;
+    color: #fff !important;
+    background: var(--sv-red);
+    border: 1px solid var(--sv-red);
+    border-radius: 5px;
+    transition: background 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.survey-student-entry__btn:hover,
+.survey-student-entry__btn:active {
+    background: var(--sv-red-dark);
+    border-color: var(--sv-red-dark);
+    color: #fff !important;
+}
+
+.survey-student-message {
+    padding: 0.75rem 0.85rem;
+    font-family: var(--sv-font-body);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--sv-muted);
+    background: var(--sv-cream);
+    border: 1px solid var(--sv-line);
+    border-left: 2px solid var(--sv-red);
+    border-radius: 6px;
+}
+
+.survey-student-message--inset {
+    margin: 0.75rem 0.85rem;
+    border-radius: 6px;
+}
+
+.survey-student-message--warn.survey-student-message--inset {
+    border-left-color: #b8860b;
+    background: #fffdf8;
+}
+
+/* ── Legacy aliases (form pages) ── */
+.survey-student-hero {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--sv-line);
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.survey-student-hero h1 {
+    font-family: var(--sv-font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--sv-ink);
+    margin: 0 0 0.25rem;
+}
+
+.survey-student-hero p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--sv-muted);
+}
+
+.survey-student-section-title {
+    font-family: var(--sv-font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sv-ink);
+    margin: 0 0 0.65rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--sv-line);
+    display: block;
+}
+
+.survey-student-notice {
+    padding: 0.9rem 1rem;
+    font-family: var(--sv-font-body);
+    font-size: 0.9rem;
+    color: var(--sv-muted);
+    background: var(--sv-cream);
+    border: 1px solid var(--sv-line);
+    border-left: 3px solid var(--sv-red);
+    border-radius: var(--sv-radius);
+    line-height: 1.55;
+}
+
+.survey-student-notice--warn {
+    border-left-color: #b8860b;
+}
+
+/* ── Кнопки (форма) ── */
+.survey-student-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    background: var(--sv-red);
+    color: #fff !important;
+    border: 1px solid var(--sv-red);
+    padding: 0.55rem 1.1rem;
+    font-family: var(--sv-font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    border-radius: var(--sv-radius-sm);
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 42px;
+}
+
+.survey-student-btn:hover,
+.survey-student-btn:active {
+    background: var(--sv-red-dark);
+    border-color: var(--sv-red-dark);
+    color: #fff !important;
+}
+
+.survey-student-btn--block {
+    width: 100%;
+}
+
+/* ── Карточка (форма, телефон) ── */
+.survey-student-card {
+    background: var(--sv-paper);
+    border: 1px solid var(--sv-line);
+    border-radius: var(--sv-radius);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(40, 32, 24, 0.06);
+}
+
+.survey-student-card-head {
+    background: var(--sv-red);
+    color: #fff;
+    padding: 0.65rem 0.9rem;
+    border-bottom: none;
+}
+
+.survey-student-card-head h4,
+.survey-student-form-card .survey-student-card-head h4 {
+    color: #fff;
+}
+
+.survey-student-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--sv-red);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none !important;
+    margin-bottom: 0.55rem;
+    padding: 0.25rem 0;
+    min-height: 44px;
+}
+
+.survey-student-back:hover,
+.survey-student-back:active {
+    color: var(--sv-red-dark);
+}
+
+body.student-portal-scene-page .survey-student--take,
+body.student-portal-scene-page .survey-student--phone {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-bottom: 1rem;
+}
+
+.survey-student-form-card {
+    background: var(--sv-paper);
+    border: 1px solid rgba(160, 14, 7, 0.14);
+    border-radius: var(--sv-radius);
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(160, 14, 7, 0.08);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 130px);
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.survey-student-card-head--fixed {
+    flex-shrink: 0;
+}
+
+.survey-student-form-card .survey-student-card-head h4 {
+    margin: 0;
+    font-family: var(--sv-font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.35;
+}
+
+.survey-student-form-card .survey-student-card-head .desc {
+    margin: 0.2rem 0 0;
+    font-family: var(--sv-font-body);
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.45;
+}
+
+.survey-student-form-layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.survey-student-form-scroll {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.85rem 0.9rem;
+    background: var(--sv-surface);
+    -webkit-overflow-scrolling: touch;
+}
+
+.survey-student-question {
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(160, 14, 7, 0.1);
+}
+
+.survey-student-question:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.survey-student-question-label {
+    font-family: var(--sv-font-body);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--sv-ink);
+    margin-bottom: 0.55rem;
+    line-height: 1.5;
+}
+
+.survey-student-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.survey-student-option {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.65rem 0.85rem;
+    min-height: 46px;
+    border: 1px solid var(--sv-line);
+    border-radius: var(--sv-radius-sm);
+    cursor: pointer;
+    margin: 0;
+    background: var(--sv-paper);
+    transition: border-color 0.12s, background 0.12s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.survey-student-option input {
+    flex-shrink: 0;
+    margin: 0;
+    cursor: pointer;
+    width: 1rem;
+    height: 1rem;
+}
+
+.survey-student-option-text {
+    flex: 1;
+    font-family: var(--sv-font-body);
+    color: var(--sv-text);
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.survey-student-option:has(input:checked) {
+    border-color: var(--sv-red);
+    background: var(--sv-red-soft);
+    box-shadow: 0 0 0 1px rgba(160, 14, 7, 0.08);
+}
+
+.survey-student-option:has(input:checked) .survey-student-option-text {
+    color: var(--sv-ink);
+    font-weight: 500;
+}
+
+.survey-student-form-footer {
+    flex-shrink: 0;
+    padding: 0.7rem 0.9rem;
+    padding-bottom: calc(0.7rem + env(safe-area-inset-bottom, 0px));
+    background: var(--sv-red-soft);
+    border-top: 1px solid rgba(160, 14, 7, 0.12);
+    text-align: center;
+}
+
+.survey-student-form-footer .survey-student-btn {
+    width: 100%;
+    max-width: 320px;
+}
+
+.survey-student-phone-wrap {
+    max-width: 440px;
+    margin: 0 auto;
+}
+
+.survey-student-phone-wrap .survey-student-card-body {
+    text-align: left;
+    padding: 0.85rem 1rem;
+}
+
+.survey-student-phone-wrap .form-control {
+    border-radius: var(--sv-radius-sm);
+    border-color: var(--sv-line);
+    font-family: var(--sv-font-body);
+    font-size: 16px;
+    min-height: 46px;
+}
+
+.survey-student-phone-wrap .form-control:focus {
+    border-color: var(--sv-red);
+    box-shadow: 0 0 0 1px var(--sv-red);
+}
+
+.survey-student-phone-actions {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.survey-student-phone-actions .survey-student-btn {
+    width: 100%;
+}
+
+/* ── Модалка подтверждения ── */
+#confirmSurvey .survey-student-modal-dialog {
+    width: calc(100% - 1.5rem);
+    max-width: 440px;
+    margin: 0.75rem auto;
+}
+
+#confirmSurvey .modal-content {
+    border-radius: var(--sv-radius);
+    box-shadow: 0 4px 24px rgba(28, 28, 28, 0.12);
+}
+
+#confirmSurvey .modal-header .modal-title {
+    font-family: var(--sv-font-heading);
+    font-size: 1.05rem;
+}
+
+#confirmSurvey .modal-body {
+    font-family: var(--sv-font-body);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+}
+
+#confirmSurvey .modal-body .lead {
+    font-size: 0.9375rem;
+    font-weight: 400;
+    color: var(--sv-text);
+}
+
+.survey-student-modal-footer {
+    flex-direction: column-reverse !important;
+    gap: 0.5rem !important;
+}
+
+.survey-student-modal-btn {
+    width: 100%;
+    min-height: 42px;
+    border-radius: var(--sv-radius-sm);
+    font-family: var(--sv-font-body);
+    font-weight: 500;
+}
+
+#confirmSurvey .btn-danger {
+    background: var(--sv-red) !important;
+    border-color: var(--sv-red) !important;
+}
+
+#confirmSurvey .btn-light {
+    background: var(--sv-paper);
+    border: 1px solid var(--sv-line);
+    color: var(--sv-text);
+}
+
+/* ── Desktop ── */
+@media (min-width: 768px) {
+    .survey-student-page-title,
+    .student-portal-page__title {
+        font-size: 1.3rem;
+    }
+    .survey-student-entry {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.7rem 0.9rem;
+        gap: 1rem;
+    }
+
+    .survey-student-entry__aside {
+        flex-shrink: 0;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .survey-student-form-footer .survey-student-btn {
+        width: auto;
+    }
+
+    .survey-student-phone-actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .survey-student-phone-actions .survey-student-btn {
+        width: auto;
+    }
+
+    .survey-student-modal-footer {
+        flex-direction: row !important;
+    }
+
+    .survey-student-modal-btn {
+        width: auto;
+    }
+}
+
+/* ── Mobile: форма ── */
+@media (max-width: 767px) {
+    .survey-student--take,
+    .survey-student--phone {
+        margin-left: -14px;
+        margin-right: -14px;
+        width: calc(100% + 28px);
+    }
+
+    body.student-portal-scene-page .survey-student--take,
+    body.student-portal-scene-page .survey-student--phone {
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .survey-student--take .survey-student-back,
+    .survey-student--phone .survey-student-back {
+        margin-left: 14px;
+    }
+
+    body.student-portal-scene-page .survey-student--take .survey-student-back,
+    body.student-portal-scene-page .survey-student--phone .survey-student-back {
+        margin-left: 0;
+    }
+
+    .survey-student--take .survey-student-form-card {
+        max-height: calc(100dvh - 110px);
+        max-width: none;
+        border-left: none;
+        border-right: none;
+        border-radius: var(--sv-radius) var(--sv-radius) 0 0;
+    }
+
+    body.student-portal-scene-page .survey-student--take .survey-student-form-card {
+        border-left: 1px solid var(--sv-line);
+        border-right: 1px solid var(--sv-line);
+        border-radius: var(--sv-radius);
+    }
+
+    .survey-student-entry__btn {
+        width: 100%;
+    }
+}

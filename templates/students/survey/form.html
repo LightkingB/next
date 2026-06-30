@@ -1,0 +1,89 @@
+{% extends 'students/base.html' %}
+{% load static %}
+
+{% block title %}<title>{{ survey.title }} | Анкетирование</title>{% endblock %}
+
+{% block body_class %}student-portal-scene-page{% endblock %}
+
+{% block portal_scene %}
+    {% include 'component/portal_scene.html' with warm=True %}
+{% endblock %}
+
+{% block content %}
+    <div class="survey-student survey-student--take">
+        <a href="{% url 'students:survey' %}" class="survey-student-back">
+            <i class="fas fa-arrow-left"></i> К анкетам
+        </a>
+
+        <div class="survey-student-form-card">
+            <div class="survey-student-card-head survey-student-card-head--fixed">
+                <h4>{{ survey.title }}</h4>
+                {% if survey.description %}
+                    <p class="desc">{{ survey.description }}</p>
+                {% endif %}
+            </div>
+            <form method="post" id="survey-form" class="survey-student-form-layout">
+                {% csrf_token %}
+                <div class="survey-student-form-scroll">
+                    {% for field in form %}
+                        <div class="survey-student-question">
+                            <div class="survey-student-question-label">{{ field.label }}</div>
+                            {% if field.errors %}
+                                <div class="text-danger small mb-2">{{ field.errors }}</div>
+                            {% endif %}
+                            <div class="survey-student-options">
+                                {% for choice in field %}
+                                    <label class="survey-student-option">
+                                        {{ choice.tag }}
+                                        <span class="survey-student-option-text">{{ choice.choice_label }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="survey-student-form-footer">
+                    <button type="button" class="survey-student-btn" data-toggle="modal" data-target="#confirmSurvey">
+                        Завершить анкетирование
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmSurvey" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered survey-student-modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="lead mb-0">
+                        Вы уверены, что хотите завершить анкетирование? После отправки изменить ответы будет невозможно.
+                    </p>
+                </div>
+                <div class="modal-footer survey-student-modal-footer">
+                    <button type="button" class="btn btn-light survey-student-modal-btn" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger survey-student-modal-btn" id="confirm-submit">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/app_modals.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/survey_student.css' %}"/>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.getElementById('confirm-submit').addEventListener('click', function () {
+            document.getElementById('survey-form').submit();
+        });
+    </script>
+{% endblock %}

@@ -21,6 +21,14 @@
                             class="fas fa-search"></i><span>{% trans 'Поиск' %}</span></a>
                 </li>
             {% endif %}
+        {% elif request.session.access == "survey" %}
+            {% if 'stsurve' in DB_ROLES %}
+                <li class="{% if navbar == 'survey-admin' %}active{% endif %}">
+                    <a href="{% url 'students:survey-admin-list' %}">
+                        <i class="fas fa-poll"></i><span> {% trans 'Анкеты' %}</span>
+                    </a>
+                </li>
+            {% endif %}
         {% elif request.session.access == "stepper" %}
             {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
                 <li class="{% if navbar == 'stepper' %}active{% endif %}">

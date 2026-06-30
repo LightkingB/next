@@ -1,0 +1,72 @@
+<form method="post" action="{{ action_url }}" class="survey-ajax-form survey-modal survey-question-form" data-options-min="2" data-options-max="20">
+    {% csrf_token %}
+    <div class="modal-header survey-modal-header">
+        <div class="survey-modal-header-text">
+            <h5 class="modal-title">
+                {% if question %}Редактирование вопроса{% else %}Новый вопрос{% endif %}
+            </h5>
+            <p class="survey-modal-subtitle mb-0">Анкета: {{ survey.title }}</p>
+        </div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body survey-modal-body">
+        {% if form.non_field_errors %}
+            <div class="survey-alert mb-3">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="survey-form-group">
+            <label class="survey-label" for="id_text">Текст вопроса <span class="survey-required">*</span></label>
+            {{ form.text }}
+            {% if form.text.errors %}
+                <div class="survey-field-error">{{ form.text.errors.0 }}</div>
+            {% else %}
+                <small class="survey-hint">От 3 до 2000 символов</small>
+            {% endif %}
+        </div>
+
+        <div class="survey-form-group">
+            <label class="survey-label" for="id_question_type">Тип ответа <span class="survey-required">*</span></label>
+            {{ form.question_type }}
+            {% if form.question_type.errors %}
+                <div class="survey-field-error">{{ form.question_type.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="survey-form-group mb-0">
+            <div class="survey-options-head">
+                <label class="survey-label mb-0">Варианты ответов <span class="survey-required">*</span></label>
+                <small class="survey-hint mb-0">от 2 до 20</small>
+            </div>
+            <div id="survey-options-list" class="survey-options-list">
+                {% for option in form.get_options_for_display %}
+                    <div class="survey-option-row">
+                        <span class="survey-option-index">{{ forloop.counter }}</span>
+                        <input type="text"
+                               name="options"
+                               class="form-control survey-input survey-option-input"
+                               value="{{ option }}"
+                               maxlength="500"
+                               placeholder="Вариант {{ forloop.counter }}">
+                        <button type="button"
+                                class="btn survey-option-remove"
+                                title="Удалить"
+                                {% if forloop.counter <= 2 %}disabled{% endif %}>
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn btn-sm btn-survey-outline mt-2" id="survey-option-add">
+                <i class="fas fa-plus"></i> Добавить вариант
+            </button>
+        </div>
+    </div>
+    <div class="modal-footer survey-modal-footer">
+        <button type="button" class="btn btn-sm survey-btn-cancel" data-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-sm btn-survey">Сохранить вопрос</button>
+    </div>
+</form>

@@ -17,20 +17,22 @@
 
 </head>
 
-<body>
+<body class="{% block body_class %}{% endblock %}" data-survey-modal-url="{% url 'stepper:student-survey-submissions' %}">
 <nav class="navbar-qualities">
     <div class="header">
         <a href="#" id="menu-action">
             <i class="fa fa-bars"></i>
             <span>{% trans 'Закрыть меню' %}</span>
         </a>
-        <div class="logo">
-            {% trans 'Админ. панель' %}
+        <div class="logo" id="admin-header-title">
+            <span class="logo-default">{% trans 'Админ. панель' %}</span>
+            <span class="logo-current" id="header-active-section"></span>
         </div>
     </div>
     <div class="sidebar">
         {% include "component/navbar.html" %}
     </div>
+    <div class="sidebar-backdrop" aria-hidden="true"></div>
 </nav>
 <!-- Content -->
 <div class="main">
@@ -47,23 +49,123 @@
 {% include 'component/footer.html' %}
 <script type="text/javascript">
     $(document).ready(function () {
-        $('#menu-action').click(function () {
-            $('.sidebar').toggleClass('active');
-            $('.main').toggleClass('active');
-            $(this).toggleClass('active');
+        var $sidebar = $('.sidebar');
+        var $backdrop = $('.sidebar-backdrop');
+        var $menuAction = $('#menu-action');
+        var $body = $('body');
+        var $headerTitle = $('#admin-header-title');
+        var $headerSection = $('#header-active-section');
+        var menuOpen = false;
+        var mobileMq = window.matchMedia('(max-width: 991px)');
 
-            if ($('.sidebar').hasClass('active')) {
-                $(this).find('i').addClass('fa-close');
-                $(this).find('i').removeClass('fa-bars');
+        function isMobileMenu() {
+            return mobileMq.matches;
+        }
+
+        function syncHeaderSection() {
+            var $active = $sidebar.find('li.active > a').first();
+            if (!$active.length) {
+                $headerTitle.removeClass('has-section');
+                $headerSection.text('');
+                return;
+            }
+            var label = $.trim($active.find('span').first().text());
+            if (!label) {
+                label = $.trim($active.text());
+            }
+            if (label) {
+                $headerSection.text(label);
+                $headerTitle.addClass('has-section');
             } else {
-                $(this).find('i').addClass('fa-bars');
-                $(this).find('i').removeClass('fa-close');
+                $headerTitle.removeClass('has-section');
+                $headerSection.text('');
+            }
+        }
+
+        function setMenuIcon(open) {
+            var $icon = $menuAction.find('i');
+            $icon.toggleClass('fa-bars', !open);
+            $icon.toggleClass('fa-times', open);
+        }
+
+        function openMenu() {
+            if (menuOpen) {
+                return;
+            }
+            menuOpen = true;
+            $sidebar.addClass('active').removeClass('hovered');
+            $menuAction.addClass('active');
+            $backdrop.addClass('active');
+            if (isMobileMenu()) {
+                $body.addClass('admin-menu-open');
+            }
+            setMenuIcon(true);
+            syncHeaderSection();
+        }
+
+        function closeMenu() {
+            if (!menuOpen) {
+                return;
+            }
+            menuOpen = false;
+            $sidebar.removeClass('active hovered');
+            $menuAction.removeClass('active');
+            $backdrop.removeClass('active');
+            $body.removeClass('admin-menu-open');
+            $('.main').removeClass('sidebar-open');
+            setMenuIcon(false);
+            syncHeaderSection();
+        }
+
+        syncHeaderSection();
+
+        $menuAction.on('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (menuOpen) {
+                closeMenu();
+            } else {
+                openMenu();
+                if (!isMobileMenu()) {
+                    $('.main').addClass('sidebar-open');
+                }
             }
         });
 
-        $('#menu-action').hover(function () {
-            $('.sidebar').toggleClass('hovered');
+        $backdrop.on('click', closeMenu);
+
+        $sidebar.find('a').on('click', function () {
+            if (isMobileMenu()) {
+                closeMenu();
+            }
         });
+
+        $(document).on('keyup', function (e) {
+            if (e.key === 'Escape' && menuOpen) {
+                closeMenu();
+            }
+        });
+
+        $(window).on('resize', function () {
+            if (!isMobileMenu()) {
+                $body.removeClass('admin-menu-open');
+            } else if (!menuOpen) {
+                $sidebar.removeClass('hovered');
+            }
+        });
+
+        if (!('ontouchstart' in window)) {
+            $menuAction.on('mouseenter', function () {
+                if (!isMobileMenu() && !menuOpen) {
+                    $sidebar.addClass('hovered');
+                }
+            });
+            $menuAction.on('mouseleave', function () {
+                if (!isMobileMenu() && !menuOpen) {
+                    $sidebar.removeClass('hovered');
+                }
+            });
+        }
     });
 </script>
 {% block scripts %}

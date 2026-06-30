@@ -1,0 +1,15 @@
+<td class="text-center survey-status-cell">
+    {% if survey_has_submissions %}
+        <button type="button"
+                class="btn btn-link p-0 border-0 survey-status-btn text-success"
+                title="Прошёл анкетирование ({{ survey_submission_count }})"
+                data-myedu-id="{{ myedu_id }}"
+                data-fio="{{ student_fio }}">
+            <i class="fas fa-check-circle fa-lg"></i>
+        </button>
+    {% else %}
+        <span class="text-muted" title="Анкетирование не пройдено">
+            <i class="fas fa-minus-circle"></i>
+        </span>
+    {% endif %}
+</td>

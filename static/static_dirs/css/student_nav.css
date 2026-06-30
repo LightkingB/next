@@ -1,0 +1,281 @@
+/* Студенческий портал — мобильное меню */
+
+:root {
+    --student-nav-red: #A00E07;
+    --student-nav-red-dark: #8a0c06;
+    --student-nav-border: #ddd;
+    --student-nav-text: #222;
+}
+
+/* ── Hamburger ── */
+@media (max-width: 991px) {
+    .student-hamburger {
+        margin-left: auto;
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--student-nav-red);
+        border-radius: 4px;
+        background: #fff;
+        color: var(--student-nav-red);
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .student-hamburger i {
+        font-size: 1.05rem;
+    }
+
+    .student-hamburger:active,
+    .student-hamburger:hover {
+        background: var(--student-nav-red);
+        color: #fff;
+    }
+
+    .header_container .header_content {
+        min-height: 52px;
+    }
+}
+
+.menu_backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.menu_backdrop.active {
+    display: block;
+    opacity: 1;
+}
+
+body.student-menu-open {
+    overflow: hidden;
+}
+
+.student-mobile-menu.menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: min(300px, 100%);
+    max-width: 100%;
+    height: 100dvh;
+    height: 100vh;
+    background: #fff;
+    z-index: 101;
+    padding: 0;
+    margin: 0;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+    transition: right 0.28s ease;
+    overflow: hidden;
+}
+
+.student-mobile-menu.menu.active {
+    right: 0;
+}
+
+/* ── Шапка + профиль ── */
+.student-mobile-menu__header {
+    flex-shrink: 0;
+    background: var(--student-nav-red);
+    color: #fff;
+}
+
+.student-mobile-menu__header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.75rem;
+}
+
+.student-mobile-menu__brand {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff !important;
+    text-decoration: none !important;
+}
+
+.student-mobile-menu__brand-accent {
+    font-weight: 400;
+}
+
+.student-mobile-menu__close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transform: none !important;
+    position: static !important;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.student-mobile-menu__close:active {
+    background: var(--student-nav-red-dark);
+}
+
+.student-mobile-menu__close i {
+    font-size: 1rem;
+}
+
+.student-mobile-menu .menu_close div {
+    display: none;
+}
+
+.student-mobile-menu__profile {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.75rem 0.65rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.student-mobile-menu__avatar {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: var(--student-nav-red-dark);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+}
+
+.student-mobile-menu__profile-text {
+    min-width: 0;
+}
+
+.student-mobile-menu__email {
+    font-size: 0.8rem;
+    color: #fff;
+    font-weight: 500;
+    word-break: break-all;
+    line-height: 1.25;
+}
+
+/* ── Навигация ── */
+.student-mobile-menu__nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.student-mobile-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid var(--student-nav-border);
+    border-left: 3px solid transparent;
+    border-radius: 0;
+    text-decoration: none !important;
+    color: var(--student-nav-text) !important;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.student-mobile-menu__item:active {
+    background: #f0f0f0;
+}
+
+.student-mobile-menu__icon {
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.student-mobile-menu__item.is-active {
+    border-left-color: var(--student-nav-red);
+    color: var(--student-nav-red) !important;
+    font-weight: 600;
+    background: #fff;
+}
+
+.student-mobile-menu__item.is-active .student-mobile-menu__icon {
+    color: var(--student-nav-red);
+}
+
+/* ── Футер ── */
+.student-mobile-menu__footer {
+    flex-shrink: 0;
+    padding: 0.6rem 0.75rem;
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--student-nav-border);
+    background: #fff;
+}
+
+.student-mobile-menu__logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border-radius: 4px;
+    border: 2px solid var(--student-nav-red);
+    background: #fff;
+    color: var(--student-nav-red) !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none !important;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.student-mobile-menu__logout:active {
+    background: var(--student-nav-red);
+    color: #fff !important;
+}
+
+.student-mobile-menu__login {
+    display: block;
+    margin: 0.75rem;
+    padding: 0.65rem;
+    text-align: center;
+    border-radius: 4px;
+    background: var(--student-nav-red);
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none !important;
+}
+
+.student-mobile-menu .menu_nav ul li {
+    margin-bottom: 0;
+    border-bottom: none;
+    list-style: none;
+}
+
+@media (max-width: 991px) {
+    .top_bar {
+        display: none;
+    }
+
+    .header_container {
+        padding: 0;
+        box-shadow: 0 1px 0 #e5e5e5;
+    }
+
+    .hamburger {
+        margin-left: auto !important;
+    }
+}

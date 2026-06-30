@@ -1,0 +1,35 @@
+{% for question in survey.questions.all %}
+    <div class="question-card">
+        <div class="question-card-header d-flex justify-content-between align-items-center flex-wrap">
+            <div class="mb-2 mb-md-0">
+                <strong>{{ forloop.counter }}. {{ question.text }}</strong>
+                <span class="question-type-badge ml-2">
+                    {% if question.question_type == 'radio' %}Один вариант{% else %}Несколько вариантов{% endif %}
+                </span>
+            </div>
+            <div>
+                <button type="button"
+                        class="btn btn-sm btn-survey-outline survey-ajax-move"
+                        data-url="{% url 'students:survey-question-move' question_id=question.id direction='up' %}">↑</button>
+                <button type="button"
+                        class="btn btn-sm btn-survey-outline survey-ajax-move"
+                        data-url="{% url 'students:survey-question-move' question_id=question.id direction='down' %}">↓</button>
+                <button type="button"
+                        class="btn btn-sm btn-survey survey-ajax-load"
+                        data-url="{% url 'students:survey-question-edit' survey_id=survey.id question_id=question.id %}">Изменить</button>
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger survey-ajax-load"
+                        data-url="{% url 'students:survey-question-delete' question_id=question.id %}">Удалить</button>
+            </div>
+        </div>
+        <div class="question-card-body">
+            {% for option in question.options.all %}
+                <div class="option-item">{{ option.text }}</div>
+            {% empty %}
+                <div class="option-item text-muted">Варианты не добавлены</div>
+            {% endfor %}
+        </div>
+    </div>
+{% empty %}
+    <div class="survey-empty">Вопросы не добавлены. Нажмите «Добавить вопрос».</div>
+{% endfor %}

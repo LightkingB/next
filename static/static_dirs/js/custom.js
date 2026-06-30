@@ -1,51 +1,18 @@
 /* JS Document */
 
-/******************************
-
- [Table of Contents]
-
- 1. Vars and Inits
- 2. Set Header
- 3. Init Menu
- 4. Init Header Search
- 5. Init Home Slider
- 6. Initialize Milestones
-
-
- ******************************/
-
 $(document).ready(function () {
     "use strict";
-
-    /*
-
-    1. Vars and Inits
-
-    */
 
     var header = $('.header');
     var menuActive = false;
     var menu = $('.menu');
     var burger = $('.hamburger');
+    var backdrop = $('.menu_backdrop');
 
     setHeader();
-
-    $(window).on('resize', function () {
-        setHeader();
-    });
-
-    $(document).on('scroll', function () {
-        setHeader();
-    });
-
+    $(window).on('resize', setHeader);
+    $(document).on('scroll', setHeader);
     initMenu();
-    initHeaderSearch();
-
-    /*
-
-    2. Set Header
-
-    */
 
     function setHeader() {
         if ($(window).scrollTop() > 100) {
@@ -55,68 +22,52 @@ $(document).ready(function () {
         }
     }
 
-    /*
-
-    3. Init Menu
-
-    */
-
     function initMenu() {
-        if ($('.menu').length) {
-            var menu = $('.menu');
-            if ($('.hamburger').length) {
-                burger.on('click', function () {
-                    if (menuActive) {
-                        closeMenu();
-                    } else {
-                        openMenu();
+        if (!menu.length || !burger.length) {
+            return;
+        }
 
-                        $(document).one('click', function cls(e) {
-                            if ($(e.target).hasClass('menu_mm')) {
-                                $(document).one('click', cls);
-                            } else {
-                                closeMenu();
-                            }
-                        });
-                    }
-                });
+        var closeBtn = $('.menu_close_container');
+
+        function openMenu() {
+            menu.addClass('active');
+            backdrop.addClass('active');
+            $('body').addClass('student-menu-open');
+            menuActive = true;
+        }
+
+        function closeMenu() {
+            menu.removeClass('active');
+            backdrop.removeClass('active');
+            $('body').removeClass('student-menu-open');
+            menuActive = false;
+        }
+
+        burger.on('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (menuActive) {
+                closeMenu();
+            } else {
+                openMenu();
             }
-        }
+        });
+
+        closeBtn.on('click', function (e) {
+            e.preventDefault();
+            closeMenu();
+        });
+
+        backdrop.on('click', closeMenu);
+
+        $('.student-mobile-menu__item, .student-mobile-menu__logout, .student-mobile-menu__login').on('click', function () {
+            closeMenu();
+        });
+
+        $(document).on('keyup', function (e) {
+            if (e.key === 'Escape' && menuActive) {
+                closeMenu();
+            }
+        });
     }
-
-    function openMenu() {
-        menu.addClass('active');
-        menuActive = true;
-    }
-
-    function closeMenu() {
-        menu.removeClass('active');
-        menuActive = false;
-    }
-
-    /*
-
-    4. Init Header Search
-
-    */
-
-    function initHeaderSearch() {
-        if ($('.search_button').length) {
-            $('.search_button').on('click', function () {
-                if ($('.header_search_container').length) {
-                    $('.header_search_container').toggleClass('active');
-                }
-            });
-        }
-    }
-
-    /*
-
-    /*
-
-    6. Initialize Milestones
-
-    */
-
-
 });

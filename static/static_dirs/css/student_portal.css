@@ -1,0 +1,448 @@
+/* Студенческий портал — общие компоненты и главная */
+
+@import url('https://fonts.googleapis.com/css?family=Roboto+Slab:400,700|Roboto:400,500,700&display=swap');
+
+:root {
+    --sp-red: #A00E07;
+    --sp-red-dark: #8a0c06;
+    --sp-ink: #1c1c1c;
+    --sp-text: #3a3a3a;
+    --sp-muted: #6b6b6b;
+    --sp-line: #ddd9d4;
+    --sp-bg: #f3ebe9;
+    --sp-surface: #faf6f4;
+    --sp-paper: #fffcfb;
+    --sp-cream: #f8f0ee;
+    --sp-red-soft: #fce8e6;
+    --sp-radius: 8px;
+    --sp-shell-radius: 10px;
+    --sp-shell-shadow: 0 1px 3px rgba(40, 32, 24, 0.06);
+    --sp-font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --sp-font-heading: 'Roboto Slab', Georgia, serif;
+}
+
+/* ── Страницы с образовательным фоном (/, /survey/, /survey/take/) ── */
+body.student-portal-scene-page {
+    background: var(--sp-bg);
+}
+
+body.student-portal-scene-page .super_container {
+    position: relative;
+    z-index: 1;
+}
+
+body.student-portal-scene-page .home {
+    background: transparent;
+}
+
+.home {
+    background: #ececec;
+}
+
+.home > .container {
+    padding-top: 1.25rem;
+    padding-bottom: 1.5rem;
+}
+
+body.student-portal-scene-page .home > .container {
+    max-width: 760px;
+    padding-top: 0.85rem;
+    padding-bottom: 1.25rem;
+}
+
+/* ── Страница ── */
+.student-portal-page {
+    max-width: 720px;
+    margin: 0 auto;
+    font-family: var(--sp-font-body);
+    color: var(--sp-text);
+    -webkit-font-smoothing: antialiased;
+}
+
+body.student-portal-scene-page .student-portal-page {
+    background: var(--sp-paper);
+    border: 1px solid var(--sp-line);
+    border-radius: var(--sp-shell-radius);
+    padding: 1rem 1.1rem 1.1rem;
+    box-shadow: var(--sp-shell-shadow);
+}
+
+.student-portal-page__head {
+    background: var(--sp-paper);
+    border: 1px solid var(--sp-line);
+    border-left: 4px solid var(--sp-red);
+    border-radius: var(--sp-radius);
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+}
+
+body.student-portal-scene-page .student-portal-page__head {
+    background: transparent;
+    border: none;
+    border-left: 4px solid var(--sp-red);
+    border-radius: 0;
+    padding: 0 0 0.75rem 0.85rem;
+    margin-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(160, 14, 7, 0.12);
+}
+
+body.student-portal-scene-page .student-portal-panel__head {
+    background: var(--sp-red);
+    color: #fff;
+    border-bottom: none;
+}
+
+body.student-portal-scene-page .student-portal-panel__head i {
+    color: rgba(255, 255, 255, 0.92);
+    opacity: 1;
+}
+
+body.student-portal-scene-page .student-portal-page {
+    border-color: rgba(160, 14, 7, 0.12);
+    box-shadow: 0 2px 12px rgba(160, 14, 7, 0.07);
+}
+
+body.student-portal-scene-page .student-portal-panel {
+    border-color: rgba(160, 14, 7, 0.14);
+    background: var(--sp-paper);
+    box-shadow: 0 1px 4px rgba(160, 14, 7, 0.06);
+}
+
+body.student-portal-scene-page .student-portal-panel__body {
+    background: var(--sp-paper);
+}
+
+body.student-portal-scene-page .student-portal-cs-card {
+    background: var(--sp-paper);
+    border-color: rgba(160, 14, 7, 0.14);
+    border-top: 3px solid var(--sp-red);
+}
+
+body.student-portal-scene-page .student-portal-cs-card__head {
+    background: var(--sp-red-soft);
+    border-bottom-color: rgba(160, 14, 7, 0.1);
+}
+
+body.student-portal-scene-page .student-portal-stages__item {
+    border-bottom-color: #e8e4df;
+}
+
+.student-portal-page__title {
+    font-family: var(--sp-font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--sp-ink);
+    margin: 0 0 0.2rem;
+    line-height: 1.3;
+}
+
+body.student-portal-scene-page .student-portal-page__title {
+    color: var(--sp-red-dark);
+}
+
+.student-portal-page__lead {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--sp-muted);
+    line-height: 1.45;
+}
+
+/* ── Алерты и действия ── */
+.student-portal-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: var(--sp-radius);
+    font-size: 0.875rem;
+    line-height: 1.45;
+    margin-bottom: 0.85rem;
+    border: 1px solid;
+}
+
+.student-portal-alert i {
+    margin-top: 0.12rem;
+    flex-shrink: 0;
+}
+
+.student-portal-alert--progress {
+    background: #f0faf3;
+    border-color: #c3e6cb;
+    color: #1e5631;
+}
+
+.student-portal-alert--progress strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.1rem;
+}
+
+.student-portal-action {
+    margin-bottom: 0.85rem;
+    text-align: center;
+}
+
+.student-portal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.5rem 1rem;
+    font-family: var(--sp-font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #fff !important;
+    background: var(--sp-red);
+    border: 1px solid var(--sp-red);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.student-portal-btn:hover {
+    background: var(--sp-red-dark);
+    border-color: var(--sp-red-dark);
+}
+
+/* ── Панели (общие с /survey/) ── */
+.student-portal-section {
+    margin-bottom: 0.75rem;
+}
+
+.student-portal-section:last-child {
+    margin-bottom: 0;
+}
+
+.student-portal-panel {
+    background: var(--sp-paper);
+    border: 1px solid var(--sp-line);
+    border-radius: var(--sp-radius);
+    overflow: hidden;
+}
+
+.student-portal-panel__head {
+    padding: 0.5rem 0.85rem;
+    background: var(--sp-red);
+    color: #fff;
+    border-bottom: none;
+    font-family: var(--sp-font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.student-portal-panel__head i {
+    margin-right: 0.35rem;
+    color: rgba(255, 255, 255, 0.92);
+    opacity: 1;
+    font-size: 0.8rem;
+}
+
+.student-portal-panel__body {
+    padding: 0.85rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--sp-text);
+}
+
+.student-portal-panel__body--flush {
+    padding: 0;
+}
+
+.student-portal-empty {
+    color: var(--sp-muted);
+    text-align: center;
+    padding: 0.85rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* ── Карточки обходных листов ── */
+.student-portal-cs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+.student-portal-cs-card {
+    background: var(--sp-paper);
+    border: 1px solid var(--sp-line);
+    border-top: 3px solid var(--sp-red);
+    border-radius: var(--sp-radius);
+    overflow: hidden;
+}
+
+.student-portal-cs-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    padding: 0.55rem 0.85rem;
+    background: var(--sp-red-soft);
+    border-bottom: 1px solid rgba(160, 14, 7, 0.1);
+}
+
+.student-portal-cs-card__title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--sp-ink);
+}
+
+.student-portal-cs-card__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+}
+
+.student-portal-cs-card__status--done {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.student-portal-cs-card__status--active {
+    background: var(--sp-red-soft);
+    color: var(--sp-red);
+}
+
+.student-portal-stages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.student-portal-stages__item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.8125rem;
+    border-bottom: 1px solid #f2f2f2;
+}
+
+.student-portal-stages__item:last-child {
+    border-bottom: none;
+}
+
+.student-portal-stages__name {
+    color: var(--sp-text);
+    line-height: 1.4;
+}
+
+.student-portal-stages__meta {
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 0.78rem;
+    color: var(--sp-muted);
+    max-width: 45%;
+}
+
+.student-portal-stages__icon--done {
+    color: #2e7d32;
+}
+
+.student-portal-stages__icon--wait {
+    color: var(--sp-red);
+}
+
+/* ── Legacy aliases ── */
+.student-content .student-page-title {
+    display: none;
+}
+
+.student-panel,
+.student-panel__head,
+.student-panel__body,
+.student-alert,
+.student-action-bar {
+    /* replaced by student-portal-* */
+}
+
+@media (max-width: 991px) {
+    .home {
+        padding-top: 58px;
+        background: #ececec;
+    }
+
+    body.student-portal-scene-page .home {
+        background: transparent;
+    }
+
+    .home > .container {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-bottom: 1.25rem;
+    }
+
+    body.student-portal-scene-page .home > .container {
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-top: 0.65rem;
+        padding-bottom: 1rem;
+    }
+
+    body.student-portal-scene-page .student-portal-page {
+        padding: 0.85rem 0.9rem 0.95rem;
+        border-radius: 8px;
+    }
+
+    .header_container {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: 0 1px 0 #e5e5e5;
+    }
+
+    .header_content {
+        height: auto !important;
+        min-height: 50px;
+        padding: 0.3rem 0;
+    }
+
+    .logo_text {
+        font-family: inherit;
+        font-size: 1.35rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-left: 0;
+        color: #222;
+    }
+
+    .logo_text span {
+        color: #A00E07;
+    }
+
+    .student-hamburger {
+        margin-left: auto !important;
+        width: 38px;
+        height: 38px;
+        border-width: 1px;
+        border-radius: 6px;
+    }
+
+    .header_search_container {
+        display: none;
+    }
+
+    .student-portal-page__title {
+        font-size: 1.15rem;
+    }
+
+    .student-portal-cs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 992px) {
+    body.student-portal-scene-page .student-portal-page {
+        padding: 1.1rem 1.2rem 1.15rem;
+    }
+
+    .student-portal-page__title {
+        font-size: 1.3rem;
+    }
+}

@@ -29,6 +29,8 @@ from stepper.services import StepperService
 from utils.caches import EntityCache
 from utils.filter_pagination import Pagination
 from utils.myedu import MyEduService
+from student.stepper_survey import enrich_students_with_survey_status
+from student.services import SurveyService
 
 
 def route(request):
@@ -67,6 +69,7 @@ def cs_index(request):
     paginator = Pagination(request, students_qs or [])
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
+    enrich_students_with_survey_status(students, id_key="student_id")
 
     faculties = request.bs.active_faculties()
 
@@ -581,6 +584,27 @@ def create_clearance_sheet(request):
 
 
 @with_stepper
+def student_survey_submissions(request):
+    myedu_id = request.GET.get("myedu_id")
+    if not myedu_id:
+        return HttpResponse("Не указан ID студента.", status=400)
+
+    submissions = list(SurveyService.submissions_for_myedu_id(myedu_id))
+    student_fio = submissions[0].student_fio if submissions else request.GET.get("fio", "")
+
+    return render(
+        request,
+        "teachers/steppers/_survey_submissions_modal.html",
+        {
+            "submissions": submissions,
+            "student_fio": student_fio,
+            "myedu_id": myedu_id,
+            "edu_year": SurveyService.commission_edu_year(),
+        },
+    )
+
+
+@with_stepper
 def cs(request):
     request.session['cs-nav'] = 'cs'
     search_query = request.GET.get('search')
@@ -589,6 +613,7 @@ def cs(request):
     paginator = Pagination(request, students_qs)
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
+    enrich_students_with_survey_status(students, id_key="myedu_id")
 
     stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
                                          stage__is_mandatory=True).select_related('stage')
@@ -635,6 +660,7 @@ def cs_done(request):
     paginator = Pagination(request, students_qs)
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
+    enrich_students_with_survey_status(students, id_key="myedu_id")
 
     context = {
         "title": "История - Перечень завершенных обходных листов",
@@ -653,6 +679,7 @@ def cs_debt_stage(request, stage):
     paginator = Pagination(request, students_qs)
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
+    enrich_students_with_survey_status(students, id_key="myedu_id")
 
     stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
                                          stage__is_mandatory=True).select_related('stage')
@@ -681,6 +708,7 @@ def cs_status(request):
     paginator = Pagination(request, students_qs)
     page_number = request.GET.get('page', 1)
     students = paginator.pagination(page_number)
+    enrich_students_with_survey_status(students, id_key="myedu_id")
 
     stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
                                          stage__is_mandatory=True).select_related('stage')

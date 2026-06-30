@@ -1,0 +1,68 @@
+{% extends 'students/survey_admin/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container survey-admin">
+        {% include 'utils/_messages.html' %}
+        {% if 'stsurve' in DB_ROLES %}
+            <div class="survey-page-header">
+                <div class="d-flex justify-content-between align-items-start flex-wrap">
+                    <div class="mb-2 mb-md-0">
+                        <h3>{{ survey.title }}</h3>
+                        {% if survey.description %}
+                            <p class="mb-1 mt-2">{{ survey.description }}</p>
+                        {% endif %}
+                        <small>
+                            Статус:
+                            {% if survey.is_active %}
+                                <span class="survey-status-active">активна</span>
+                            {% else %}
+                                <span class="survey-status-inactive">неактивна</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div>
+                        <a href="{% url 'students:survey-admin-completions' survey_id=survey.id %}"
+                           class="btn btn-sm btn-survey-muted">
+                            <i class="fas fa-users"></i> Прошедшие
+                        </a>
+                        <button type="button"
+                                class="btn btn-sm btn-survey-outline survey-ajax-load"
+                                data-url="{% url 'students:survey-admin-edit' survey_id=survey.id %}">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </button>
+                        <button type="button"
+                                class="btn btn-sm btn-survey-outline survey-ajax-load"
+                                data-url="{% url 'students:survey-admin-delete' survey_id=survey.id %}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="survey-panel">
+                <div class="survey-panel-toolbar d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 font-weight-bold">Вопросы и варианты ответов</h5>
+                    <button type="button"
+                            class="btn btn-sm btn-survey survey-ajax-load"
+                            data-url="{% url 'students:survey-question-create' survey_id=survey.id %}">
+                        <i class="fas fa-plus"></i> Добавить вопрос
+                    </button>
+                </div>
+                <div class="p-3" id="questions-container">
+                    {% include 'students/survey_admin/_questions_list.html' %}
+                </div>
+            </div>
+
+            <a href="{% url 'students:survey-admin-list' %}" class="btn btn-sm btn-survey-outline mt-3">
+                <i class="fas fa-arrow-left"></i> К списку анкет
+            </a>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/survey_admin.js' %}"></script>
+{% endblock %}

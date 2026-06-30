@@ -1,0 +1,28 @@
+{% for survey in surveys %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td><strong>{{ survey.title }}</strong></td>
+        <td class="text-center">
+            {% if survey.is_active %}
+                <span class="badge-active on"><i class="fas fa-check-circle"></i> Да</span>
+            {% else %}
+                <span class="badge-active off"><i class="fas fa-minus-circle"></i> Нет</span>
+            {% endif %}
+        </td>
+        <td>{{ survey.created_at|date:"d.m.Y H:i" }}</td>
+        <td>
+            <a href="{% url 'students:survey-admin-detail' survey_id=survey.id %}"
+               class="btn btn-sm btn-survey">
+                <i class="fas fa-cog"></i> Управление
+            </a>
+            <a href="{% url 'students:survey-admin-completions' survey_id=survey.id %}"
+               class="btn btn-sm btn-survey-muted">
+                <i class="fas fa-users"></i> Прошедшие
+            </a>
+        </td>
+    </tr>
+{% empty %}
+    <tr>
+        <td colspan="5" class="survey-empty">Анкеты не созданы. Нажмите «Создать анкету».</td>
+    </tr>
+{% endfor %}

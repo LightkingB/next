@@ -1,0 +1,44 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{% block title %}Вход | ОшГУ{% endblock %}</title>
+    <link rel="icon" type="image/png" href="https://oshsu.kg/main/images/logo/white-logo.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}">
+    <link rel="stylesheet" href="{% static 'css/portal_login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app_modals.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="portal-page-body">
+{% include 'component/portal_scene.html' %}
+
+<div id="loading-overlay" class="portal-login__overlay" aria-hidden="true">
+    <i class="fas fa-spinner fa-spin fa-2x"></i>
+    <span>Загрузка…</span>
+</div>
+
+<main class="portal-login">
+    <div class="portal-login__card">
+        <div class="portal-login__logo">
+            <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" alt="ОшГУ" width="200" height="56">
+        </div>
+        {% block login_heading %}{% endblock %}
+        {% include 'utils/_messages.html' %}
+        {% block login_content %}{% endblock %}
+        {% block login_switch %}{% endblock %}
+    </div>
+</main>
+
+{% block modals %}{% endblock %}
+
+{% include 'component/footer.html' %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

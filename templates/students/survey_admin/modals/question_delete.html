@@ -1,0 +1,20 @@
+<form method="post" action="{{ action_url }}" class="survey-ajax-form survey-modal survey-modal--danger">
+    {% csrf_token %}
+    <div class="modal-header survey-modal-header">
+        <div class="survey-modal-header-text">
+            <h5 class="modal-title">Удаление вопроса</h5>
+        </div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body survey-modal-body">
+        <p class="survey-modal-message mb-0">
+            Удалить вопрос <strong>«{{ question.text }}»</strong> и все его варианты ответов?
+        </p>
+    </div>
+    <div class="modal-footer survey-modal-footer">
+        <button type="button" class="btn btn-sm survey-btn-cancel" data-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-sm btn-survey">Удалить</button>
+    </div>
+</form>

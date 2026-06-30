@@ -1,62 +1,84 @@
 {% extends 'admin_base.html' %}
 {% load static i18n crispy_forms_tags cms_tags %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h4 class="text-center mb-0">Модуль#1: Академическая справка</h4>
-        <hr/>
+    <div class="container admin-module">
+        <header class="admin-module__header">
+            <h1><i class="fas fa-file-alt" aria-hidden="true"></i>Академическая справка</h1>
+            <p>Регистрация, проверка и учёт академических справок по факультетам</p>
+        </header>
+
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
             {% include 'utils/_messages.html' %}
-            <div class="row">
-                <div class="col-md-8">
-                    <form action="" method="post">
+
+            <div class="admin-module__panel">
+                <div class="admin-module__panel-head">
+                    <span><i class="fas fa-search" aria-hidden="true"></i>Проверка справки</span>
+                </div>
+                <div class="admin-module__panel-body">
+                    <form action="" method="post" class="admin-module__verify-row">
                         {% csrf_token %}
-                        <div class="form-row">
-                            <div class="col-md-8">
-                                <label for="transcript_number" class="form-label">Введите № академической справки для
-                                    проверки</label>
-                                <input type="text" class="form-control form-control-sm" id="custom_transcript_number"
-                                       name="transcript_number" placeholder="12345678"/>
-                            </div>
-                            <div class="col-md-2">
-                                <input type="submit" class="btn btn-sm btn-danger mt-md-4 mt-2" value="Поиск"/>
-                            </div>
+                        <div class="admin-module__verify-field">
+                            <label for="custom_transcript_number">№ академической справки</label>
+                            <input type="text" class="form-control form-control-sm" id="custom_transcript_number"
+                                   name="transcript_number" placeholder="12345678"/>
+                        </div>
+                        <div class="admin-module__verify-actions">
+                            <button type="submit" class="btn btn-sm admin-module__btn-primary">
+                                <i class="fas fa-search" aria-hidden="true"></i> Поиск
+                            </button>
+                            <a href="{% url 'bsadmin:all-faculty-academic-transcript-reports' %}"
+                               class="btn btn-sm admin-module__btn-report">
+                                <i class="fas fa-chart-bar" aria-hidden="true"></i> Общий отчёт
+                            </a>
                         </div>
                     </form>
                 </div>
-                <div class="col-md-4">
-                    <div class="mt-md-4 text-right">
-                        <a href="{% url 'bsadmin:all-faculty-academic-transcript-reports' %}"
-                           class="btn btn-sm btn-success">Общий
-                            отчёт</a>
+            </div>
+
+            <div class="admin-module__panel">
+                <div class="admin-module__panel-head">
+                    <span><i class="fas fa-university" aria-hidden="true"></i>{% trans 'Список факультетов' %}</span>
+                </div>
+                <div class="admin-module__panel-body admin-module__panel-body--grid">
+                    <div class="admin-module__grid">
+                        {% for faculty in faculties %}
+                            <a href="{% url 'bsadmin:faculty-transcript-category' faculty_id=faculty.id %}"
+                               class="admin-module__faculty-card">
+                                <span class="admin-module__faculty-card__title">
+                                    {{ faculty.title }} ({{ faculty.short_name }})
+                                </span>
+                                <ul class="admin-module__faculty-card__stats">
+                                    <li>
+                                        <span>{% trans 'Зарегистр. справки' %}</span>
+                                        <strong>{{ faculty.total_documents }}</strong>
+                                    </li>
+                                    <li>
+                                        <span>{% trans 'Использованные справки' %}</span>
+                                        <strong>{{ faculty.used_documents }}</strong>
+                                    </li>
+                                    <li>
+                                        <span>{% trans 'Бракованные справки' %}</span>
+                                        <strong>{{ faculty.defective_documents }}</strong>
+                                    </li>
+                                </ul>
+                            </a>
+                        {% endfor %}
                     </div>
                 </div>
-            </div>
-            <hr/>
-            <h4 class="text-center mb-0">{% trans 'Список факультетов' %}</h4>
-            <hr/>
-            <div class="row">
-                {% for faculty in faculties %}
-                    <div class="col-md-3 mb-2">
-                        <div class="card h-100 d-flex flex-column">
-                            <div class="card-body flex-grow-1">
-                                <a href="{% url 'bsadmin:faculty-transcript-category' faculty_id=faculty.id %}">
-                                    <h6 class="card-title mb-0">{{ faculty.title }} ({{ faculty.short_name }})</h6>
-                                </a>
-                                {% trans 'Зарегистр. справки:' %} {{ faculty.total_documents }} <br/>
-                                {% trans 'Использванные справки:' %} {{ faculty.used_documents }} <br/>
-                                {% trans 'Бракованные справки:' %} {{ faculty.defective_documents }} <br/>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
             </div>
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 {% endblock %}
+
 {% block scripts %}
     <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", function () {

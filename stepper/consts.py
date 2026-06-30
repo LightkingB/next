@@ -14,3 +14,5 @@ TEACHER_CS = "teacher"
 
 CS_PROCESS = 1
 CS_FINISHED = 2
+
+STSURVE = "stsurve"

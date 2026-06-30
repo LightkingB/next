@@ -1,91 +1,99 @@
 {% extends 'admin_base.html' %}
-{% load static i18n crispy_forms_tags %}
+{% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
-            <h3 class="text-center mb-0"> {% trans 'Список сотрудников с указанием ролей' %}</h3>
-            <hr/>
-            <div class="row">
-                <div class="col-md-10">
-                    <form action="" method="get">
-                        <div class="row">
-                            <div class="col-md-4">
-                                {{ form.fio|as_crispy_field }}
-                            </div>
-                            <div class="col-md-4">
-                                {{ form.template_stage|as_crispy_field }}
-                            </div>
+    <div class="container admin-module">
+        <header class="admin-module__header">
+            <h1><i class="fas fa-user-tag" aria-hidden="true"></i>{{ title }}</h1>
+            <p>Назначение сотрудников на этапы обходного листа</p>
+        </header>
 
-                            <div class="col-md-2">
-                                <div class="mt-4">
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-search"></i> Поиск
-                                    </button>
-                                </div>
-                            </div>
+        {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
+            {% include 'utils/_messages.html' %}
+
+            <div class="admin-module__panel">
+                <div class="admin-module__panel-head admin-module__panel-head--split">
+                    <span><i class="fas fa-search" aria-hidden="true"></i>Поиск сотрудников</span>
+                    <a href="{% url 'stepper:stage-employee-create' %}" class="admin-module__panel-head-action">
+                        <i class="fas fa-plus" aria-hidden="true"></i> Добавить
+                    </a>
+                </div>
+                <div class="admin-module__panel-body">
+                    <form action="" method="get" class="admin-module__filter-grid admin-module__filter-grid--stage">
+                        <div class="admin-module__filter-field">
+                            <label for="id_fio">ФИО</label>
+                            {{ form.fio }}
+                        </div>
+                        <div class="admin-module__filter-field">
+                            <label for="id_template_stage">Шаг</label>
+                            {{ form.template_stage }}
+                        </div>
+                        <div class="admin-module__filter-actions">
+                            <button type="submit" class="btn btn-sm admin-module__btn-primary">
+                                <i class="fas fa-search" aria-hidden="true"></i> Поиск
+                            </button>
                         </div>
                     </form>
                 </div>
-                <div class="col-md-2 text-right mt-0 mt-md-4">
-                    <a href="{% url 'stepper:stage-employee-create' %}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-save"></i> Добавить
-                    </a>
+                <div class="admin-module__table-zone">
+                    <div class="table-responsive">
+                        <table class="table table-sm admin-module__table mb-0">
+                            <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">{% trans 'ФИО' %}</th>
+                                <th scope="col">{% trans 'Роль' %}</th>
+                                <th scope="col">{% trans 'Операции' %}</th>
+                                <th scope="col">{% trans 'Активный' %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for obj in employees %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        {{ obj.employee.full_name }} ({{ obj.employee.email }})
+                                    </td>
+                                    <td>{{ obj.template_stage.stage.name }}</td>
+                                    <td>
+                                        <a href="{% url 'stepper:stage-employee-update' pk=obj.id %}"
+                                           class="admin-module__table-action">
+                                            <i class="fas fa-user-edit" aria-hidden="true"></i>
+                                            {% trans 'Редактировать' %}
+                                        </a>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if obj.is_active %}
+                                            <span class="admin-module__status admin-module__status--yes" title="{% trans 'Активный' %}">
+                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                            </span>
+                                        {% else %}
+                                            <span class="admin-module__status admin-module__status--no" title="{% trans 'Неактивный' %}">
+                                                <i class="fas fa-minus-circle" aria-hidden="true"></i>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr class="admin-module__empty">
+                                    <td colspan="100%" class="text-center">
+                                        <small>{% trans 'Пусто' %}</small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <hr/>
 
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-md"
-                       id="table-ajax-facultytranscript">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">{% trans 'ФИО' %}</th>
-                        <th scope="col">{% trans 'Роль' %}</th>
-                        <th scope="col">{% trans 'Операции' %}</th>
-                        <th scope="col">{% trans 'Активный' %}</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for obj in employees %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>
-                                {{ obj.employee.full_name }} ({{ obj.employee.email }})
-                            </td>
-                            <td>{{ obj.template_stage.stage.name }}</td>
-                            <td>
-                                <a href="{% url 'stepper:stage-employee-update' pk=obj.id %}"
-                                   class="btn btn-sm btn-primary">
-                                    <i class="fas fa-user-edit"></i> Редактировать
-                                </a>
-                            </td>
-                            <td>
-                                {% if obj.is_active %}
-                                    <div class="text-center text-success">
-                                        <i class="fas fa-check-circle"></i>
-                                    </div>
-                                {% else %}
-                                    <div class="text-center text-danger">
-                                        <i class="fas fa-minus-circle"></i>
-                                    </div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-
-                {% include "utils/_pagination.html" with page_obj=employees %}
-            </div>
+            {% include "utils/_pagination.html" with page_obj=employees %}
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}

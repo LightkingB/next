@@ -1,0 +1,110 @@
+{% extends 'students/base.html' %}
+{% load static %}
+
+{% block title %}<title>Анкетирование | ОшГУ</title>{% endblock %}
+
+{% block body_class %}student-portal-scene-page{% endblock %}
+
+{% block portal_scene %}
+    {% include 'component/portal_scene.html' with warm=True %}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/survey_student.css' %}"/>
+{% endblock %}
+
+{% block content %}
+    <div class="student-portal-page survey-student survey-student--index">
+        <header class="student-portal-page__head">
+            <h1 class="student-portal-page__title">Анкетирование</h1>
+            <p class="student-portal-page__lead">Активные анкеты и история ваших прохождений</p>
+        </header>
+
+        <section class="student-portal-section">
+            <div class="student-portal-panel">
+                <div class="student-portal-panel__head">
+                    <i class="fas fa-poll" aria-hidden="true"></i>Активные анкеты
+                </div>
+                <div class="student-portal-panel__body student-portal-panel__body--flush">
+                    {% if not edu_year %}
+                        <div class="survey-student-message survey-student-message--warn survey-student-message--inset">
+                            Не найден учебный год с активной комиссией. Прохождение анкет временно недоступно.
+                        </div>
+                    {% elif active_items %}
+                        <div class="survey-student-entries survey-student-entries--flat">
+                            {% for item in active_items %}
+                                <article class="survey-student-entry">
+                                    <div class="survey-student-entry__body">
+                                        <h3 class="survey-student-entry__title">{{ item.survey.title }}</h3>
+                                        {% if item.survey.description %}
+                                            <p class="survey-student-entry__desc">{{ item.survey.description }}</p>
+                                        {% endif %}
+                                        <p class="survey-student-entry__meta">Учебный год: {{ edu_year.title }}</p>
+                                    </div>
+                                    <div class="survey-student-entry__aside">
+                                        {% if item.is_completed %}
+                                            <span class="survey-student-entry__status survey-student-entry__status--done">
+                                                Заполнена
+                                                {% if item.submission %}
+                                                    <time datetime="{{ item.submission.submitted_at|date:'c' }}">
+                                                        {{ item.submission.submitted_at|date:"d.m.Y H:i" }}
+                                                    </time>
+                                                {% endif %}
+                                            </span>
+                                        {% elif item.can_take %}
+                                            <span class="survey-student-entry__status survey-student-entry__status--open">Доступна</span>
+                                            <a href="{% url 'students:survey-take' survey_id=item.survey.id %}"
+                                               class="survey-student-entry__btn">
+                                                Пройти анкету
+                                            </a>
+                                        {% else %}
+                                            <span class="survey-student-entry__status survey-student-entry__status--muted">Нет вопросов</span>
+                                        {% endif %}
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="survey-student-message survey-student-message--inset">
+                            В настоящее время нет активных анкет.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="student-portal-section">
+            <div class="student-portal-panel">
+                <div class="student-portal-panel__head">
+                    <i class="fas fa-history" aria-hidden="true"></i>История моих прохождений
+                </div>
+                <div class="student-portal-panel__body student-portal-panel__body--flush">
+                    {% if history %}
+                        <div class="survey-student-entries survey-student-entries--flat">
+                            {% for submission in history %}
+                                <article class="survey-student-entry survey-student-entry--history">
+                                    <div class="survey-student-entry__body">
+                                        <h3 class="survey-student-entry__title">{{ submission.survey.title }}</h3>
+                                        <p class="survey-student-entry__meta">
+                                            {{ submission.edu_year.title }}
+                                            <span class="survey-student-entry__meta-sep" aria-hidden="true">|</span>
+                                            {{ submission.submitted_at|date:"d.m.Y H:i" }}
+                                        </p>
+                                    </div>
+                                    <div class="survey-student-entry__aside">
+                                        <span class="survey-student-entry__status survey-student-entry__status--done">Пройдена</span>
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="survey-student-message survey-student-message--inset">
+                            Вы ещё не проходили анкеты.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}

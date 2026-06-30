@@ -1,0 +1,17 @@
+{% if submission.answers.all %}
+    <dl class="survey-completion-qa">
+        {% regroup submission.answers.all by question as grouped_answers %}
+        {% for group in grouped_answers %}
+            <div class="survey-completion-qa__row">
+                <dt>{{ group.grouper.text }}</dt>
+                <dd>
+                    {% for answer in group.list %}
+                        <span class="survey-completion-qa__tag">{{ answer.option.text }}</span>
+                    {% endfor %}
+                </dd>
+            </div>
+        {% endfor %}
+    </dl>
+{% else %}
+    <p class="survey-completion-qa__empty mb-0">Ответы не сохранены.</p>
+{% endif %}

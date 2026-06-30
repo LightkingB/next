@@ -1,0 +1,46 @@
+{% extends 'students/survey_admin/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+    <div class="container survey-admin">
+        {% include 'utils/_messages.html' %}
+        {% if 'stsurve' in DB_ROLES %}
+            <div class="survey-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h3><i class="fas fa-poll mr-2"></i>Анкетирование</h3>
+                    <small>Управление анкетами и вопросами</small>
+                </div>
+                <button type="button"
+                        class="btn btn-sm btn-survey survey-ajax-load mt-2 mt-md-0"
+                        data-url="{% url 'students:survey-admin-list' %}">
+                    <i class="fas fa-plus"></i> Создать анкету
+                </button>
+            </div>
+
+            <div class="survey-panel">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm survey-table" id="surveys-table">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Название</th>
+                            <th>Активна</th>
+                            <th>Создана</th>
+                            <th>Операции</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% include 'students/survey_admin/_surveys_table.html' %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            {% include 'utils/_access.html' %}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/survey_admin.js' %}"></script>
+{% endblock %}
