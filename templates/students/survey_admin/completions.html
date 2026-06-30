@@ -151,6 +151,8 @@
                         <tr>
                             <th>#</th>
                             <th>ФИО</th>
+                            <th>MyEDU ID</th>
+                            <th>Телефон</th>
                             <th>Логин</th>
                             <th>Группа</th>
                             <th>Дата прохождения</th>
@@ -163,10 +165,19 @@
                         {% for submission in page_obj %}
                             <tr class="survey-completion-row">
                                 <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-                                <td>
-                                    {{ submission.student_fio }}
+                                <td>{{ submission.student_fio }}</td>
+                                <td class="text-nowrap">
                                     {% if submission.user.myedu_id %}
-                                        <span class="survey-myedu-id">({{ submission.user.myedu_id }})</span>
+                                        {{ submission.user.myedu_id }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="text-nowrap">
+                                    {% if submission.user.student_profile %}
+                                        {{ submission.user.student_profile.work_phone|default:"—" }}
+                                    {% else %}
+                                        —
                                     {% endif %}
                                 </td>
                                 <td>{{ submission.student_login }}</td>
@@ -195,7 +206,7 @@
                             <tr class="survey-completion-answers-row"
                                 id="submission-answers-{{ submission.id }}"
                                 hidden>
-                                <td colspan="8">
+                                <td colspan="10">
                                     <div class="survey-completion-answers-panel">
                                         <div class="survey-completion-answers-panel__title">
                                             Ответы — {{ submission.student_fio }}
@@ -209,7 +220,7 @@
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="8" class="survey-empty">
+                                <td colspan="10" class="survey-empty">
                                     {% if filters_active %}
                                         По выбранным фильтрам записей нет.
                                     {% else %}

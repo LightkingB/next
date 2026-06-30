@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Count, Prefetch
+from django.db.models import Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -389,22 +389,19 @@ def survey_completions(request, survey_id):
     is_pdf = request.GET.get("export") == "pdf"
     include_answers = request.GET.get("include_answers") == "1"
 
-    survey_qs = Survey.objects.filter(pk=survey_id)
-    if is_pdf and include_answers:
-        from student.models import SurveyQuestion
+    survey = get_object_or_404(
+        SurveyExportService.survey_for_export(
+            survey_id,
+            include_questions=is_pdf and include_answers,
+        ),
+        pk=survey_id,
+    )
 
-        survey_qs = survey_qs.prefetch_related(
-            Prefetch(
-                "questions",
-                queryset=SurveyQuestion.objects.order_by("order", "id"),
-            )
-        )
+    if is_pdf:
+        filter_meta = {"edu_years": None, "groups": []}
     else:
-        survey_qs = survey_qs.only("id", "title")
+        filter_meta = SurveyExportService.completions_filter_meta(survey)
 
-    survey = get_object_or_404(survey_qs, pk=survey_id)
-
-    filter_meta = SurveyExportService.completions_filter_meta(survey)
     filter_params = {
         k: v
         for k, v in request.GET.items()
@@ -424,7 +421,6 @@ def survey_completions(request, survey_id):
         survey,
         cleaned,
         prefetch_answers=is_pdf and include_answers,
-        for_list=not is_pdf,
     )
 
     if is_pdf:
@@ -483,23 +479,18 @@ def survey_completions(request, survey_id):
 @with_stepper
 @survey_admin_required
 def survey_submission_answers(request, survey_id, submission_id):
-    from student.models import SurveyQuestion
-
     survey = get_object_or_404(
-        Survey.objects.prefetch_related(
-            Prefetch(
-                "questions",
-                queryset=SurveyQuestion.objects.order_by("order", "id"),
-            )
-        ).only("id"),
+        SurveyExportService.survey_for_export(survey_id, include_questions=True),
         pk=survey_id,
     )
     submission = get_object_or_404(
         SurveyExportService.submission_with_answers_queryset(survey_id),
         pk=submission_id,
     )
-    questions = list(survey.questions.all())
-    answer_rows = SurveyExportService.ordered_answer_rows(submission, questions)
+    questions = SurveyExportService.get_ordered_questions(survey)
+    answer_rows = SurveyExportService.ordered_answer_rows(
+        submission, questions, answers=submission.answers.all()
+    )
     html = render_to_string(
         "students/survey_admin/_submission_answers_panel.html",
         {

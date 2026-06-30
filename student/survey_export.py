@@ -13,7 +13,53 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from student.models import Survey, SurveyAnswerItem, SurveySubmission
+from student.models import Survey, SurveyAnswerItem, SurveyQuestion, SurveySubmission
+
+_SUBMISSION_LIST_FIELDS = (
+    "id",
+    "student_fio",
+    "student_login",
+    "student_group",
+    "submitted_at",
+    "edu_year_id",
+    "edu_year__id",
+    "edu_year__title",
+    "user_id",
+    "user__myedu_id",
+    "user__student_profile__work_phone",
+)
+
+_ANSWER_ITEM_FIELDS = (
+    "id",
+    "submission_id",
+    "question_id",
+    "option_id",
+    "custom_text",
+    "question__id",
+    "question__text",
+    "question__order",
+    "option__id",
+    "option__text",
+    "option__order",
+)
+
+
+def _answers_prefetch():
+    return Prefetch(
+        "answers",
+        queryset=SurveyAnswerItem.objects.select_related("question", "option")
+        .only(*_ANSWER_ITEM_FIELDS)
+        .order_by("question__order", "option__order"),
+    )
+
+
+def _questions_prefetch():
+    return Prefetch(
+        "questions",
+        queryset=SurveyQuestion.objects.order_by("order", "id").only(
+            "id", "survey_id", "text", "order"
+        ),
+    )
 
 FONT_REGULAR = "SurveyDejaVu"
 FONT_BOLD = "SurveyDejaVu-Bold"
@@ -170,8 +216,17 @@ def _myedu_id(submission):
     return "—"
 
 
+def _work_phone(submission):
+    user = getattr(submission, "user", None)
+    if user:
+        profile = getattr(user, "student_profile", None)
+        if profile and profile.work_phone:
+            return profile.work_phone
+    return "—"
+
+
 def _summary_col_widths(total_width):
-    fractions = (0.03, 0.20, 0.09, 0.18, 0.11, 0.14, 0.12)
+    fractions = (0.03, 0.19, 0.08, 0.11, 0.16, 0.12, 0.15, 0.16)
     return [total_width * part for part in fractions]
 
 
@@ -203,50 +258,61 @@ def _safe_filename_part(value, fallback="export"):
 
 class SurveyExportService:
     @staticmethod
-    def completions_filter_meta(survey):
-        """Учебные годы и группы для фильтра (2 запроса к данным)."""
-        from stepper.models import EduYear
-
-        subs = SurveySubmission.objects.filter(survey=survey)
-        edu_year_ids = subs.values_list("edu_year_id", flat=True).distinct()
-        edu_years = EduYear.objects.filter(pk__in=edu_year_ids).only("id", "title").order_by("-title")
-        groups = list(
-            subs.exclude(student_group="")
-            .values_list("student_group", flat=True)
-            .distinct()
-            .order_by("student_group")
-        )
-        return {"edu_years": edu_years, "groups": groups}
+    def survey_for_export(survey_id, *, include_questions=False):
+        qs = Survey.objects.filter(pk=survey_id).only("id", "title")
+        if include_questions:
+            qs = qs.prefetch_related(_questions_prefetch())
+        return qs
 
     @staticmethod
-    def filtered_submissions(survey, cleaned_data=None, *, prefetch_answers=False, for_list=False):
-        qs = SurveySubmission.objects.filter(survey=survey).order_by("-submitted_at")
+    def get_ordered_questions(survey):
+        prefetched = getattr(survey, "_prefetched_objects_cache", None)
+        if prefetched is not None and "questions" in prefetched:
+            return list(prefetched["questions"])
+        return list(
+            SurveyQuestion.objects.filter(survey_id=survey.pk)
+            .order_by("order", "id")
+            .only("id", "text", "order")
+        )
 
-        if for_list:
-            qs = qs.select_related("edu_year", "user").only(
-                "id",
-                "student_fio",
-                "student_login",
-                "student_group",
-                "submitted_at",
-                "edu_year_id",
-                "edu_year__id",
-                "edu_year__title",
-                "user_id",
-                "user__myedu_id",
-            )
-        else:
-            qs = qs.select_related("edu_year", "user")
+    @staticmethod
+    def completions_filter_meta(survey):
+        """Учебные годы и группы для фильтра (2 запроса)."""
+        from stepper.models import EduYear
+
+        rows = (
+            SurveySubmission.objects.filter(survey=survey)
+            .values_list("edu_year_id", "student_group")
+            .distinct()
+        )
+        edu_year_ids = set()
+        groups = set()
+        for edu_year_id, group in rows:
+            edu_year_ids.add(edu_year_id)
+            if group:
+                groups.add(group)
+        edu_years = (
+            EduYear.objects.filter(pk__in=edu_year_ids).only("id", "title").order_by("-title")
+            if edu_year_ids
+            else EduYear.objects.none()
+        )
+        return {"edu_years": edu_years, "groups": sorted(groups)}
+
+    @staticmethod
+    def _submissions_base_queryset(survey):
+        return (
+            SurveySubmission.objects.filter(survey=survey)
+            .order_by("-submitted_at")
+            .select_related("edu_year", "user", "user__student_profile")
+            .only(*_SUBMISSION_LIST_FIELDS)
+        )
+
+    @staticmethod
+    def filtered_submissions(survey, cleaned_data=None, *, prefetch_answers=False):
+        qs = SurveyExportService._submissions_base_queryset(survey)
 
         if prefetch_answers:
-            qs = qs.prefetch_related(
-                Prefetch(
-                    "answers",
-                    queryset=SurveyAnswerItem.objects.select_related("question", "option").order_by(
-                        "question__order", "option__order"
-                    ),
-                )
-            )
+            qs = qs.prefetch_related(_answers_prefetch())
 
         if not cleaned_data:
             return qs
@@ -277,29 +343,8 @@ class SurveyExportService:
 
     @staticmethod
     def submission_with_answers_queryset(survey_id):
-        return (
-            SurveySubmission.objects.filter(survey_id=survey_id)
-            .select_related("edu_year", "user")
-            .only(
-                "id",
-                "student_fio",
-                "student_login",
-                "student_group",
-                "submitted_at",
-                "edu_year_id",
-                "edu_year__id",
-                "edu_year__title",
-                "user_id",
-                "user__myedu_id",
-            )
-            .prefetch_related(
-                Prefetch(
-                    "answers",
-                    queryset=SurveyAnswerItem.objects.select_related("question", "option").order_by(
-                        "question__order", "option__order"
-                    ),
-                )
-            )
+        return SurveyExportService._submissions_base_queryset(Survey(pk=survey_id)).prefetch_related(
+            _answers_prefetch()
         )
 
     @staticmethod
@@ -354,24 +399,23 @@ class SurveyExportService:
         return line
 
     @staticmethod
-    def ordered_answer_rows(submission, questions):
+    def ordered_answer_rows(submission, questions, answers=None):
         answers_by_question = defaultdict(list)
-        for answer in submission.answers.all():
+        source = answers if answers is not None else submission.answers.all()
+        for answer in source:
             if answer.custom_text:
                 answers_by_question[answer.question_id].append(answer.custom_text)
             elif answer.option_id:
                 answers_by_question[answer.question_id].append(answer.option.text)
 
-        rows = []
-        for index, question in enumerate(questions, start=1):
-            rows.append(
-                {
-                    "number": index,
-                    "question": question,
-                    "answers": answers_by_question.get(question.id, []),
-                }
-            )
-        return rows
+        return [
+            {
+                "number": index,
+                "question": question,
+                "answers": answers_by_question.get(question.id, []),
+            }
+            for index, question in enumerate(questions, start=1)
+        ]
 
     @classmethod
     def build_pdf(cls, survey, submissions, cleaned_data, include_answers=False, submissions_count=None):
@@ -431,7 +475,7 @@ class SurveyExportService:
         story.extend(cls._build_summary_table(submissions, styles, table_width=doc.width))
 
         if include_answers:
-            questions = list(survey.questions.order_by("order", "id"))
+            questions = cls.get_ordered_questions(survey)
             story.append(Spacer(1, 5 * mm))
             story.append(_paragraph("Ответы по студентам", styles["section"]))
             for index, submission in enumerate(submissions, start=1):
@@ -451,7 +495,7 @@ class SurveyExportService:
 
     @staticmethod
     def _build_summary_table(submissions, styles, table_width):
-        header_labels = ["#", "ФИО", "MyEDU ID", "Логин", "Группа", "Дата", "Уч. год"]
+        header_labels = ["#", "ФИО", "MyEDU ID", "Телефон", "Логин", "Группа", "Дата", "Уч. год"]
         rows = [[_paragraph(label, styles["table_header"]) for label in header_labels]]
         for index, submission in enumerate(submissions, start=1):
             rows.append(
@@ -459,6 +503,7 @@ class SurveyExportService:
                     _paragraph(str(index), styles["table_cell_center"]),
                     _paragraph(submission.student_fio, styles["table_cell"]),
                     _paragraph(_myedu_id(submission), styles["table_cell_center"]),
+                    _paragraph(_work_phone(submission), styles["table_cell"]),
                     _paragraph(submission.student_login, styles["table_cell"]),
                     _paragraph(submission.student_group or "—", styles["table_cell"]),
                     _paragraph(submission.submitted_at.strftime("%d.%m.%Y %H:%M"), styles["table_cell"]),
@@ -493,14 +538,14 @@ class SurveyExportService:
             [
                 _paragraph("Логин", styles["meta_label"]),
                 _paragraph(submission.student_login, styles["meta_value"]),
-                _paragraph("Группа", styles["meta_label"]),
-                _paragraph(submission.student_group or "—", styles["meta_value"]),
+                _paragraph("Телефон", styles["meta_label"]),
+                _paragraph(_work_phone(submission), styles["meta_value"]),
             ],
             [
+                _paragraph("Группа", styles["meta_label"]),
+                _paragraph(submission.student_group or "—", styles["meta_value"]),
                 _paragraph("Учебный год", styles["meta_label"]),
                 _paragraph(submission.edu_year.title, styles["meta_value"]),
-                _paragraph("", styles["meta_value"]),
-                _paragraph("", styles["meta_value"]),
             ],
         ]
         info_table = Table(info_rows, colWidths=[table_width * 0.1, table_width * 0.4, table_width * 0.1, table_width * 0.4])
@@ -529,7 +574,9 @@ class SurveyExportService:
                 _paragraph("Ответ", styles["table_header"]),
             ]
         ]
-        for row in SurveyExportService.ordered_answer_rows(submission, questions):
+        for row in SurveyExportService.ordered_answer_rows(
+            submission, questions, answers=submission.answers.all()
+        ):
             answer_rows.append(
                 [
                     _paragraph(str(row["number"]), styles["table_cell_center"]),

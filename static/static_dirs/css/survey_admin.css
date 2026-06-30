@@ -5,6 +5,12 @@
     --survey-text: #333;
     --survey-muted: #666;
     --survey-radius: 4px;
+    --survey-admin-width: 1320px;
+}
+
+.survey-admin.container {
+    max-width: var(--survey-admin-width);
+    width: 100%;
 }
 
 /* ── Modals: формы анкет (базовый shell — app_modals.css) ── */
@@ -450,6 +456,8 @@ button.badge-active.survey-badge-toggle:hover {
 
 .survey-admin .survey-table {
     margin-bottom: 0;
+    width: 100%;
+    table-layout: auto;
 }
 
 .survey-admin .survey-table thead th {
