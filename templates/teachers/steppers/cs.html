@@ -1,183 +1,211 @@
 {% extends 'admin_base.html' %}
-{% load static i18n custom_filters %}
+{% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_cs.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <!-- Индикатор загрузки -->
-    <div id="loading-overlay" style="
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.4);
-        z-index: 9999;
-        text-align: center;
-        color: white;
-        font-size: 24px;
-        padding-top: 20%;
-    ">
-        <i class="fas fa-spinner fa-spin"></i> Загрузка...
+    <div id="loading-overlay" class="stepper-cs__overlay" aria-hidden="true">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <span>Загрузка…</span>
     </div>
-    <div class="container-fluid">
-        <h4 class="text-center mb-0">{{ title }}</h4>
-        {% if stage %}
-            <h5 class="text-primary text-center">Текущий шаг: {{ current_stage.stage }}</h5>
-        {% endif %}
-        <hr/>
 
+    <div class="container-fluid stepper-cs">
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
-            <div class="row">
-                <div class="col-md-4">
-                    <form action="" method="get">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <input type="text" name="search" class="form-control form-control-sm mb-2 mb-md-0"
-                                       placeholder="Введите ФИО | уникальный номер"/>
-                            </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-search"></i> Поиск
-                                </button>
-                            </div>
+            <header class="stepper-cs__header">
+                <h1><i class="fas fa-clipboard-list" aria-hidden="true"></i>{{ title }}</h1>
+                <div class="stepper-cs__header-meta">
+                    {% if students.paginator.count %}
+                        <span><strong>{{ students.paginator.count }}</strong> записей</span>
+                    {% endif %}
+                    {% if stage and current_stage %}
+                        <span class="stepper-cs__header-badge">
+                            Этап: {{ current_stage.stage }}
+                        </span>
+                    {% endif %}
+                    {% if status_filter == 'done' or history %}
+                        <span class="stepper-cs__header-badge">Завершённые</span>
+                    {% elif status_filter == 1 %}
+                        <span class="stepper-cs__header-badge">В процессе</span>
+                    {% endif %}
+                </div>
+            </header>
 
-                        </div>
+            <div class="stepper-cs__toolbar">
+                <div class="stepper-cs__toolbar-top">
+                    <form action="" method="get" class="stepper-cs__search-form">
+                        <input type="text"
+                               id="cs-search"
+                               name="search"
+                               class="form-control form-control-sm"
+                               value="{{ request.GET.search }}"
+                               placeholder="ФИО или MyEDU ID"/>
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-search" aria-hidden="true"></i> Найти
+                        </button>
                     </form>
                 </div>
-                <div class="col-md-6 mt-3 mt-md-0">
-                    <div class="btn-group" role="group" aria-label="Basic mixed styles example">
-                        {% if not history %}
-                            <a type="button" href="{% url 'stepper:cs' %}"
-                               class="btn btn-sm btn-primary">
-                                <i class="fas fa-globe-europe"></i> Все
-                            </a>
-                        {% endif %}
-                        {% for stage in stages %}
-                            {% get_stage_button_class forloop.counter as stage_classes %}
-
-                            <a type="button" href="{% url 'stepper:cs-stage' stage=stage.stage.id %}"
-                               class="btn btn-sm {{ stage_classes.btn_class }}">
-                                <i class="{{ stage_classes.icon_class }}"></i> {{ stage.stage.name }}
-                            </a>
-                        {% endfor %}
+                <div class="stepper-cs__toolbar-bottom">
+                    <div class="stepper-cs__toolbar-group">
+                        <span class="stepper-cs__toolbar-label">Статус</span>
+                        <a href="{% url 'stepper:cs' %}{% if request.GET.search %}?search={{ request.GET.search|urlencode }}{% endif %}"
+                           class="stepper-cs__chip{% if status_filter|default:'all' == 'all' %} is-active{% endif %}">Все</a>
+                        <form method="post"
+                              action="{% url 'stepper:cs-status' %}{% if request.GET.search %}?search={{ request.GET.search|urlencode }}{% endif %}"
+                              class="stepper-cs__chip-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="1">
+                            <button type="submit" class="stepper-cs__chip{% if status_filter == 1 %} is-active{% endif %}">В процессе</button>
+                        </form>
+                        <a href="{% url 'stepper:cs-done' %}{% if request.GET.search %}?search={{ request.GET.search|urlencode }}{% endif %}"
+                           class="stepper-cs__chip{% if status_filter == 'done' %} is-active{% endif %}">Завершённые</a>
                     </div>
-                </div>
-                <div class="col-md-2">
-                    <form action="{% url 'stepper:cs-status' %}" method="post" id="status-form">
-                        {% csrf_token %}
-                        <select class="custom-select custom-select-sm" name="status" id="status-select">
-                            <option value="" {% if not request.POST.status %}selected{% endif %}>---------</option>
-                            <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>В процессе</option>
-                            <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>Завершенные
-                            </option>
-                        </select>
-                    </form>
+                    {% if not history and stages %}
+                        <div class="stepper-cs__toolbar-group">
+                            <span class="stepper-cs__toolbar-label">Этап</span>
+                            <a href="{% url 'stepper:cs' %}{% if request.GET.search %}?search={{ request.GET.search|urlencode }}{% endif %}"
+                               class="stepper-cs__chip{% if not stage %} is-active{% endif %}">Все</a>
+                            {% for stage_item in stages %}
+                                <a href="{% url 'stepper:cs-stage' stage=stage_item.stage.id %}{% if request.GET.search %}?search={{ request.GET.search|urlencode }}{% endif %}"
+                                   class="stepper-cs__chip{% if stage and current_stage and current_stage.stage.id == stage_item.stage.id %} is-active{% endif %}">
+                                    {{ stage_item.stage.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-            <hr/>
+
             {% include 'utils/_messages.html' %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-md">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">ФИО</th>
-                        <th scope="col" title="Анкетирование">Анк.</th>
-                        <th scope="col">Отчёт (Печать)</th>
-                        <th scope="col">Об. лист №</th>
 
-                        <th scope="col">Приказ</th>
-                        <th scope="col">Дата приказа</th>
-                        <th scope="col">Статус</th>
-                        <th scope="col">Факультет</th>
-                        <th scope="col">Специальность</th>
-                        {% if not history %}
-                            <th scope="col">Текущий шаг</th>
-                            <th scope="col">Удалить</th>
-                        {% else %}
-                            <th scope="col">Направление</th>
-                            <th scope="col">Статус (время)</th>
-                        {% endif %}
-                        <th scope="col">История</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for student in students %}
+            <div class="stepper-cs__results">
+                <div class="stepper-cs__table-wrap">
+                    <table class="stepper-cs__table">
+                        <thead>
                         <tr>
-                            <td>{{ forloop.counter }}</td>
-                            {% if not history %}
-                                <td>
-                                    <a href="{% url 'stepper:cs-detail' myedu_id=student.myedu_id %}"
-                                       class="preloader-link">
-                                        {{ student.fio }} ({{ student.myedu_id }})
-                                    </a>
-                                </td>
-                                {% include 'teachers/steppers/_survey_status_cell.html' with myedu_id=student.myedu_id student_fio=student.fio survey_has_submissions=student.survey_has_submissions survey_submission_count=student.survey_submission_count %}
-                                <td class="text-center">
-                                    <a href="{% url 'stepper:cs-report' cs_id=student.id %}"
-                                       class="btn btn-sm btn-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                                <td>{{ student.id }}</td>
-                                <td>{{ student.order|default:"-" }}</td>
-                                <td>{{ student.order_date|default:"-" }}</td>
-                                <td>{{ student.order_status|default:"-" }}</td>
-                                <td>{{ student.faculty_name }}</td>
-                                <td>{{ student.spec_name }}</td>
-                                <td>{{ student.current_stage|default_if_none:"-" }}</td>
-                                <td class="text-center">
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger"
-                                            data-toggle="modal"
-                                            data-target="#deleteModal"
-                                            data-cs-id="{{ student.id }}"
-                                            data-student-name="{{ student.fio|default:"-" }}">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </td>
-                            {% else %}
-                                <td>
-                                    <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}"
-                                       class="preloader-link">
-                                        {{ student.student_fio }} ({{ student.myedu_id }})
-                                    </a>
-                                </td>
-                                {% include 'teachers/steppers/_survey_status_cell.html' with myedu_id=student.myedu_id student_fio=student.student_fio survey_has_submissions=student.survey_has_submissions survey_submission_count=student.survey_submission_count %}
-                                <td class="text-center">
-                                    <a href="{% url 'stepper:cs-report' cs_id=student.id %}"
-                                       class="btn btn-sm btn-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                                <td>{{ student.id }}</td>
-                                <td>{{ student.order|default:"-" }}</td>
-                                <td>{{ student.order_date|default:"-" }}</td>
-                                <td>{{ student.order_status|default:"-" }}</td>
-                                <td>{{ student.myedu_faculty }}</td>
-                                <td>{{ student.myedu_spec }}</td>
-                                <td>{{ student.get_type_choices_display }}</td>
-                                <td class="text-success">{{ student.completed_at|date:"d-m-Y H:i" }} <i
-                                        class="fas fa-check-square"></i></td>
-                            {% endif %}
-                            <td class="text-center">
-                                <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}"
-                                   class="btn btn-sm btn-success">
-                                    <i class="fas fa-seedling"></i>
-                                </a>
-                            </td>
-
-
+                            <th class="stepper-cs__col-num">№</th>
+                            <th class="stepper-cs__col-status">Обходной</th>
+                            <th class="stepper-cs__col-student">Студент</th>
+                            <th class="stepper-cs__col-report">Отчёт</th>
+                            <th class="stepper-cs__col-survey" title="Анкетирование">Анкета</th>
+                            <th class="stepper-cs__col-order">Приказ</th>
+                            <th class="stepper-cs__col-actions">Действия</th>
                         </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% include "utils/_pagination.html" with page_obj=students %}
+                        </thead>
+                            <tbody>
+                            {% for student in students %}
+                                <tr class="stepper-cs__row--clickable"
+                                    tabindex="0"
+                                    role="link"
+                                    {% if not history %}
+                                        data-href="{% url 'stepper:cs-detail' myedu_id=student.myedu_id %}"
+                                    {% else %}
+                                        data-href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}"
+                                    {% endif %}
+                                    aria-label="Открыть карточку студента">
+                                    <td class="stepper-cs__col-num">{{ students.start_index|add:forloop.counter0 }}</td>
+
+                                    {% if not history %}
+                                        {% include 'teachers/steppers/_cs_completion_status_cell.html' with completed_at=student.completed_at current_stage=student.current_stage %}
+                                    {% else %}
+                                        {% include 'teachers/steppers/_cs_completion_status_cell.html' with completed_at=student.completed_at current_stage=None %}
+                                    {% endif %}
+
+                                    <td class="stepper-cs__col-student">
+                                        {% if not history %}
+                                            <span class="stepper-cs__student-name">{{ student.fio }}</span>
+                                            <span class="stepper-cs__student-line">
+                                                <strong>{{ student.myedu_id }}</strong>
+                                                · лист №{{ student.id }}
+                                                {% if student.faculty_name %} · {{ student.faculty_name }}{% endif %}
+                                            </span>
+                                            {% if student.spec_name %}
+                                                <span class="stepper-cs__student-line" title="{{ student.spec_name }}">{{ student.spec_name }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="stepper-cs__student-name">{{ student.student_fio }}</span>
+                                            <span class="stepper-cs__student-line">
+                                                <strong>{{ student.myedu_id }}</strong>
+                                                · лист №{{ student.id }}
+                                                {% if student.myedu_faculty %} · {{ student.myedu_faculty }}{% endif %}
+                                            </span>
+                                            {% if student.myedu_spec %}
+                                                <span class="stepper-cs__student-line" title="{{ student.myedu_spec }}">{{ student.myedu_spec }}</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+
+                                    {% include 'teachers/steppers/_cs_report_cell.html' with cs_id=student.id %}
+
+                                    {% if not history %}
+                                        {% include 'teachers/steppers/_survey_status_cell.html' with myedu_id=student.myedu_id student_fio=student.fio survey_has_submissions=student.survey_has_submissions survey_submission_count=student.survey_submission_count %}
+                                    {% else %}
+                                        {% include 'teachers/steppers/_survey_status_cell.html' with myedu_id=student.myedu_id student_fio=student.student_fio survey_has_submissions=student.survey_has_submissions survey_submission_count=student.survey_submission_count %}
+                                    {% endif %}
+
+                                    <td class="stepper-cs__col-order">
+                                        {% if student.order or student.order_date %}
+                                            <span class="stepper-cs__order-num">
+                                                {% if student.order %}№{{ student.order }}{% endif %}{% if student.order_date %} · {{ student.order_date }}{% endif %}
+                                            </span>
+                                        {% else %}
+                                            <span class="stepper-cs__order-sub">—</span>
+                                        {% endif %}
+                                        {% if student.order_status %}
+                                            <span class="stepper-cs__order-sub" title="{{ student.order_status }}">{{ student.order_status }}</span>
+                                        {% endif %}
+                                        {% if history and student.get_type_choices_display %}
+                                            <span class="stepper-cs__order-sub">{{ student.get_type_choices_display }}</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="stepper-cs__col-actions">
+                                        <div class="stepper-cs__actions">
+                                            <a href="{% url 'stepper:cs-history' myedu_id=student.myedu_id cs_id=student.id %}"
+                                               class="stepper-cs__action"
+                                               title="История">
+                                                <i class="fas fa-history" aria-hidden="true"></i>
+                                            </a>
+                                            {% if not history %}
+                                                <button type="button"
+                                                        class="stepper-cs__action stepper-cs__action--danger"
+                                                        title="Удалить"
+                                                        data-toggle="modal"
+                                                        data-target="#deleteModal"
+                                                        data-cs-id="{{ student.id }}"
+                                                        data-student-name="{{ student.fio|default:'-' }}">
+                                                    <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="stepper-cs__empty">
+                                        По вашему запросу записей не найдено
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                </div>
+                <div class="stepper-cs__footer">
+                    <div class="stepper-cs__footer-meta">
+                        {% if students.paginator.count %}
+                            Показано <strong>{{ students.start_index }}–{{ students.end_index }}</strong>
+                            из <strong>{{ students.paginator.count }}</strong>
+                            · страница <strong>{{ students.number }}</strong> из <strong>{{ students.paginator.num_pages }}</strong>
+                        {% else %}
+                            Записей нет
+                        {% endif %}
+                    </div>
+                    {% include "utils/_pagination.html" with page_obj=students %}
+                </div>
             </div>
         {% else %}
             {% include 'utils/_access.html' %}
@@ -186,7 +214,6 @@
 
     {% include 'teachers/steppers/_survey_modal_shell.html' %}
 
-    <!-- Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
          aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -201,7 +228,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        Вы уверены, что хотите удалить обходной лист: <strong id="modal-student-name"></strong>?
+                        Удалить обходной лист студента <strong id="modal-student-name"></strong>?
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
@@ -215,48 +242,56 @@
 
 {% block scripts %}
     <script src="{% static 'js/stepper_survey.js' %}"></script>
-    <script type="text/javascript">
-        $('#deleteModal').on('show.bs.modal', function (event) {
-            let button = $(event.relatedTarget);
-            let csId = button.data('cs-id');
-            let studentName = button.data('student-name');
+    <script>
+        (function () {
+            $('#deleteModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#modal-cs-id').val(button.data('cs-id'));
+                modal.find('#modal-student-name').text(button.data('student-name'));
+            });
 
-            let modal = $(this);
-            modal.find('#modal-cs-id').val(csId);
-            modal.find('#modal-student-name').text(studentName);
-        });
+            var overlay = document.getElementById('loading-overlay');
+            var clicked = false;
 
-        document.getElementById('status-select').addEventListener('change', function () {
-            document.getElementById('status-form').submit();
-        });
+            function showLoader() {
+                if (clicked || !overlay) return;
+                clicked = true;
+                overlay.classList.add('is-visible');
+                document.body.style.pointerEvents = 'none';
+            }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const overlay = document.getElementById('loading-overlay');
-            const preloaderLinks = document.querySelectorAll('.preloader-link');
-            let clicked = false;
+            document.querySelectorAll('.stepper-cs__row--clickable').forEach(function (row) {
+                row.addEventListener('click', function (e) {
+                    if (e.target.closest('a, button, .survey-status-btn, .stepper-cs__action, .stepper-cs__report-btn')) {
+                        return;
+                    }
+                    var href = row.getAttribute('data-href');
+                    if (!href) return;
+                    showLoader();
+                    window.location = href;
+                });
 
-            overlay.style.display = 'none';
-            document.body.style.pointerEvents = 'auto';
+                row.addEventListener('keydown', function (e) {
+                    if (e.key !== 'Enter' && e.key !== ' ') return;
+                    e.preventDefault();
+                    row.click();
+                });
+            });
 
-            preloaderLinks.forEach(link => {
+            document.querySelectorAll('.stepper-cs__col-actions a.stepper-cs__action').forEach(function (link) {
                 link.addEventListener('click', function (e) {
-                    if (clicked) return;
-                    clicked = true;
-
-                    overlay.style.display = 'block';
-                    document.body.style.pointerEvents = 'none';
-                    overlay.style.pointerEvents = 'auto';
+                    e.stopPropagation();
                 });
             });
 
             window.addEventListener('pageshow', function (event) {
-                if (event.persisted) {
-                    overlay.style.display = 'none';
-                    document.body.style.pointerEvents = 'auto';
+                if (event.persisted && overlay) {
+                    overlay.classList.remove('is-visible');
+                    document.body.style.pointerEvents = '';
                     clicked = false;
                 }
             });
-        });
+        })();
     </script>
 {% endblock %}
-

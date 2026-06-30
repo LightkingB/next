@@ -1,15 +1,18 @@
-<td class="text-center survey-status-cell">
+<td class="text-center survey-status-cell stepper-cs__col-survey">
     {% if survey_has_submissions %}
         <button type="button"
-                class="btn btn-link p-0 border-0 survey-status-btn text-success"
+                class="stepper-cs__survey-pill stepper-cs__survey-pill--clickable survey-status-btn"
                 title="Прошёл анкетирование ({{ survey_submission_count }})"
+                aria-label="Анкета пройдена — показать ответы"
                 data-myedu-id="{{ myedu_id }}"
                 data-fio="{{ student_fio }}">
-            <i class="fas fa-check-circle fa-lg"></i>
+            <i class="fas fa-check-circle stepper-cs__survey-icon stepper-cs__survey-icon--ok" aria-hidden="true"></i>
+            <span class="stepper-cs__survey-label stepper-cs__survey-label--ok">Пройдена</span>
         </button>
     {% else %}
-        <span class="text-muted" title="Анкетирование не пройдено">
-            <i class="fas fa-minus-circle"></i>
+        <span class="stepper-cs__survey-pill" title="Анкетирование не пройдено">
+            <i class="fas fa-times-circle stepper-cs__survey-icon stepper-cs__survey-icon--no" aria-hidden="true"></i>
+            <span class="stepper-cs__survey-label">Нет</span>
         </span>
     {% endif %}
 </td>

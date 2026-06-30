@@ -1,0 +1,21 @@
+<td class="stepper-cs__col-status">
+    <div class="stepper-cs__status-block">
+        {% if completed_at %}
+            <span class="stepper-cs__badge stepper-cs__badge--done">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                Завершён
+            </span>
+            <span class="stepper-cs__badge-meta">{{ completed_at|date:"d.m.Y H:i" }}</span>
+        {% else %}
+            <span class="stepper-cs__badge stepper-cs__badge--progress">
+                <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+                В процессе
+            </span>
+            {% if current_stage %}
+                <span class="stepper-cs__badge-meta">
+                    Этап: {% if current_stage.stage %}{{ current_stage.stage.name }}{% else %}{{ current_stage }}{% endif %}
+                </span>
+            {% endif %}
+        {% endif %}
+    </div>
+</td>

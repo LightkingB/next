@@ -703,8 +703,21 @@ table.no-border th {
 }
 
 /* ── Stepper: анкетирование в таблице ── */
-.survey-status-cell .survey-status-btn {
+.survey-status-cell .survey-status-btn,
+.stepper-cs__survey-btn {
     line-height: 1;
+}
+
+.stepper-cs__survey-ok,
+.survey-status-cell .text-success {
+    color: #1e7e34;
+    font-size: 1.1rem;
+}
+
+.stepper-cs__survey-no,
+.survey-status-cell .text-muted {
+    color: #adb5bd;
+    font-size: 1rem;
 }
 
 /* stepper survey modal: см. app_modals.css */

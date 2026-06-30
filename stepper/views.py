@@ -17,7 +17,7 @@ from django.views.decorators.http import require_POST
 from bsadmin.consts import STADMIN
 from bsadmin.models import Faculty, Speciality
 from stepper.choices import TypeChoices
-from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS, CS_PROCESS, VC_URL
+from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS, CS_PROCESS, CS_FINISHED, VC_URL
 from stepper.decorators import with_stepper
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
@@ -622,7 +622,8 @@ def cs(request):
         "title": "Перечень сформированных обходных листов",
         "students": students,
         "navbar": "cs",
-        "stages": stages
+        "stages": stages,
+        "status_filter": "all",
     }
     return render(request, "teachers/steppers/cs.html", context)
 
@@ -666,7 +667,8 @@ def cs_done(request):
         "title": "История - Перечень завершенных обходных листов",
         "students": students,
         "navbar": "cs-done",
-        "history": True
+        "history": True,
+        "status_filter": "done",
     }
     return render(request, "teachers/steppers/cs.html", context)
 
@@ -691,7 +693,8 @@ def cs_debt_stage(request, stage):
         "navbar": "cs",
         "stage": True,
         "current_stage": current_stage,
-        "stages": stages
+        "stages": stages,
+        "status_filter": "all",
     }
     return render(request, "teachers/steppers/cs.html", context)
 
@@ -701,7 +704,15 @@ def cs_status(request):
     search_query = request.GET.get('search')
     status_param = CS_PROCESS
     if request.method == "POST":
-        status_param = int(request.POST.get("status", CS_PROCESS))
+        raw_status = (request.POST.get("status") or "").strip()
+        if not raw_status:
+            return redirect("stepper:cs")
+        try:
+            status_param = int(raw_status)
+        except (TypeError, ValueError):
+            return redirect("stepper:cs")
+        if status_param not in (CS_PROCESS, CS_FINISHED):
+            return redirect("stepper:cs")
 
     students_qs = request.stepper.get_clearance_sheets_status(status_param, search_query)
 
@@ -718,7 +729,8 @@ def cs_status(request):
         "students": students,
         "navbar": "cs",
         "stage": True,
-        "stages": stages
+        "stages": stages,
+        "status_filter": status_param,
     }
     return render(request, "teachers/steppers/cs.html", context)
 
