@@ -118,6 +118,30 @@ def _pdf_styles():
             alignment=1,
             wordWrap="CJK",
         ),
+        "meta_label": ParagraphStyle(
+            "SurveyMetaLabel",
+            parent=styles["Normal"],
+            fontName=FONT_BOLD,
+            fontSize=8,
+            leading=11,
+            textColor=colors.HexColor("#555555"),
+        ),
+        "meta_value": ParagraphStyle(
+            "SurveyMetaValue",
+            parent=styles["Normal"],
+            fontName=FONT_REGULAR,
+            fontSize=8,
+            leading=11,
+            textColor=colors.HexColor("#333333"),
+        ),
+        "muted": ParagraphStyle(
+            "SurveyMuted",
+            parent=styles["Normal"],
+            fontName=FONT_REGULAR,
+            fontSize=8,
+            leading=10,
+            textColor=colors.HexColor("#888888"),
+        ),
     }
 
 
@@ -130,9 +154,46 @@ def _paragraph(text, style):
     return Paragraph(_escape_pdf_text(text), style)
 
 
+def _answers_cell(texts, styles):
+    if not texts:
+        return _paragraph("—", styles["muted"])
+    if len(texts) == 1:
+        return _paragraph(texts[0], styles["table_cell"])
+    bullets = "<br/>".join(f"• {_escape_pdf_text(item)}" for item in texts)
+    return Paragraph(bullets, styles["table_cell"])
+
+
+def _myedu_id(submission):
+    user = getattr(submission, "user", None)
+    if user and getattr(user, "myedu_id", None):
+        return str(user.myedu_id)
+    return "—"
+
+
 def _summary_col_widths(total_width):
-    fractions = (0.04, 0.28, 0.24, 0.14, 0.16, 0.14)
+    fractions = (0.03, 0.20, 0.09, 0.18, 0.11, 0.14, 0.12)
     return [total_width * part for part in fractions]
+
+
+def _answers_col_widths(total_width):
+    fractions = (0.05, 0.45, 0.50)
+    return [total_width * part for part in fractions]
+
+
+def _base_table_style():
+    return TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#A00E07")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d8d8d8")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fafafa")]),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ]
+    )
 
 
 def _safe_filename_part(value, fallback="export"):
@@ -162,7 +223,7 @@ class SurveyExportService:
         qs = SurveySubmission.objects.filter(survey=survey).order_by("-submitted_at")
 
         if for_list:
-            qs = qs.select_related("edu_year").only(
+            qs = qs.select_related("edu_year", "user").only(
                 "id",
                 "student_fio",
                 "student_login",
@@ -171,6 +232,8 @@ class SurveyExportService:
                 "edu_year_id",
                 "edu_year__id",
                 "edu_year__title",
+                "user_id",
+                "user__myedu_id",
             )
         else:
             qs = qs.select_related("edu_year", "user")
@@ -216,7 +279,7 @@ class SurveyExportService:
     def submission_with_answers_queryset(survey_id):
         return (
             SurveySubmission.objects.filter(survey_id=survey_id)
-            .select_related("edu_year")
+            .select_related("edu_year", "user")
             .only(
                 "id",
                 "student_fio",
@@ -226,6 +289,8 @@ class SurveyExportService:
                 "edu_year_id",
                 "edu_year__id",
                 "edu_year__title",
+                "user_id",
+                "user__myedu_id",
             )
             .prefetch_related(
                 Prefetch(
@@ -247,24 +312,66 @@ class SurveyExportService:
     def filter_summary(cleaned_data):
         parts = []
         edu_year = cleaned_data.get("edu_year")
-        parts.append(f"Учебный год: {edu_year.title if edu_year else 'все'}")
+        parts.append(edu_year.title if edu_year else "все годы")
 
         date_from = cleaned_data.get("date_from")
         date_to = cleaned_data.get("date_to")
         if date_from or date_to:
             left = date_from.strftime("%d.%m.%Y") if date_from else "…"
             right = date_to.strftime("%d.%m.%Y") if date_to else "…"
-            parts.append(f"Период: {left} — {right}")
+            parts.append(f"{left} — {right}")
         else:
-            parts.append("Период: весь")
+            parts.append("весь период")
 
         group = (cleaned_data.get("group") or "").strip()
-        parts.append(f"Группа: {group or 'все'}")
+        parts.append(group or "все группы")
 
         search = (cleaned_data.get("search") or "").strip()
-        parts.append(f"Поиск: {search or '—'}")
+        if search:
+            parts.append(f"поиск: {search}")
 
         return parts
+
+    @staticmethod
+    def filter_summary_line(cleaned_data):
+        edu_year = cleaned_data.get("edu_year")
+        year = edu_year.title if edu_year else "все годы"
+
+        date_from = cleaned_data.get("date_from")
+        date_to = cleaned_data.get("date_to")
+        if date_from or date_to:
+            left = date_from.strftime("%d.%m.%Y") if date_from else "…"
+            right = date_to.strftime("%d.%m.%Y") if date_to else "…"
+            period = f"{left} — {right}"
+        else:
+            period = "весь период"
+
+        group = (cleaned_data.get("group") or "").strip() or "все группы"
+        search = (cleaned_data.get("search") or "").strip()
+        line = f"Учебный год: {year}; период: {period}; группа: {group}"
+        if search:
+            line += f"; поиск: {search}"
+        return line
+
+    @staticmethod
+    def ordered_answer_rows(submission, questions):
+        answers_by_question = defaultdict(list)
+        for answer in submission.answers.all():
+            if answer.custom_text:
+                answers_by_question[answer.question_id].append(answer.custom_text)
+            elif answer.option_id:
+                answers_by_question[answer.question_id].append(answer.option.text)
+
+        rows = []
+        for index, question in enumerate(questions, start=1):
+            rows.append(
+                {
+                    "number": index,
+                    "question": question,
+                    "answers": answers_by_question.get(question.id, []),
+                }
+            )
+        return rows
 
     @classmethod
     def build_pdf(cls, survey, submissions, cleaned_data, include_answers=False, submissions_count=None):
@@ -286,22 +393,57 @@ class SurveyExportService:
         story = []
         story.append(_paragraph(survey.title, styles["title"]))
         story.append(_paragraph("Отчёт по прохождениям анкеты", styles["subtitle"]))
-        story.append(_paragraph(f"Сформирован: {datetime.now().strftime('%d.%m.%Y %H:%M')}", styles["subtitle"]))
-        for line in cls.filter_summary(cleaned_data):
-            story.append(_paragraph(line, styles["subtitle"]))
+        story.append(Spacer(1, 2 * mm))
+
         if submissions_count is None:
             submissions_count = len(submissions)
-        story.append(_paragraph(f"Записей: {submissions_count}", styles["subtitle"]))
-        story.append(Spacer(1, 6 * mm))
 
+        meta_rows = [
+            [
+                _paragraph("Сформирован", styles["meta_label"]),
+                _paragraph(datetime.now().strftime("%d.%m.%Y %H:%M"), styles["meta_value"]),
+            ],
+            [
+                _paragraph("Записей", styles["meta_label"]),
+                _paragraph(str(submissions_count), styles["meta_value"]),
+            ],
+            [
+                _paragraph("Параметры", styles["meta_label"]),
+                _paragraph(cls.filter_summary_line(cleaned_data), styles["meta_value"]),
+            ],
+        ]
+        meta_table = Table(meta_rows, colWidths=[doc.width * 0.14, doc.width * 0.86])
+        meta_table.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 2),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+                ]
+            )
+        )
+        story.append(meta_table)
+        story.append(Spacer(1, 5 * mm))
+
+        story.append(_paragraph("Список студентов", styles["section"]))
         story.extend(cls._build_summary_table(submissions, styles, table_width=doc.width))
 
         if include_answers:
             questions = list(survey.questions.order_by("order", "id"))
-            story.append(Spacer(1, 4 * mm))
-            story.append(_paragraph("Детализация ответов", styles["section"]))
-            for submission in submissions:
-                story.extend(cls._build_submission_answers(submission, questions, styles))
+            story.append(Spacer(1, 5 * mm))
+            story.append(_paragraph("Ответы по студентам", styles["section"]))
+            for index, submission in enumerate(submissions, start=1):
+                story.extend(
+                    cls._build_submission_answers_block(
+                        submission,
+                        questions,
+                        styles,
+                        table_width=doc.width,
+                        block_number=index,
+                    )
+                )
 
         doc.build(story)
         buffer.seek(0)
@@ -309,13 +451,14 @@ class SurveyExportService:
 
     @staticmethod
     def _build_summary_table(submissions, styles, table_width):
-        header_labels = ["#", "ФИО", "Логин", "Группа", "Дата", "Учебный год"]
+        header_labels = ["#", "ФИО", "MyEDU ID", "Логин", "Группа", "Дата", "Уч. год"]
         rows = [[_paragraph(label, styles["table_header"]) for label in header_labels]]
         for index, submission in enumerate(submissions, start=1):
             rows.append(
                 [
                     _paragraph(str(index), styles["table_cell_center"]),
                     _paragraph(submission.student_fio, styles["table_cell"]),
+                    _paragraph(_myedu_id(submission), styles["table_cell_center"]),
                     _paragraph(submission.student_login, styles["table_cell"]),
                     _paragraph(submission.student_group or "—", styles["table_cell"]),
                     _paragraph(submission.submitted_at.strftime("%d.%m.%Y %H:%M"), styles["table_cell"]),
@@ -328,49 +471,78 @@ class SurveyExportService:
 
         col_widths = _summary_col_widths(table_width)
         table = Table(rows, colWidths=col_widths, repeatRows=1)
-        table.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#A00E07")),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("ALIGN", (0, 0), (0, -1), "CENTER"),
-                    ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#cccccc")),
-                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fafafa")]),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-                    ("TOPPADDING", (0, 0), (-1, -1), 5),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-                ]
-            )
-        )
+        style = _base_table_style()
+        style.add("ALIGN", (0, 0), (0, -1), "CENTER")
+        style.add("ALIGN", (2, 0), (2, -1), "CENTER")
+        table.setStyle(style)
         return [table]
 
     @staticmethod
-    def _build_submission_answers(submission, questions, styles):
-        answers_by_question = defaultdict(list)
-        for answer in submission.answers.all():
-            answers_by_question[answer.question_id].append(answer.option.text)
-
+    def _build_submission_answers_block(submission, questions, styles, table_width, block_number):
+        header = (
+            f"{block_number}. {submission.student_fio}"
+            f" · MyEDU ID: {_myedu_id(submission)}"
+            f" · {submission.submitted_at.strftime('%d.%m.%Y %H:%M')}"
+        )
         elements = [
-            _paragraph(
-                f"{submission.student_fio} ({submission.student_login}) — "
-                f"{submission.submitted_at.strftime('%d.%m.%Y %H:%M')}",
-                styles["student"],
-            )
+            Spacer(1, 3 * mm),
+            _paragraph(header, styles["student"]),
         ]
+
+        info_rows = [
+            [
+                _paragraph("Логин", styles["meta_label"]),
+                _paragraph(submission.student_login, styles["meta_value"]),
+                _paragraph("Группа", styles["meta_label"]),
+                _paragraph(submission.student_group or "—", styles["meta_value"]),
+            ],
+            [
+                _paragraph("Учебный год", styles["meta_label"]),
+                _paragraph(submission.edu_year.title, styles["meta_value"]),
+                _paragraph("", styles["meta_value"]),
+                _paragraph("", styles["meta_value"]),
+            ],
+        ]
+        info_table = Table(info_rows, colWidths=[table_width * 0.1, table_width * 0.4, table_width * 0.1, table_width * 0.4])
+        info_table.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                    ("TOPPADDING", (0, 0), (-1, -1), 1),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
+                ]
+            )
+        )
+        elements.append(info_table)
+        elements.append(Spacer(1, 2 * mm))
 
         if not questions:
             elements.append(_paragraph("В анкете нет вопросов.", styles["body"]))
             return elements
 
-        for question in questions:
-            selected = answers_by_question.get(question.id, [])
-            answer_text = ", ".join(selected) if selected else "—"
-            elements.append(
-                _paragraph(f"{question.text}: {answer_text}", styles["body"])
+        answer_rows = [
+            [
+                _paragraph("№", styles["table_header"]),
+                _paragraph("Вопрос", styles["table_header"]),
+                _paragraph("Ответ", styles["table_header"]),
+            ]
+        ]
+        for row in SurveyExportService.ordered_answer_rows(submission, questions):
+            answer_rows.append(
+                [
+                    _paragraph(str(row["number"]), styles["table_cell_center"]),
+                    _paragraph(row["question"].text, styles["table_cell"]),
+                    _answers_cell(row["answers"], styles),
+                ]
             )
 
-        elements.append(Spacer(1, 2 * mm))
+        answers_table = Table(answer_rows, colWidths=_answers_col_widths(table_width), repeatRows=1)
+        answers_style = _base_table_style()
+        answers_style.add("ALIGN", (0, 0), (0, -1), "CENTER")
+        answers_table.setStyle(answers_style)
+        elements.append(answers_table)
         return elements
 
     @classmethod

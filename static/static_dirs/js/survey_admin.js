@@ -50,11 +50,17 @@
     $form.find("#survey-option-add").prop("disabled", $rows.length >= OPTION_MAX);
   }
 
+  function toggleOptionsBlock($form) {
+    const isText = $form.find("#id_question_type").val() === "text";
+    $form.find("#survey-options-block").toggle(!isText);
+  }
+
   function initQuestionOptionsForm($form) {
     if (!$form.length) {
       return;
     }
     renumberOptions($form);
+    toggleOptionsBlock($form);
   }
 
   $(document).on("click", ".survey-ajax-load", function (event) {
@@ -134,5 +140,9 @@
     }
     $(this).closest(".survey-option-row").remove();
     renumberOptions($form);
+  });
+
+  $(document).on("change", "#id_question_type", function () {
+    toggleOptionsBlock($(this).closest(".survey-question-form"));
   });
 })(jQuery);

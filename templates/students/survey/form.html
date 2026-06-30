@@ -25,20 +25,33 @@
             <form method="post" id="survey-form" class="survey-student-form-layout">
                 {% csrf_token %}
                 <div class="survey-student-form-scroll">
+                    <div class="survey-student-quality-notice survey-student-quality-notice--inset" role="note">
+                        <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                        <p>
+                            Внимательно прочитайте каждый вопрос и отвечайте честно и содержательно.
+                            От качества ваших ответов зависит польза анкетирования для университета.
+                        </p>
+                    </div>
                     {% for field in form %}
                         <div class="survey-student-question">
                             <div class="survey-student-question-label">{{ field.label }}</div>
                             {% if field.errors %}
                                 <div class="text-danger small mb-2">{{ field.errors }}</div>
                             {% endif %}
-                            <div class="survey-student-options">
-                                {% for choice in field %}
-                                    <label class="survey-student-option">
-                                        {{ choice.tag }}
-                                        <span class="survey-student-option-text">{{ choice.choice_label }}</span>
-                                    </label>
-                                {% endfor %}
-                            </div>
+                            {% if field.field.survey_question_type == 'text' %}
+                                <div class="survey-student-text-answer">
+                                    {{ field }}
+                                </div>
+                            {% else %}
+                                <div class="survey-student-options{% if field.field.survey_question_type == 'checkbox' %} survey-student-options--checkbox{% endif %}">
+                                    {% for choice in field %}
+                                        <label class="survey-student-option">
+                                            {{ choice.tag }}
+                                            <span class="survey-student-option-text">{{ choice.choice_label }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
@@ -50,13 +63,15 @@
             </form>
         </div>
     </div>
+{% endblock %}
 
-    <div class="modal fade" id="confirmSurvey" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered survey-student-modal-dialog">
+{% block modals %}
+    <div class="modal fade" id="confirmSurvey" tabindex="-1" role="dialog" aria-labelledby="confirmSurveyTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered survey-student-modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Подтверждение</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <h5 class="modal-title" id="confirmSurveyTitle">Подтверждение</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -82,8 +97,24 @@
 
 {% block scripts %}
     <script>
-        document.getElementById('confirm-submit').addEventListener('click', function () {
-            document.getElementById('survey-form').submit();
-        });
+        (function () {
+            function initSurveyConfirmModal() {
+                var confirmBtn = document.getElementById('confirm-submit');
+                var surveyForm = document.getElementById('survey-form');
+                if (!confirmBtn || !surveyForm) {
+                    return;
+                }
+                confirmBtn.addEventListener('click', function () {
+                    confirmBtn.disabled = true;
+                    surveyForm.submit();
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initSurveyConfirmModal);
+            } else {
+                initSurveyConfirmModal();
+            }
+        })();
     </script>
 {% endblock %}

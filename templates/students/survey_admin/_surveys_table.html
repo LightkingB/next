@@ -1,13 +1,28 @@
 {% for survey in surveys %}
     <tr>
         <td>{{ forloop.counter }}</td>
-        <td><strong>{{ survey.title }}</strong></td>
-        <td class="text-center">
-            {% if survey.is_active %}
-                <span class="badge-active on"><i class="fas fa-check-circle"></i> Да</span>
-            {% else %}
-                <span class="badge-active off"><i class="fas fa-minus-circle"></i> Нет</span>
+        <td>
+            <strong>{{ survey.title }}</strong>
+            {% if survey.submission_count %}
+                <small class="survey-table-meta d-block">Прохождений: {{ survey.submission_count }}</small>
             {% endif %}
+        </td>
+        <td class="text-center">
+            <form method="post"
+                  action="{% url 'students:survey-admin-toggle-active' survey_id=survey.id %}"
+                  class="survey-inline-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'students:survey-admin-list' %}">
+                <button type="submit"
+                        class="badge-active {% if survey.is_active %}on{% else %}off{% endif %} survey-badge-toggle"
+                        title="{% if survey.is_active %}Деактивировать{% else %}Активировать{% endif %}">
+                    {% if survey.is_active %}
+                        <i class="fas fa-check-circle"></i> Да
+                    {% else %}
+                        <i class="fas fa-minus-circle"></i> Нет
+                    {% endif %}
+                </button>
+            </form>
         </td>
         <td>{{ survey.created_at|date:"d.m.Y H:i" }}</td>
         <td>

@@ -5,3 +5,4 @@ from django.utils.translation import gettext_lazy as _
 class QuestionType(models.TextChoices):
     RADIO = "radio", _("Один вариант ответа")
     CHECKBOX = "checkbox", _("Несколько вариантов ответа")
+    TEXT = "text", _("Свой вариант")

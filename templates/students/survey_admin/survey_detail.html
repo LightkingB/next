@@ -5,40 +5,69 @@
     <div class="container survey-admin">
         {% include 'utils/_messages.html' %}
         {% if 'stsurve' in DB_ROLES %}
-            <div class="survey-page-header">
-                <div class="d-flex justify-content-between align-items-start flex-wrap">
-                    <div class="mb-2 mb-md-0">
-                        <h3>{{ survey.title }}</h3>
+            <header class="survey-detail-head">
+                <a href="{% url 'students:survey-admin-list' %}" class="survey-detail-head__back">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i> К списку анкет
+                </a>
+
+                <div class="survey-detail-head__body">
+                    <div class="survey-detail-head__info">
+                        <h1 class="survey-detail-head__title">{{ survey.title }}</h1>
                         {% if survey.description %}
-                            <p class="mb-1 mt-2">{{ survey.description }}</p>
+                            <p class="survey-detail-head__desc">{{ survey.description }}</p>
                         {% endif %}
-                        <small>
-                            Статус:
+                        <div class="survey-detail-head__meta">
                             {% if survey.is_active %}
-                                <span class="survey-status-active">активна</span>
+                                <span class="survey-meta-chip survey-meta-chip--on">Активна</span>
                             {% else %}
-                                <span class="survey-status-inactive">неактивна</span>
+                                <span class="survey-meta-chip survey-meta-chip--off">Неактивна</span>
                             {% endif %}
-                        </small>
+                            {% if has_submissions %}
+                                <span class="survey-meta-chip survey-meta-chip--muted">
+                                    <i class="fas fa-users" aria-hidden="true"></i>
+                                    {{ survey.submission_count }} прохожд.
+                                </span>
+                            {% else %}
+                                <span class="survey-meta-chip survey-meta-chip--muted">Нет прохождений</span>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div>
+                </div>
+
+                <div class="survey-detail-head__toolbar">
+                    <div class="survey-detail-head__toolbar-group">
                         <a href="{% url 'students:survey-admin-completions' survey_id=survey.id %}"
-                           class="btn btn-sm btn-survey-muted">
-                            <i class="fas fa-users"></i> Прошедшие
+                           class="btn btn-sm btn-survey">
+                            <i class="fas fa-users" aria-hidden="true"></i> Прошедшие
                         </a>
                         <button type="button"
                                 class="btn btn-sm btn-survey-outline survey-ajax-load"
                                 data-url="{% url 'students:survey-admin-edit' survey_id=survey.id %}">
-                            <i class="fas fa-edit"></i> Редактировать
-                        </button>
-                        <button type="button"
-                                class="btn btn-sm btn-survey-outline survey-ajax-load"
-                                data-url="{% url 'students:survey-admin-delete' survey_id=survey.id %}">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-edit" aria-hidden="true"></i> Редактировать
                         </button>
                     </div>
+                    <div class="survey-detail-head__toolbar-group survey-detail-head__toolbar-group--end">
+                        <form method="post"
+                              action="{% url 'students:survey-admin-toggle-active' survey_id=survey.id %}"
+                              class="survey-inline-form">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn btn-sm btn-survey-outline survey-detail-head__toggle">
+                                <i class="fas fa-{% if survey.is_active %}pause{% else %}play{% endif %}" aria-hidden="true"></i>
+                                {% if survey.is_active %}Сделать неактивной{% else %}Сделать активной{% endif %}
+                            </button>
+                        </form>
+                        {% if not has_submissions %}
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger survey-ajax-load"
+                                    data-url="{% url 'students:survey-admin-delete' survey_id=survey.id %}"
+                                    title="Удалить анкету">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                            </button>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
+            </header>
 
             <div class="survey-panel">
                 <div class="survey-panel-toolbar d-flex justify-content-between align-items-center">
@@ -53,10 +82,6 @@
                     {% include 'students/survey_admin/_questions_list.html' %}
                 </div>
             </div>
-
-            <a href="{% url 'students:survey-admin-list' %}" class="btn btn-sm btn-survey-outline mt-3">
-                <i class="fas fa-arrow-left"></i> К списку анкет
-            </a>
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}

@@ -5,6 +5,7 @@ from django.db.models import Count, Exists, Max, OuterRef, Prefetch
 
 from stepper.models import EduYear
 from student.choices import QuestionType
+from student.consts import SURVEY_CUSTOM_TEXT_MAX, SURVEY_CUSTOM_TEXT_MIN
 from student.models import StudentProfile, Survey, SurveyAnswerItem, SurveyQuestion, SurveySubmission
 
 QUESTIONS_WITH_OPTIONS_PREFETCH = Prefetch(
@@ -161,6 +162,20 @@ class SurveyService:
         ).first()
 
     @staticmethod
+    def survey_has_submissions(survey):
+        return SurveySubmission.objects.filter(survey=survey).exists()
+
+    @staticmethod
+    def delete_submission(submission):
+        submission.delete()
+
+    @staticmethod
+    def toggle_survey_active(survey):
+        survey.is_active = not survey.is_active
+        survey.save(update_fields=["is_active", "updated_at"])
+        return survey.is_active
+
+    @staticmethod
     def validate_answers(survey, cleaned_data):
         errors = {}
         questions = list(survey.questions.all())
@@ -172,6 +187,16 @@ class SurveyService:
         for question in questions:
             field_name = f"q_{question.id}"
             value = cleaned_data.get(field_name)
+
+            if question.question_type == QuestionType.TEXT:
+                text = (value or "").strip() if value is not None else ""
+                if not text:
+                    errors[field_name] = "Введите ответ."
+                elif len(text) < SURVEY_CUSTOM_TEXT_MIN:
+                    errors[field_name] = "Ответ не может быть пустым."
+                elif len(text) > SURVEY_CUSTOM_TEXT_MAX:
+                    errors[field_name] = f"Ответ не должен превышать {SURVEY_CUSTOM_TEXT_MAX} символов."
+                continue
 
             if question.question_type == QuestionType.RADIO:
                 if not value:
@@ -224,6 +249,18 @@ class SurveyService:
         for question in survey.questions.all():
             field_name = f"q_{question.id}"
             value = cleaned_data.get(field_name)
+
+            if question.question_type == QuestionType.TEXT:
+                answer_items.append(
+                    SurveyAnswerItem(
+                        submission=submission,
+                        question_id=question.id,
+                        option=None,
+                        custom_text=str(value).strip(),
+                    )
+                )
+                continue
+
             if question.question_type == QuestionType.RADIO:
                 option_ids = [int(value)]
             else:

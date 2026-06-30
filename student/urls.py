@@ -10,6 +10,8 @@ from student.survey_admin_views import (
     survey_question_modal,
     survey_question_move,
     survey_submission_answers,
+    survey_submission_delete,
+    survey_admin_toggle_active,
 )
 from student.survey_views import survey_index, survey_phone, survey_take
 from student.views import sign_in_student_view, sign_out_student_view, student_cs_history_detail, student_index
@@ -27,11 +29,21 @@ urlpatterns = [
     path("survey/admin/<int:survey_id>/", survey_admin_detail, name="survey-admin-detail"),
     path("survey/admin/<int:survey_id>/edit/", survey_admin_edit, name="survey-admin-edit"),
     path("survey/admin/<int:survey_id>/delete/", survey_admin_delete, name="survey-admin-delete"),
+    path(
+        "survey/admin/<int:survey_id>/toggle-active/",
+        survey_admin_toggle_active,
+        name="survey-admin-toggle-active",
+    ),
     path("survey/admin/<int:survey_id>/completions/", survey_completions, name="survey-admin-completions"),
     path(
         "survey/admin/<int:survey_id>/completions/<int:submission_id>/answers/",
         survey_submission_answers,
         name="survey-submission-answers",
+    ),
+    path(
+        "survey/admin/<int:survey_id>/completions/<int:submission_id>/delete/",
+        survey_submission_delete,
+        name="survey-submission-delete",
     ),
     path(
         "survey/admin/<int:survey_id>/questions/create/",

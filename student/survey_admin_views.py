@@ -1,16 +1,23 @@
 from django.contrib import messages
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Prefetch
-from django.http import HttpResponse
+from django.db.models import Count, Prefetch
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 
 from stepper.decorators import with_stepper
 from student.consts import SURVEY_COMPLETIONS_PAGE_SIZE
+from student.choices import QuestionType
 from student.decorators import survey_admin_required
-from student.forms import SurveyDeleteForm, SurveyForm, SurveyQuestionModalForm, SurveySubmissionFilterForm
+from student.forms import (
+    SurveyDeleteForm,
+    SurveyForm,
+    SurveyQuestionModalForm,
+    SurveySubmissionDeleteForm,
+    SurveySubmissionFilterForm,
+)
 from student.models import Survey, SurveyOption, SurveyQuestion, SurveySubmission
 from student.services import SurveyService
 from student.survey_export import SurveyExportService
@@ -42,7 +49,7 @@ def _surveys_table_html(request, surveys):
 @with_stepper
 @survey_admin_required
 def survey_admin_list(request):
-    surveys = Survey.objects.all()
+    surveys = Survey.objects.annotate(submission_count=Count("submissions", distinct=True))
     if request.method == "POST":
         form = SurveyForm(request.POST)
         if form.is_valid():
@@ -81,13 +88,20 @@ def survey_admin_list(request):
 @survey_admin_required
 def survey_admin_detail(request, survey_id):
     survey = get_object_or_404(
-        Survey.objects.prefetch_related("questions__options"),
+        Survey.objects.annotate(submission_count=Count("submissions", distinct=True)).prefetch_related(
+            "questions__options"
+        ),
         id=survey_id,
     )
     return render(
         request,
         "students/survey_admin/survey_detail.html",
-        {"survey": survey, "navbar": "survey-admin", "title": survey.title},
+        {
+            "survey": survey,
+            "has_submissions": survey.submission_count > 0,
+            "navbar": "survey-admin",
+            "title": survey.title,
+        },
     )
 
 
@@ -126,7 +140,16 @@ def survey_admin_edit(request, survey_id):
 @survey_admin_required
 def survey_admin_delete(request, survey_id):
     survey = get_object_or_404(Survey, id=survey_id)
+    has_submissions = SurveyService.survey_has_submissions(survey)
+
     if request.method == "POST":
+        if has_submissions:
+            message = "Нельзя удалить анкету: есть прохождения студентов. Можно редактировать вопросы."
+            if is_ajax(request):
+                return JsonResponse({"form_is_valid": False, "message": message}, status=400)
+            messages.error(request, message)
+            return redirect("students:survey-admin-detail", survey_id=survey.id)
+
         form = SurveyDeleteForm(request.POST)
         if form.is_valid():
             survey.delete()
@@ -141,7 +164,12 @@ def survey_admin_delete(request, survey_id):
             html = render_modal(
                 request,
                 "students/survey_admin/modals/survey_delete.html",
-                {"form": form, "survey": survey, "action_url": request.path},
+                {
+                    "form": form,
+                    "survey": survey,
+                    "action_url": request.path,
+                    "has_submissions": has_submissions,
+                },
             )
             return ajax_error("Подтвердите удаление.", html)
     elif is_ajax(request):
@@ -149,11 +177,94 @@ def survey_admin_delete(request, survey_id):
         html = render_modal(
             request,
             "students/survey_admin/modals/survey_delete.html",
-            {"form": form, "survey": survey, "action_url": request.path},
+            {
+                "form": form,
+                "survey": survey,
+                "action_url": request.path,
+                "has_submissions": has_submissions,
+            },
         )
         return ajax_modal(html)
 
     return redirect("students:survey-admin-detail", survey_id=survey.id)
+
+
+@with_stepper
+@survey_admin_required
+def survey_admin_toggle_active(request, survey_id):
+    if request.method != "POST":
+        return redirect("students:survey-admin-detail", survey_id=survey_id)
+
+    survey = get_object_or_404(Survey, id=survey_id)
+    is_active = SurveyService.toggle_survey_active(survey)
+    message = "Анкета активирована." if is_active else "Анкета деактивирована."
+
+    if is_ajax(request):
+        return ajax_success(message, reload=True)
+
+    messages.success(request, message)
+    next_url = request.POST.get("next")
+    if next_url:
+        return redirect(next_url)
+    return redirect("students:survey-admin-detail", survey_id=survey.id)
+
+
+@with_stepper
+@survey_admin_required
+def survey_submission_delete(request, survey_id, submission_id):
+    survey = get_object_or_404(Survey, id=survey_id)
+    submission = get_object_or_404(
+        SurveySubmission.objects.select_related("user"),
+        id=submission_id,
+        survey=survey,
+    )
+    action_url = reverse(
+        "students:survey-submission-delete",
+        kwargs={"survey_id": survey.id, "submission_id": submission.id},
+    )
+
+    if request.method == "POST":
+        form = SurveySubmissionDeleteForm(request.POST)
+        if form.is_valid():
+            student_name = submission.student_fio
+            SurveyService.delete_submission(submission)
+            message = f"Ответы студента {student_name} удалены. Анкету можно пройти заново."
+            if is_ajax(request):
+                messages.success(request, message)
+                return ajax_success(message, reload=True)
+            messages.success(request, message)
+            return redirect("students:survey-admin-completions", survey_id=survey.id)
+
+        if is_ajax(request):
+            html = render_modal(
+                request,
+                "students/survey_admin/modals/submission_delete.html",
+                {
+                    "form": form,
+                    "submission": submission,
+                    "survey": survey,
+                    "action_url": action_url,
+                },
+            )
+            return ajax_error("Подтвердите удаление ответов.", html)
+        messages.error(request, "Подтвердите удаление ответов.")
+        return redirect("students:survey-admin-completions", survey_id=survey.id)
+
+    if is_ajax(request):
+        form = SurveySubmissionDeleteForm()
+        html = render_modal(
+            request,
+            "students/survey_admin/modals/submission_delete.html",
+            {
+                "form": form,
+                "submission": submission,
+                "survey": survey,
+                "action_url": action_url,
+            },
+        )
+        return ajax_modal(html)
+
+    return redirect("students:survey-admin-completions", survey_id=survey.id)
 
 
 @with_stepper
@@ -181,12 +292,13 @@ def survey_question_modal(request, survey_id, question_id=None):
                     question.save()
                     question.options.all().delete()
 
-                SurveyOption.objects.bulk_create(
-                    [
-                        SurveyOption(question=question, text=text, order=index + 1)
-                        for index, text in enumerate(form.cleaned_data["options"])
-                    ]
-                )
+                if form.cleaned_data["question_type"] != QuestionType.TEXT:
+                    SurveyOption.objects.bulk_create(
+                        [
+                            SurveyOption(question=question, text=text, order=index + 1)
+                            for index, text in enumerate(form.cleaned_data["options"])
+                        ]
+                    )
 
             survey = Survey.objects.prefetch_related("questions__options").get(id=survey.id)
             if is_ajax(request):
@@ -371,14 +483,29 @@ def survey_completions(request, survey_id):
 @with_stepper
 @survey_admin_required
 def survey_submission_answers(request, survey_id, submission_id):
-    get_object_or_404(Survey.objects.only("id"), pk=survey_id)
+    from student.models import SurveyQuestion
+
+    survey = get_object_or_404(
+        Survey.objects.prefetch_related(
+            Prefetch(
+                "questions",
+                queryset=SurveyQuestion.objects.order_by("order", "id"),
+            )
+        ).only("id"),
+        pk=survey_id,
+    )
     submission = get_object_or_404(
         SurveyExportService.submission_with_answers_queryset(survey_id),
         pk=submission_id,
     )
+    questions = list(survey.questions.all())
+    answer_rows = SurveyExportService.ordered_answer_rows(submission, questions)
     html = render_to_string(
         "students/survey_admin/_submission_answers_panel.html",
-        {"submission": submission},
+        {
+            "submission": submission,
+            "answer_rows": answer_rows,
+        },
         request=request,
     )
     return HttpResponse(html)

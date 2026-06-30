@@ -1,4 +1,4 @@
-<form method="post" action="{{ action_url }}" class="survey-ajax-form survey-modal survey-modal--danger">
+<form method="post" action="{{ action_url }}" class="survey-ajax-form survey-modal{% if has_submissions %} survey-modal--danger{% endif %}">
     {% csrf_token %}
     <div class="modal-header survey-modal-header">
         <div class="survey-modal-header-text">
@@ -9,22 +9,33 @@
         </button>
     </div>
     <div class="modal-body survey-modal-body">
-        <p class="survey-modal-message">
-            Вы уверены, что хотите удалить анкету <strong>«{{ survey.title }}»</strong>?
-            Все вопросы и ответы студентов будут удалены безвозвратно.
-        </p>
-        <div class="survey-form-group survey-form-group--checkbox mb-0">
-            <div class="survey-checkbox-row">
-                {{ form.confirm }}
-                <label class="survey-checkbox-label" for="id_confirm">Подтверждаю удаление</label>
+        {% if has_submissions %}
+            <div class="survey-alert mb-0">
+                Анкету <strong>«{{ survey.title }}»</strong> нельзя удалить: есть прохождения студентов.
+                Вопросы и варианты ответов по-прежнему можно редактировать.
             </div>
-            {% if form.confirm.errors %}
-                <div class="survey-field-error">{{ form.confirm.errors.0 }}</div>
-            {% endif %}
-        </div>
+        {% else %}
+            <p class="survey-modal-message">
+                Вы уверены, что хотите удалить анкету <strong>«{{ survey.title }}»</strong>?
+                Все вопросы будут удалены безвозвратно.
+            </p>
+            <div class="survey-form-group survey-form-group--checkbox mb-0">
+                <div class="survey-checkbox-row">
+                    {{ form.confirm }}
+                    <label class="survey-checkbox-label" for="id_confirm">Подтверждаю удаление</label>
+                </div>
+                {% if form.confirm.errors %}
+                    <div class="survey-field-error">{{ form.confirm.errors.0 }}</div>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
     <div class="modal-footer survey-modal-footer">
-        <button type="button" class="btn btn-sm survey-btn-cancel" data-dismiss="modal">Отмена</button>
-        <button type="submit" class="btn btn-sm btn-survey">Удалить</button>
+        <button type="button" class="btn btn-sm survey-btn-cancel" data-dismiss="modal">
+            {% if has_submissions %}Закрыть{% else %}Отмена{% endif %}
+        </button>
+        {% if not has_submissions %}
+            <button type="submit" class="btn btn-sm btn-survey">Удалить</button>
+        {% endif %}
     </div>
 </form>

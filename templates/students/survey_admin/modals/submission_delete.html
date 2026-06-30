@@ -1,0 +1,36 @@
+<form method="post" action="{{ action_url }}" class="survey-ajax-form survey-modal survey-modal--danger">
+    {% csrf_token %}
+    <div class="modal-header survey-modal-header">
+        <div class="survey-modal-header-text">
+            <h5 class="modal-title">Удаление ответов</h5>
+            <p class="survey-modal-subtitle mb-0">Анкета: {{ survey.title }}</p>
+        </div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body survey-modal-body">
+        <p class="survey-modal-message mb-0">
+            Удалить ответы студента
+            <strong>{{ submission.student_fio }}</strong>
+            {% if submission.user.myedu_id %}
+                <span class="text-muted">({{ submission.user.myedu_id }})</span>
+            {% endif %}?
+            <br>
+            <span class="text-muted">Студент сможет пройти анкету заново.</span>
+        </p>
+        <div class="survey-form-group survey-form-group--checkbox mt-3 mb-0">
+            <div class="survey-checkbox-row">
+                {{ form.confirm }}
+                <label class="survey-checkbox-label" for="id_confirm">Подтверждаю удаление ответов</label>
+            </div>
+            {% if form.confirm.errors %}
+                <div class="survey-field-error">{{ form.confirm.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer survey-modal-footer">
+        <button type="button" class="btn btn-sm survey-btn-cancel" data-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-sm btn-survey">Удалить ответы</button>
+    </div>
+</form>

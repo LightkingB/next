@@ -1,17 +1,36 @@
-{% if submission.answers.all %}
-    <dl class="survey-completion-qa">
-        {% regroup submission.answers.all by question as grouped_answers %}
-        {% for group in grouped_answers %}
-            <div class="survey-completion-qa__row">
-                <dt>{{ group.grouper.text }}</dt>
-                <dd>
-                    {% for answer in group.list %}
-                        <span class="survey-completion-qa__tag">{{ answer.option.text }}</span>
-                    {% endfor %}
-                </dd>
-            </div>
+{% if answer_rows %}
+    <table class="survey-completion-answers-table">
+        <thead>
+        <tr>
+            <th scope="col">№</th>
+            <th scope="col">Вопрос</th>
+            <th scope="col">Ответ</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in answer_rows %}
+            <tr>
+                <td class="survey-completion-answers-table__num">{{ row.number }}</td>
+                <td>{{ row.question.text }}</td>
+                <td>
+                    {% if row.answers %}
+                        {% if row.answers|length > 1 %}
+                            <ul class="survey-completion-answers-table__list mb-0">
+                                {% for answer in row.answers %}
+                                    <li>{{ answer }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            {{ row.answers.0 }}
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+            </tr>
         {% endfor %}
-    </dl>
+        </tbody>
+    </table>
 {% else %}
     <p class="survey-completion-qa__empty mb-0">Ответы не сохранены.</p>
 {% endif %}

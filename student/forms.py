@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from stepper.models import EduYear
 from student.choices import QuestionType
 from student.consts import (
+    SURVEY_CUSTOM_TEXT_MAX,
+    SURVEY_CUSTOM_TEXT_MIN,
     SURVEY_OPTION_TEXT_MAX,
     SURVEY_OPTION_TEXT_MIN,
     SURVEY_OPTIONS_MAX,
@@ -93,6 +95,12 @@ class SurveyQuestionModalForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        question_type = cleaned_data.get("question_type")
+
+        if question_type == QuestionType.TEXT:
+            cleaned_data["options"] = []
+            return cleaned_data
+
         raw_options = self.data.getlist("options") if hasattr(self.data, "getlist") else []
         options = [value.strip() for value in raw_options if value and value.strip()]
 
@@ -136,6 +144,10 @@ class SurveyQuestionModalForm(forms.Form):
 
 class SurveyDeleteForm(forms.Form):
     confirm = forms.BooleanField(label="Подтвердить удаление", required=True)
+
+
+class SurveySubmissionDeleteForm(forms.Form):
+    confirm = forms.BooleanField(label="Подтвердить удаление ответов", required=True)
 
 
 class SurveySubmissionFilterForm(forms.Form):
@@ -197,20 +209,42 @@ def build_survey_form(survey):
         pass
 
     for question in survey.questions.all():
+        field_name = f"q_{question.id}"
+        if question.question_type == QuestionType.TEXT:
+            field = forms.CharField(
+                label=question.text,
+                min_length=SURVEY_CUSTOM_TEXT_MIN,
+                max_length=SURVEY_CUSTOM_TEXT_MAX,
+                widget=forms.TextInput(
+                    attrs={
+                        "class": "form-control survey-student-text-input",
+                        "placeholder": "Введите свой ответ",
+                        "autocomplete": "off",
+                    }
+                ),
+                required=True,
+            )
+            field.survey_question_type = QuestionType.TEXT
+            DynamicSurveyForm.base_fields[field_name] = field
+            continue
+
         options = [(str(option.id), option.text) for option in question.options.all()]
         if question.question_type == QuestionType.RADIO:
-            DynamicSurveyForm.base_fields[f"q_{question.id}"] = forms.ChoiceField(
+            field = forms.ChoiceField(
                 label=question.text,
                 choices=options,
                 widget=forms.RadioSelect,
                 required=True,
             )
+            field.survey_question_type = QuestionType.RADIO
         else:
-            DynamicSurveyForm.base_fields[f"q_{question.id}"] = forms.MultipleChoiceField(
+            field = forms.MultipleChoiceField(
                 label=question.text,
                 choices=options,
                 widget=forms.CheckboxSelectMultiple,
                 required=True,
             )
+            field.survey_question_type = QuestionType.CHECKBOX
+        DynamicSurveyForm.base_fields[field_name] = field
 
     return DynamicSurveyForm

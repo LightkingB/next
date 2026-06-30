@@ -24,7 +24,7 @@
                             <dt>{{ group.grouper.text }}</dt>
                             <dd>
                                 {% for answer in group.list %}
-                                    {{ answer.option.text }}{% if not forloop.last %}, {% endif %}
+                                    {% if answer.custom_text %}{{ answer.custom_text }}{% else %}{{ answer.option.text }}{% endif %}{% if not forloop.last %}, {% endif %}
                                 {% endfor %}
                             </dd>
                         </div>

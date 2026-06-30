@@ -1,18 +1,25 @@
 {% extends 'students/survey_admin/base.html' %}
+{% load static %}
 
 {% block content %}
     <div class="container survey-admin">
+        {% include 'utils/_messages.html' %}
         {% if 'stsurve' in DB_ROLES %}
-            <div class="survey-page-header d-flex justify-content-between align-items-start flex-wrap">
-                <div>
-                    <h3 class="mb-1"><i class="fas fa-users mr-2"></i>Прошедшие студенты</h3>
-                    <p class="mb-0 text-muted">{{ survey.title }}</p>
+            <header class="survey-detail-head survey-detail-head--sub">
+                <nav class="survey-detail-head__breadcrumbs" aria-label="Навигация">
+                    <a href="{% url 'students:survey-admin-detail' survey_id=survey.id %}">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i> К анкете
+                    </a>
+                    <span class="survey-detail-head__breadcrumbs-sep" aria-hidden="true">·</span>
+                    <a href="{% url 'students:survey-admin-list' %}">К списку анкет</a>
+                </nav>
+                <div class="survey-detail-head__body">
+                    <div class="survey-detail-head__info">
+                        <h1 class="survey-detail-head__title">Прошедшие студенты</h1>
+                        <p class="survey-detail-head__desc mb-0">{{ survey.title }}</p>
+                    </div>
                 </div>
-                <a href="{% url 'students:survey-admin-detail' survey_id=survey.id %}"
-                   class="btn btn-sm btn-survey-outline mt-2 mt-md-0">
-                    <i class="fas fa-arrow-left"></i> К анкете
-                </a>
-            </div>
+            </header>
 
             <div class="survey-panel survey-filters-panel">
                 <div class="survey-filters-head">
@@ -149,13 +156,19 @@
                             <th>Дата прохождения</th>
                             <th>Учебный год</th>
                             <th class="text-center" style="width: 7rem;">Ответы</th>
+                            <th class="text-center" style="width: 8rem;">Сброс</th>
                         </tr>
                         </thead>
                         <tbody>
                         {% for submission in page_obj %}
                             <tr class="survey-completion-row">
                                 <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-                                <td>{{ submission.student_fio }}</td>
+                                <td>
+                                    {{ submission.student_fio }}
+                                    {% if submission.user.myedu_id %}
+                                        <span class="survey-myedu-id">({{ submission.user.myedu_id }})</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ submission.student_login }}</td>
                                 <td>{{ submission.student_group|default:"-" }}</td>
                                 <td>{{ submission.submitted_at|date:"d.m.Y H:i" }}</td>
@@ -170,14 +183,25 @@
                                         <span class="survey-completion-toggle__label">Показать</span>
                                     </button>
                                 </td>
+                                <td class="text-center">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger survey-ajax-load"
+                                            data-url="{% url 'students:survey-submission-delete' survey_id=survey.id submission_id=submission.id %}"
+                                            title="Удалить ответы — студент сможет пройти анкету заново">
+                                        <i class="fas fa-undo" aria-hidden="true"></i>
+                                    </button>
+                                </td>
                             </tr>
                             <tr class="survey-completion-answers-row"
                                 id="submission-answers-{{ submission.id }}"
                                 hidden>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="survey-completion-answers-panel">
                                         <div class="survey-completion-answers-panel__title">
                                             Ответы — {{ submission.student_fio }}
+                                            {% if submission.user.myedu_id %}
+                                                <span class="survey-myedu-id">({{ submission.user.myedu_id }})</span>
+                                            {% endif %}
                                         </div>
                                         <div class="survey-completion-answers-panel__body"></div>
                                     </div>
@@ -185,7 +209,7 @@
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="7" class="survey-empty">
+                                <td colspan="8" class="survey-empty">
                                     {% if filters_active %}
                                         По выбранным фильтрам записей нет.
                                     {% else %}
@@ -210,6 +234,7 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="{% static 'js/survey_admin.js' %}"></script>
     <script>
         (function () {
             const form = document.getElementById('survey-completions-filter');

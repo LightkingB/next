@@ -48,6 +48,7 @@ class SurveyOptionAdmin(admin.ModelAdmin):
 
 class SurveyAnswerItemInline(admin.TabularInline):
     model = SurveyAnswerItem
+    fields = ("question", "option", "custom_text")
     extra = 0
     readonly_fields = ("question", "option")
 

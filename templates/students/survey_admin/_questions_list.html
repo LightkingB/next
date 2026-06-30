@@ -4,7 +4,9 @@
             <div class="mb-2 mb-md-0">
                 <strong>{{ forloop.counter }}. {{ question.text }}</strong>
                 <span class="question-type-badge ml-2">
-                    {% if question.question_type == 'radio' %}Один вариант{% else %}Несколько вариантов{% endif %}
+                    {% if question.question_type == 'radio' %}Один вариант
+                    {% elif question.question_type == 'checkbox' %}Несколько вариантов
+                    {% else %}Свой вариант{% endif %}
                 </span>
             </div>
             <div>
@@ -23,11 +25,15 @@
             </div>
         </div>
         <div class="question-card-body">
-            {% for option in question.options.all %}
-                <div class="option-item">{{ option.text }}</div>
-            {% empty %}
-                <div class="option-item text-muted">Варианты не добавлены</div>
-            {% endfor %}
+            {% if question.question_type == 'text' %}
+                <div class="option-item text-muted">Студент вводит ответ в текстовое поле</div>
+            {% else %}
+                {% for option in question.options.all %}
+                    <div class="option-item">{{ option.text }}</div>
+                {% empty %}
+                    <div class="option-item text-muted">Варианты не добавлены</div>
+                {% endfor %}
+            {% endif %}
         </div>
     </div>
 {% empty %}

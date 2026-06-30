@@ -239,6 +239,42 @@
     border-radius: 6px;
 }
 
+.survey-student-quality-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+    padding: 0.75rem 0.9rem;
+    background: #fff9f0;
+    border: 1px solid #ecd9b8;
+    border-left: 3px solid #c9a227;
+    border-radius: var(--sv-radius-sm);
+    color: var(--sv-text);
+}
+
+.survey-student-quality-notice i {
+    color: #b8860b;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.survey-student-quality-notice p {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.55;
+}
+
+.survey-student-quality-notice--inset {
+    margin-bottom: 1rem;
+    background: #fffcfa;
+    border-color: rgba(160, 14, 7, 0.16);
+    border-left-color: var(--sv-red);
+}
+
+.survey-student-quality-notice--inset i {
+    color: var(--sv-red);
+}
+
 .survey-student-message--warn.survey-student-message--inset {
     border-left-color: #b8860b;
     background: #fffdf8;
@@ -498,6 +534,30 @@ body.student-portal-scene-page .survey-student--phone {
     font-weight: 500;
 }
 
+.survey-student-text-answer {
+    margin-top: 0.15rem;
+}
+
+.survey-student-text-input {
+    width: 100%;
+    min-height: 46px;
+    padding: 0.65rem 0.85rem;
+    font-family: var(--sv-font-body);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--sv-text);
+    background: var(--sv-paper);
+    border: 1px solid var(--sv-line);
+    border-radius: var(--sv-radius-sm);
+    transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.survey-student-text-input:focus {
+    border-color: var(--sv-red);
+    box-shadow: 0 0 0 2px rgba(160, 14, 7, 0.1);
+    outline: none;
+}
+
 .survey-student-form-footer {
     flex-shrink: 0;
     padding: 0.7rem 0.9rem;
@@ -547,6 +607,10 @@ body.student-portal-scene-page .survey-student--phone {
 }
 
 /* ── Модалка подтверждения ── */
+#confirmSurvey {
+    z-index: 1060 !important;
+}
+
 #confirmSurvey .survey-student-modal-dialog {
     width: calc(100% - 1.5rem);
     max-width: 440px;

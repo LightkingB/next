@@ -153,7 +153,10 @@ class SurveyAnswerItem(models.Model):
         on_delete=models.PROTECT,
         related_name="answer_items",
         verbose_name=_("Вариант ответа"),
+        null=True,
+        blank=True,
     )
+    custom_text = models.TextField(blank=True, verbose_name=_("Свободный ответ"))
 
     class Meta:
         verbose_name = _("Ответ")
@@ -166,4 +169,8 @@ class SurveyAnswerItem(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.question_id}: {self.option.text[:40]}"
+        if self.custom_text:
+            return f"{self.question_id}: {self.custom_text[:40]}"
+        if self.option_id:
+            return f"{self.question_id}: {self.option.text[:40]}"
+        return f"{self.question_id}: —"

@@ -1,0 +1,13 @@
+<nav class="survey-admin-topnav" aria-label="Навигация">
+    {% if back_survey %}
+        <a href="{% url 'students:survey-admin-detail' survey_id=back_survey.id %}"
+           class="btn btn-sm btn-survey-outline">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i> К анкете
+        </a>
+    {% endif %}
+    {% if show_list_link %}
+        <a href="{% url 'students:survey-admin-list' %}" class="btn btn-sm btn-survey-outline">
+            <i class="fas fa-list" aria-hidden="true"></i> К списку анкет
+        </a>
+    {% endif %}
+</nav>
