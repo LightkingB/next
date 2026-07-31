@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from bsadmin.views import auth_required_view, invitation_view
+from bsadmin.views import auth_required_view, invitation_view, invitation_view_2
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -13,6 +13,7 @@ urlpatterns = [
     path('integrator/', include('integrator.urls'), name='integrator'),
     path('archive/', include('archives.urls'), name='archive'),
     path('invite/', invitation_view, name='invitation'),
+    path('invite2/', invitation_view_2, name='invitation2'),
     # path('minio/', include('djminio.urls'), name='minio'),
     path('', include('student.urls'), name='student'),
     path('auth-required/', auth_required_view, name='auth_required'),
