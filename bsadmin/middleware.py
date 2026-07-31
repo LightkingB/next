@@ -14,6 +14,7 @@ class AuthRequiredMiddleware:
         # Эти URL-адреса доступны без аутентификации.
         self.public_urls = [
             'invitation',
+            'invitation2',
             'auth_required',  # Наша страница "Доступ ограничен"
             'students:next-student-login',  # Страница входа для студентов
             'integrator:next-teacher-login',  # Страница входа для преподавателей
