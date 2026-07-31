@@ -588,7 +588,7 @@ def invitation_view_2(request):
     # --- НАСТРОЙКИ ---
 
     CENTER_X = 510  # центр имени по ширине картинки
-    Y_COORDINATE = 420  # высота имени
+    Y_COORDINATE = 425  # высота имени
 
     MAX_FONT_SIZE = 46
     MIN_FONT_SIZE = 28
