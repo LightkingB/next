@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
-from django.http import JsonResponse, HttpResponse, FileResponse
+from django.http import JsonResponse, FileResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView
@@ -583,28 +583,31 @@ def invitation_view(request):
         'guest_name': guest_name
     })
 
-def invitation_view_2(request):
 
+def invitation_view_2(request):
     # --- НАСТРОЙКИ ---
 
-    X_OFFSET = 265
-    Y_COORDINATE = 465
+    CENTER_X = 510  # центр имени по ширине картинки
+    Y_COORDINATE = 420  # высота имени
 
     MAX_FONT_SIZE = 46
     MIN_FONT_SIZE = 28
 
     MAX_TEXT_WIDTH = 500
 
+    TEXT_COLOR = (111, 80, 46)  # #BFA88A
+
     # -----------------
 
     guest_name = ""
     img_str = None
 
-
     if request.method == "POST":
 
-        guest_name = request.POST.get("guest_name", "").strip()
-
+        guest_name = request.POST.get(
+            "guest_name",
+            ""
+        ).strip()
 
         image_path = os.path.join(
             settings.BASE_DIR,
@@ -614,20 +617,18 @@ def invitation_view_2(request):
             'ap.png'
         )
 
-
         try:
 
             img = Image.open(image_path).convert("RGB")
+
             draw = ImageDraw.Draw(img)
 
-
-            # --- АДАПТИВНЫЙ ШРИФТ ---
+            # --- ПОИСК ШРИФТА ---
 
             font_candidates = [
                 "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf",
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
             ]
-
 
             font_path = None
 
@@ -636,14 +637,11 @@ def invitation_view_2(request):
                     font_path = path
                     break
 
+            # --- АДАПТИВНЫЙ РАЗМЕР ШРИФТА ---
 
-            if not font_path:
-                font = ImageFont.load_default()
-
-            else:
+            if font_path:
 
                 font_size = MAX_FONT_SIZE
-
 
                 while font_size > MIN_FONT_SIZE:
 
@@ -651,7 +649,6 @@ def invitation_view_2(request):
                         font_path,
                         font_size
                     )
-
 
                     bbox = draw.textbbox(
                         (0, 0),
@@ -661,13 +658,10 @@ def invitation_view_2(request):
 
                     text_width = bbox[2] - bbox[0]
 
-
                     if text_width <= MAX_TEXT_WIDTH:
                         break
 
-
                     font_size -= 2
-
 
                 font = ImageFont.truetype(
                     font_path,
@@ -675,21 +669,35 @@ def invitation_view_2(request):
                 )
 
 
-            # --- РИСУЕМ ИМЯ ---
+            else:
 
-            draw.text(
-                (X_OFFSET, Y_COORDINATE),
+                font = ImageFont.load_default()
+
+            # --- ВЫЧИСЛЯЕМ ШИРИНУ ИМЕНИ ---
+
+            bbox = draw.textbbox(
+                (0, 0),
                 guest_name,
-                fill=(111, 80, 46),
-                font=font,
-                anchor="ls"
+                font=font
             )
 
+            text_width = bbox[2] - bbox[0]
+
+            # --- РИСУЕМ СТРОГО ПО ЦЕНТРУ ---
+
+            draw.text(
+                (
+                    CENTER_X - text_width / 2,
+                    Y_COORDINATE
+                ),
+                guest_name,
+                fill=TEXT_COLOR,
+                font=font
+            )
 
             # --- СКАЧИВАНИЕ ---
 
             if 'download_action' in request.POST:
-
 
                 suffix = ''.join(
                     random.choices(
@@ -698,21 +706,20 @@ def invitation_view_2(request):
                     )
                 )
 
-
                 clean_name = re.sub(
                     r'[^\w\s]',
                     '',
                     guest_name,
                     flags=re.U
-                ).strip().replace(" ", "_")
-
+                ).strip().replace(
+                    " ",
+                    "_"
+                )
 
                 if not clean_name:
                     clean_name = "invitation"
 
-
                 filename = f"{clean_name}_{suffix}.jpg"
-
 
                 buffer = io.BytesIO()
 
@@ -724,20 +731,17 @@ def invitation_view_2(request):
 
                 buffer.seek(0)
 
-
                 response = FileResponse(
                     buffer,
                     as_attachment=True,
                     filename=filename
                 )
 
-                response['Content-Type'] = 'image/jpeg'
+                response["Content-Type"] = "image/jpeg"
 
                 return response
 
-
-
-            # --- ПРЕДПРОСМОТР ---
+            # --- PREVIEW ---
 
             preview_buffer = io.BytesIO()
 
@@ -755,7 +759,6 @@ def invitation_view_2(request):
         except Exception as e:
 
             print(f"Ошибка: {e}")
-
 
     return render(
         request,
