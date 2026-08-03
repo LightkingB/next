@@ -587,10 +587,10 @@ def invitation_view(request):
 def invitation_view_2(request):
     # --- НАСТРОЙКИ ---
 
-    CENTER_X = 510  # центр имени по ширине картинки
-    Y_COORDINATE = 425  # высота имени
+    CENTER_X = 420  # центр имени по ширине картинки
+    Y_COORDINATE = 345  # высота имени
 
-    MAX_FONT_SIZE = 46
+    MAX_FONT_SIZE = 38
     MIN_FONT_SIZE = 28
 
     MAX_TEXT_WIDTH = 500
@@ -614,7 +614,7 @@ def invitation_view_2(request):
             'static',
             'static_dirs',
             'img',
-            'ap.png'
+            'ap.jpg'
         )
 
         try:

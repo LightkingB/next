@@ -28,6 +28,7 @@ def student_index(request):
             "search": myedu_id,
         },
     )
+    # print(student.is_worker)
 
     active_cs_qs = ClearanceSheet.objects.filter(myedu_id=myedu_id, completed_at__isnull=True)
     has_cs = active_cs_qs.exists()
