@@ -43,9 +43,19 @@ $('#imageModal').on('show.bs.modal', function (event) {
 });
 document.addEventListener("DOMContentLoaded", function () {
     const canvas = document.getElementById("signatureCanvas");
-    const ctx = canvas.getContext("2d");
     const screen = document.getElementById("signatureScreen");
+    const openSignature = document.getElementById("openSignature");
     const previewImg = document.getElementById("signature-preview");
+    const signatureInput = document.getElementById("signature");
+    const clearBtn = document.getElementById("clearSignature");
+    const cancelBtn = document.getElementById("cancelSignature");
+    const saveBtn = document.getElementById("saveSignature");
+
+    if (!canvas || !screen || !openSignature || !previewImg || !signatureInput) {
+        return;
+    }
+
+    const ctx = canvas.getContext("2d");
 
     let drawing = false;
     let isSigned = false;
@@ -140,34 +150,40 @@ document.addEventListener("DOMContentLoaded", function () {
     canvas.addEventListener("touchend", stopDraw);
 
 // Открытие
-    document.getElementById("openSignature").onclick = () => {
+    openSignature.onclick = () => {
         screen.style.display = "block";
         resizeCanvas();
         isSigned = false;
     };
 
 // Очистка
-    document.getElementById("clearSignature").onclick = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        isSigned = false;
-    };
+    if (clearBtn) {
+        clearBtn.onclick = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            isSigned = false;
+        };
+    }
 
 // Отмена
-    document.getElementById("cancelSignature").onclick = () => {
-        screen.style.display = "none";
-    };
+    if (cancelBtn) {
+        cancelBtn.onclick = () => {
+            screen.style.display = "none";
+        };
+    }
 
 // Сохранение
-    document.getElementById("saveSignature").onclick = () => {
-        if (!isSigned) return alert("Пожалуйста, нарисуйте подпись.");
-        const trimmed = trimCanvas(canvas);
-        if (!trimmed) return alert("Подпись пуста.");
-        const dataURL = trimmed.toDataURL("image/png");
+    if (saveBtn) {
+        saveBtn.onclick = () => {
+            if (!isSigned) return alert("Пожалуйста, нарисуйте подпись.");
+            const trimmed = trimCanvas(canvas);
+            if (!trimmed) return alert("Подпись пуста.");
+            const dataURL = trimmed.toDataURL("image/png");
 
-        document.getElementById("signature").value = dataURL;
-        previewImg.src = dataURL;
-        screen.style.display = "none";
-    };
+            signatureInput.value = dataURL;
+            previewImg.src = dataURL;
+            screen.style.display = "none";
+        };
+    }
 
 // Адаптация к окну
     window.addEventListener("resize", () => {
