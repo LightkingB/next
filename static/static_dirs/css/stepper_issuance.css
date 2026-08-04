@@ -522,13 +522,18 @@
 
     .stepper-issuance__table-wrap {
         overflow-x: visible;
-        padding: 0.65rem 0.85rem;
+        padding: 0.65rem 0.75rem;
         background: var(--am-surface, #f7f5f2);
+    }
+
+    .stepper-issuance__table,
+    .stepper-issuance__table tbody {
+        display: block;
+        width: 100%;
     }
 
     .stepper-issuance__table {
         min-width: 0 !important;
-        width: 100%;
     }
 
     .stepper-issuance__table thead {
@@ -537,11 +542,17 @@
 
     .stepper-issuance__table tbody tr {
         display: block;
+        width: 100%;
         margin-bottom: 0.65rem;
-        border: 1px solid var(--am-line-soft, #eceae6);
+        border: 1px solid rgba(160, 14, 7, 0.14);
         border-radius: 8px;
         overflow: hidden;
         background: #fff;
+        box-shadow: 0 1px 3px rgba(40, 32, 24, 0.04);
+    }
+
+    .stepper-issuance__table tbody tr:hover td {
+        background: #fff !important;
     }
 
     .stepper-issuance__table tbody tr:last-child {
@@ -550,49 +561,107 @@
 
     .stepper-issuance__table tbody td {
         display: block;
-        padding: 0.55rem 0.75rem;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.6rem 0.85rem;
         text-align: left !important;
+        border: none;
         border-bottom: 1px solid var(--am-line-soft, #eceae6);
         background: #fff !important;
     }
 
     .stepper-issuance__table tbody td::before {
         display: block;
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.25rem;
         content: attr(data-label);
-        font-size: 0.68rem;
+        font-size: 0.65rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.04em;
         color: var(--am-muted, #6b6b6b);
-        line-height: 1.35;
+        line-height: 1.3;
     }
 
-    .stepper-issuance__table tbody td[data-label=""]::before {
-        display: none;
+    .stepper-issuance__col-cert {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.35rem 0.5rem;
+        padding: 0.7rem 0.85rem;
+        background: linear-gradient(180deg, var(--am-red-soft, #faf5f4) 0%, #fff 100%);
+        border-top: 3px solid var(--am-red, #A00E07);
+    }
+
+    .stepper-issuance__col-cert::before {
+        margin-bottom: 0;
+        content: "Справка №";
+    }
+
+    .stepper-issuance__col-cert .stepper-issuance__cert-num {
+        font-size: 1.05rem;
+    }
+
+    .stepper-issuance__col-student {
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+    }
+
+    .stepper-issuance__col-student .stepper-issuance__student-name {
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    .stepper-issuance__col-student .stepper-issuance__student-meta {
+        margin-top: 0.25rem;
+    }
+
+    .stepper-issuance__col-student .stepper-issuance__student-sub {
+        margin-top: 0.15rem;
+        font-size: 0.72rem;
+    }
+
+    .stepper-issuance__col-date .stepper-issuance__date-main,
+    .stepper-issuance__col-date .stepper-issuance__date-sub {
+        display: inline;
+    }
+
+    .stepper-issuance__col-date .stepper-issuance__date-sub {
+        margin-top: 0;
+        margin-left: 0.35rem;
+        font-size: 0.78rem;
+    }
+
+    .stepper-issuance__col-date .stepper-issuance__date-sub::before {
+        content: "· ";
+    }
+
+    .stepper-issuance__col-type .stepper-issuance__badge--double {
+        display: inline-flex;
+        margin-top: 0.35rem;
     }
 
     .stepper-issuance__col-actions {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        padding: 0.55rem 0.85rem;
+        background: var(--am-surface, #f7f5f2);
+        border-bottom: none;
     }
 
     .stepper-issuance__col-actions::before {
         display: block;
         margin-bottom: 0;
-        content: "Удалить";
+        content: "Удалить запись";
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--am-text, #333);
     }
 
-    .stepper-issuance__col-student .stepper-issuance__student-name,
-    .stepper-issuance__col-student .stepper-issuance__student-meta,
-    .stepper-issuance__col-student .stepper-issuance__student-sub {
-        grid-column: auto;
-    }
-
-    .stepper-issuance__col-type .stepper-issuance__badge--double {
-        grid-column: auto;
-        margin-top: 0.25rem;
+    .stepper-issuance__table tbody td[data-label=""]::before {
+        display: none;
     }
 
     .stepper-issuance__table tbody td:last-child {
@@ -602,6 +671,7 @@
     .stepper-issuance__empty {
         display: block;
         padding: 1.5rem 1rem !important;
+        border: none;
     }
 
     .stepper-issuance__footer {
