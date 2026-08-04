@@ -159,50 +159,79 @@
                                 <span><i class="fas fa-certificate" aria-hidden="true"></i>Выданная справка</span>
                             </div>
                             <div class="stepper-spec__issuance-body">
-                                <div class="stepper-spec__issuance-photo">
-                                    <div class="signature-preview-container">
-                                        {% if issuance.signature %}
-                                            <img src="{{ issuance.signature.url }}" class="signature-preview-img" alt="Подпись">
-                                        {% else %}
-                                            <img src="{% static 'img/No-photo-m.png' %}" class="signature-preview-img"
-                                                 alt="Нет подписи">
-                                        {% endif %}
+                                <h2 class="stepper-spec__issuance-title">Обходной лист № {{ student.id }}</h2>
+
+                                <div class="stepper-spec__issuance-grid">
+                                    <div class="stepper-spec__issuance-media">
+                                        <figure class="stepper-spec__issuance-figure">
+                                            <figcaption>Подпись</figcaption>
+                                            <div class="stepper-spec__issuance-frame stepper-spec__issuance-frame--signature">
+                                                {% if issuance.signature %}
+                                                    <img src="{{ issuance.signature.url }}" alt="Подпись">
+                                                {% else %}
+                                                    <img src="{% static 'img/No-photo-m.png' %}" alt="Нет подписи">
+                                                {% endif %}
+                                            </div>
+                                        </figure>
+                                        <figure class="stepper-spec__issuance-figure">
+                                            <figcaption>Фото</figcaption>
+                                            <div class="stepper-spec__issuance-frame">
+                                                {% if issuance.profile %}
+                                                    <img src="{{ issuance.profile.url }}" alt="Фото студента">
+                                                {% else %}
+                                                    <img src="{% static 'img/No-photo-m.png' %}" alt="Нет фото">
+                                                {% endif %}
+                                            </div>
+                                        </figure>
                                     </div>
+
+                                    <dl class="stepper-spec__issuance-meta">
+                                        <div class="stepper-spec__issuance-row">
+                                            <dt>№ справки</dt>
+                                            <dd>{{ issuance.id }}</dd>
+                                        </div>
+                                        <div class="stepper-spec__issuance-row">
+                                            <dt>Регистрационный №</dt>
+                                            <dd>{{ issuance.reg_number|default:"-" }}</dd>
+                                        </div>
+                                        <div class="stepper-spec__issuance-row">
+                                            <dt>Диплом №</dt>
+                                            <dd>{{ issuance.doc_number|default:"-" }}</dd>
+                                        </div>
+                                        <div class="stepper-spec__issuance-row">
+                                            <dt>Дата выдачи диплома</dt>
+                                            <dd>{{ issuance.date_issue|date:"d-m-Y" }}</dd>
+                                        </div>
+                                        <div class="stepper-spec__issuance-row">
+                                            <dt>Паспортные данные</dt>
+                                            <dd>{{ issuance.inn|default:"-" }}</dd>
+                                        </div>
+                                        <div class="stepper-spec__issuance-row">
+                                            <dt>Статус</dt>
+                                            <dd>Выдан {% if issuance.status == "received" %}однократно{% else %}более одного раза{% endif %}</dd>
+                                        </div>
+                                        <div class="stepper-spec__issuance-row">
+                                            <dt>Примечание</dt>
+                                            <dd>{{ issuance.note|default:"-" }}</dd>
+                                        </div>
+                                        <div class="stepper-spec__issuance-row">
+                                            <dt>Дата создания записи</dt>
+                                            <dd>{{ issuance.created_at|date:"d-m-Y" }}</dd>
+                                        </div>
+                                    </dl>
                                 </div>
-                                <div class="stepper-spec__issuance-main">
-                                    <h2>Обходной лист № {{ student.id }}</h2>
-                                    <div class="stepper-spec__issuance-list">
-                                        № справки: {{ issuance.id }}<br/>
-                                        Регистрационный №: {{ issuance.reg_number }}<br/>
-                                        Диплом №: {{ issuance.doc_number }}<br/>
-                                        Дата выдачи диплома: {{ issuance.date_issue|date:"d-m-Y" }}<br/>
-                                        Паспортные данные: {{ issuance.inn|default:"-" }}<br/>
-                                        Статус: Выдан {% if issuance.status == "received" %}однократно{% else %}более одного раза{% endif %}<br/>
-                                        Примечание: {{ issuance.note|default:"-" }}<br/>
-                                        Дата создания записи: {{ issuance.created_at|date:"d-m-Y" }}
-                                    </div>
-                                    <div class="stepper-spec__issuance-actions">
-                                        <button type="button" class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary"
-                                                data-toggle="modal"
-                                                data-target="#doubleCS">
-                                            <i class="fas fa-question-circle" aria-hidden="true"></i> Выдать дубликат
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-danger stepper-spec__btn stepper-spec__btn--danger-soft"
-                                                data-toggle="modal"
-                                                data-target="#removeCS">
-                                            <i class="fas fa-trash-alt" aria-hidden="true"></i> Удалить
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="stepper-spec__issuance-photo">
-                                    <div class="signature-preview-container">
-                                        {% if issuance.profile %}
-                                            <img src="{{ issuance.profile.url }}" class="signature-preview-img" alt="Фото">
-                                        {% else %}
-                                            <img src="{% static 'img/No-photo-m.png' %}" class="signature-preview-img"
-                                                 alt="Нет фото">
-                                        {% endif %}
-                                    </div>
+
+                                <div class="stepper-spec__issuance-actions">
+                                    <button type="button" class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary"
+                                            data-toggle="modal"
+                                            data-target="#doubleCS">
+                                        <i class="fas fa-question-circle" aria-hidden="true"></i> Выдать дубликат
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger stepper-spec__btn stepper-spec__btn--danger-soft"
+                                            data-toggle="modal"
+                                            data-target="#removeCS">
+                                        <i class="fas fa-trash-alt" aria-hidden="true"></i> Удалить
+                                    </button>
                                 </div>
                             </div>
                         </div>

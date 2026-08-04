@@ -447,44 +447,119 @@
 }
 
 .stepper-spec__issuance {
-    max-width: 720px;
+    max-width: 42rem;
     overflow: hidden;
     background: #fff;
 }
 
 .stepper-spec__issuance-body {
-    display: grid;
-    grid-template-columns: 6.5rem minmax(0, 1fr) 6.5rem;
-    gap: 1rem;
-    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem 1.15rem;
 }
 
-.stepper-spec__issuance-photo .signature-preview-container {
-    width: 6.5rem;
-    height: 8.5rem;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-.stepper-spec__issuance-main h2 {
-    margin: 0 0 0.65rem;
+.stepper-spec__issuance-title {
+    margin: 0;
     font-family: var(--am-font-heading, 'Roboto Slab', serif);
     font-size: 0.9375rem;
     font-weight: 700;
     color: var(--ss-ink);
+    line-height: 1.35;
 }
 
-.stepper-spec__issuance-list {
-    margin: 0 0 0.85rem;
+.stepper-spec__issuance-grid {
+    display: grid;
+    grid-template-columns: 7.25rem minmax(0, 1fr);
+    gap: 1rem 1.15rem;
+    align-items: start;
+}
+
+.stepper-spec__issuance-media {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.stepper-spec__issuance-figure {
+    margin: 0;
+}
+
+.stepper-spec__issuance-figure figcaption {
+    margin-bottom: 0.3rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ss-muted);
+}
+
+.stepper-spec__issuance-frame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: var(--ss-surface);
+    border: 1px solid var(--ss-line);
+    border-radius: 6px;
+}
+
+.stepper-spec__issuance-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.stepper-spec__issuance-frame--signature img {
+    object-fit: contain;
+    padding: 0.25rem;
+}
+
+.stepper-spec__issuance-meta {
+    display: grid;
+    gap: 0;
+    margin: 0;
+}
+
+.stepper-spec__issuance-row {
+    display: grid;
+    grid-template-columns: minmax(0, 9.25rem) minmax(0, 1fr);
+    gap: 0.35rem 0.75rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+}
+
+.stepper-spec__issuance-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.stepper-spec__issuance-row dt {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ss-muted);
+    line-height: 1.4;
+}
+
+.stepper-spec__issuance-row dd {
+    margin: 0;
     font-size: 0.8125rem;
-    line-height: 1.55;
-    color: var(--ss-text);
+    color: var(--ss-ink);
+    line-height: 1.45;
+    word-break: break-word;
 }
 
 .stepper-spec__issuance-actions {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 0.45rem;
+    margin-top: 0.15rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--am-line-soft, #eceae6);
 }
 
 .stepper-spec__pagination {
@@ -511,14 +586,27 @@
         max-height: none;
     }
 
-    .stepper-spec__issuance-body {
-        grid-template-columns: 1fr;
+    .stepper-spec__issuance {
+        max-width: none;
     }
 
-    .stepper-spec__issuance-photo .signature-preview-container {
-        width: 100%;
-        max-width: 8rem;
-        height: 9rem;
+    .stepper-spec__issuance-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+    }
+
+    .stepper-spec__issuance-media {
+        flex-direction: row;
+        gap: 0.65rem;
+    }
+
+    .stepper-spec__issuance-figure {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .stepper-spec__issuance-frame {
+        max-height: 9.5rem;
     }
 }
 
@@ -552,6 +640,20 @@
     .stepper-spec__toolbar .btn-danger,
     .stepper-spec__search .btn-danger,
     .stepper-spec__filter-row .btn-danger {
+        width: 100%;
+    }
+
+    .stepper-spec__issuance-row {
+        grid-template-columns: 1fr;
+        gap: 0.1rem;
+        padding: 0.45rem 0;
+    }
+
+    .stepper-spec__issuance-actions {
+        flex-direction: column;
+    }
+
+    .stepper-spec__issuance-actions .stepper-spec__btn {
         width: 100%;
     }
 }
