@@ -285,13 +285,53 @@
     opacity: 0.45;
 }
 
+.vc-students__col-cert {
+    min-width: 6.5rem;
+    white-space: nowrap;
+}
+
+.vc-students__col-date {
+    min-width: 6rem;
+    white-space: nowrap;
+}
+
+.vc-students__col-issuer {
+    min-width: 7rem;
+}
+
+.vc-students__cert-num {
+    display: block;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--am-ink, #1c1c1c);
+}
+
+.vc-students__cert-lang {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.72rem;
+    color: var(--am-muted, #6b6b6b);
+    text-transform: uppercase;
+}
+
+.vc-history .vc-students__results .pagination {
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    justify-content: center;
+    border-top: 1px solid var(--am-line-soft, #eceae6);
+    background: var(--am-surface, #f7f5f2);
+}
+
 @media (max-width: 767px) {
     .vc-students__toolbar {
         flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     .vc-students__search-form {
         flex: 1 1 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
     }
 
     .vc-students__btn-history {

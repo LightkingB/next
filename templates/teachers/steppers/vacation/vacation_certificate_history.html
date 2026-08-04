@@ -1,96 +1,96 @@
 {% extends 'admin_base.html' %}
 {% load static i18n custom_filters %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/vacation_certificate_students.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div id="loading-overlay" style="
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.4);
-        z-index: 9999;
-        text-align: center;
-        color: white;
-        font-size: 24px;
-        padding-top: 20%;
-    ">
-        <i class="fas fa-spinner fa-spin"></i> Загрузка...
-    </div>
-    <div class="container-fluid">
-        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
-        <hr/>
-
+    <div class="container-fluid vc-students vc-history">
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
-            <div class="row">
-                <div class="col-md-10 col-lg-8">
-                    <form action="" method="post" id="search-form">
-                        {% csrf_token %}
+            <header class="vc-students__header">
+                <h1><i class="fas fa-history" aria-hidden="true"></i>{{ title }}</h1>
+                <p class="vc-students__header-desc">
+                    Выданные каникулярные справки — поиск по ФИО, MyEDU ID или номеру справки.
+                </p>
+            </header>
 
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label for="search">ФИО / MyEDU ID / Справка №:</label>
-                                <input type="text" class="form-control form-control-sm" name="search"
-                                       placeholder="230795"
-                                       id="search" value="{{ search }}"/>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="mt-4">
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-search"></i> Поиск
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="col-md-2 col-lg-4 text-right mt-0 mt-md-4">
-
-                </div>
+            <div class="vc-students__toolbar">
+                <form action="" method="post" id="search-form" class="vc-students__search-form">
+                    {% csrf_token %}
+                    <label class="sr-only" for="search">ФИО / MyEDU ID / Справка №</label>
+                    <input type="text"
+                           class="form-control form-control-sm vc-students__search-input"
+                           name="search"
+                           placeholder="ФИО / MyEDU ID / Справка №"
+                           id="search"
+                           value="{{ search }}"/>
+                    <button type="submit" class="btn btn-sm btn-danger vc-students__btn-primary">
+                        <i class="fas fa-search" aria-hidden="true"></i> Найти
+                    </button>
+                </form>
+                <a href="{% url 'stepper:vacation-certificate-students' %}" class="vc-students__btn-history">
+                    <i class="fas fa-search" aria-hidden="true"></i> К поиску
+                </a>
             </div>
-            <hr/>
+
             {% include 'utils/_messages.html' %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-md">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">ФИО</th>
-                        <th scope="col">№ справки <br/> (Версия)</th>
-                        <th scope="col">Факультет</th>
-                        <th scope="col">Специальность</th>
-                        <th scope="col">Приказ</th>
-                        <th scope="col">Дата выдачи</th>
-                        <th scope="col">Выдан</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for vc in vc_list %}
+
+            <div class="vc-students__results">
+                <div class="vc-students__table-wrap">
+                    <table class="vc-students__table">
+                        <thead>
                         <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td class="text-center">{{ vc.student_name }} ({{ vc.student_id }})</td>
-                            <td class="text-center">{{ vc.cert_number|default:"-" }} ({{ vc.lang|default:"-" }})</td>
-                            <td>{{ vc.faculty_info|default:"-" }}</td>
-                            <td>{{ vc.specialty_info|default:"-" }}</td>
-                            <td>{{ vc.order_info|default:"-" }} </td>
-                            <td>{{ vc.created_at|date:"d/m/Y" }} </td>
-                            <td>{{ vc.created_by|default:"-" }} </td>
+                            <th class="vc-students__col-num">#</th>
+                            <th class="vc-students__col-student">ФИО</th>
+                            <th class="vc-students__col-cert">№ справки</th>
+                            <th class="vc-students__col-faculty">Факультет</th>
+                            <th class="vc-students__col-spec">Специальность</th>
+                            <th class="vc-students__col-order">Приказ</th>
+                            <th class="vc-students__col-date">Дата выдачи</th>
+                            <th class="vc-students__col-issuer">Выдан</th>
                         </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        {% for vc in vc_list %}
+                            <tr>
+                                <td class="vc-students__col-num">{{ forloop.counter }}</td>
+                                <td class="vc-students__col-student">
+                                    <span class="vc-students__student-name">{{ vc.student_name }}</span>
+                                    <span class="vc-students__student-id">
+                                        MyEDU ID: <strong>{{ vc.student_id }}</strong>
+                                    </span>
+                                </td>
+                                <td class="vc-students__col-cert">
+                                    <span class="vc-students__cert-num">{{ vc.cert_number|default:"—" }}</span>
+                                    <span class="vc-students__cert-lang">{{ vc.lang|default:"—" }}</span>
+                                </td>
+                                <td class="vc-students__col-faculty">{{ vc.faculty_info|default:"—" }}</td>
+                                <td class="vc-students__col-spec">{{ vc.specialty_info|default:"—" }}</td>
+                                <td class="vc-students__col-order">
+                                    <span class="vc-students__order-main">{{ vc.order_info|default:"—" }}</span>
+                                </td>
+                                <td class="vc-students__col-date">{{ vc.created_at|date:"d.m.Y" }}</td>
+                                <td class="vc-students__col-issuer">{{ vc.created_by|default:"—" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="vc-students__empty">
+                                    <i class="fas fa-inbox" aria-hidden="true"></i>
+                                    {% trans 'Пусто' %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% include "utils/_pagination.html" with page_obj=vc_list %}
             </div>
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
-
-
 {% endblock %}
