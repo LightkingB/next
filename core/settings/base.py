@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'silk.middleware.SilkyMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'utils.middleware.DisableStaticCacheMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'stepper.middleware.UserActionLoggingMiddleware',
 ]
@@ -119,6 +120,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static", "static_root")
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static", "static_dirs"),
 ]
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "utils.staticfiles.VersionedStaticFilesStorage",
+    },
+}
 MEDIA_ROOT = os.path.join(BASE_DIR, "static", "media")
 MEDIA_URL = '/media/'
 
