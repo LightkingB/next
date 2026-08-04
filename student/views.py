@@ -1,13 +1,13 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import render, redirect, get_object_or_404
 
 from bsadmin.forms import LoginForm
 from bsadmin.services import UserService
 from stepper.consts import STUDENT_STEPPER_URL
 from stepper.decorators import with_stepper
-from stepper.models import ClearanceSheet, Trajectory
+from stepper.models import ClearanceSheet, Trajectory, StageStatus
 from utils.caches import EntityCache
 from utils.errors import handle_error
 from utils.myedu import MyEduService
@@ -55,10 +55,27 @@ def student_index(request):
             'template_stage',
             'template_stage__stage',
             'assigned_by'
-        )
+        ).prefetch_related(
+            Prefetch(
+                'stagestatus_set',
+                queryset=StageStatus.objects.select_related('processed_by').order_by('-created_at')
+            )
+        ).order_by('template_stage__order')
     )
 
-    cs_list = ClearanceSheet.objects.filter(myedu_id=myedu_id).prefetch_related(trajectory_prefetch)
+    cs_list = (
+        ClearanceSheet.objects.filter(myedu_id=myedu_id)
+        .annotate(
+            trajectory_total=Count('trajectory', distinct=True),
+            trajectory_done=Count(
+                'trajectory',
+                filter=Q(trajectory__completed_at__isnull=False),
+                distinct=True,
+            ),
+        )
+        .prefetch_related(trajectory_prefetch)
+        .order_by('-issued_at')
+    )
 
     return render(request, "students/index.html", {
         "cs_list": cs_list,
@@ -68,11 +85,12 @@ def student_index(request):
 
 
 def student_cs_history_detail(request, cs_id):
-    student = get_object_or_404(ClearanceSheet, id=cs_id)
+    student = get_object_or_404(ClearanceSheet, id=cs_id, myedu_id=request.user.myedu_id)
     trajectories = (
         Trajectory.objects.filter(clearance_sheet=student)
         .select_related("template_stage", "template_stage__stage")
         .prefetch_related("stagestatus_set", "stagestatus_set__processed_by")
+        .order_by("template_stage__order")
     )
 
     context = {

@@ -30,7 +30,7 @@
                 <div class="container">
                     <div class="row">
                         <div class="col">
-                            <div class="top_bar_content d-flex flex-row align-items-center justify-content-start">
+                            <div class="top_bar_content d-flex flex-row align-items-center justify-content-between flex-wrap">
                                 <ul class="top_bar_contact_list">
                                     <li>
                                         <div class="question">Если есть вопросы?</div>
@@ -44,7 +44,17 @@
                                         <div>edu@oshsu.kg</div>
                                     </li>
                                 </ul>
-
+                                {% if request.user.is_authenticated %}
+                                    <div class="student-header-user student-header-user--topbar">
+                                        <div class="student-header-user__avatar" aria-hidden="true">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="student-header-user__text">
+                                            <span class="student-header-user__name">{{ portal_user_fio|default:request.user.full_name }}</span>
+                                            <span class="student-header-user__email">{{ portal_user_email|default:request.user.email }}</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -63,6 +73,17 @@
                                     <div class="logo_text">Ош<span>ГУ</span></div>
                                 </a>
                             </div>
+                            {% if request.user.is_authenticated %}
+                                <div class="student-header-user student-header-user--main">
+                                    <div class="student-header-user__avatar" aria-hidden="true">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="student-header-user__text">
+                                        <span class="student-header-user__name">{{ portal_user_fio|default:request.user.full_name }}</span>
+                                        <span class="student-header-user__email">{{ portal_user_email|default:request.user.email }}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
                             <nav class="main_nav_contaner ml-auto">
                                 <ul class="main_nav">
                                     {% if request.user.is_authenticated %}
@@ -144,7 +165,8 @@
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="student-mobile-menu__profile-text">
-                        <span class="student-mobile-menu__email">{{ request.user.email }}</span>
+                        <span class="student-mobile-menu__name">{{ portal_user_fio|default:request.user.full_name }}</span>
+                        <span class="student-mobile-menu__email">{{ portal_user_email|default:request.user.email }}</span>
                     </div>
                 </div>
             {% endif %}

@@ -24,7 +24,7 @@
                 <i class="fas fa-hourglass-half" aria-hidden="true"></i>
                 <div>
                     <strong>Процесс продолжается</strong>
-                    Ваш обходной лист пока не завершён. Следите за статусом этапов ниже.
+                    Ваш обходной лист пока не завершён. Нажмите на карточку, чтобы увидеть этапы.
                 </div>
             </div>
         {% else %}
@@ -40,47 +40,128 @@
         {% endif %}
 
         {% if cs_list %}
-            <div class="student-portal-cs-grid">
-                {% for cs in cs_list %}
-                    <article class="student-portal-cs-card">
-                        <header class="student-portal-cs-card__head">
-                            <h2 class="student-portal-cs-card__title">Обходной лист № {{ cs.id }}</h2>
-                            {% if cs.type_choices %}
-                                <span class="student-portal-cs-card__status student-portal-cs-card__status--done">
-                                    <i class="fas fa-check-circle" aria-hidden="true"></i>
-                                    {% trans 'Завершен' %} · {{ cs.completed_at|date:"d.m.Y" }}
-                                </span>
+            <section class="student-portal-cs-section">
+                <div class="student-portal-cs-section__head">
+                    <h2 class="student-portal-cs-section__title">История обходных листов</h2>
+                    <span class="student-portal-cs-section__count">{{ cs_list|length }}</span>
+                </div>
+
+                <div class="student-portal-cs-list">
+                    {% for cs in cs_list %}
+                        <article class="student-portal-cs-card{% if cs.trajectory_total and not cs.completed_at %} is-open{% elif cs.trajectory_total and forloop.first and not has_cs %} is-open{% endif %}{% if cs.completed_at and not cs.trajectory_total %} student-portal-cs-card--static{% endif %}"
+                                 data-cs-card{% if cs.completed_at and not cs.trajectory_total %} data-cs-static{% endif %}>
+                            {% if cs.trajectory_total or not cs.completed_at %}
+                            <button type="button"
+                                    class="student-portal-cs-card__toggle"
+                                    aria-expanded="{% if cs.trajectory_total and not cs.completed_at %}true{% elif cs.trajectory_total and forloop.first and not has_cs %}true{% else %}false{% endif %}"
+                                    aria-controls="cs-stages-{{ cs.id }}">
                             {% else %}
-                                <span class="student-portal-cs-card__status student-portal-cs-card__status--active">
-                                    <i class="fas fa-spinner" aria-hidden="true"></i>
-                                    {% trans 'В процессе' %}
-                                </span>
+                            <div class="student-portal-cs-card__summary-wrap">
                             {% endif %}
-                        </header>
-                        <ul class="student-portal-stages">
-                            {% for trajectory in cs.trajectory_set.all %}
-                                <li class="student-portal-stages__item">
-                                    <span class="student-portal-stages__name">
-                                        {{ trajectory.template_stage.stage.name }}
-                                    </span>
-                                    <span class="student-portal-stages__meta">
-                                        {% if trajectory.completed_at %}
-                                            <span class="student-portal-stages__icon--done">
-                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
-                                            </span>
-                                            {{ trajectory.assigned_by.email }}
-                                        {% else %}
-                                            <span class="student-portal-stages__icon--wait">
-                                                <i class="fas fa-clock" aria-hidden="true"></i> Ожидание
+                                <div class="student-portal-cs-card__summary">
+                                    <div class="student-portal-cs-card__main">
+                                        <span class="student-portal-cs-card__label">Обходной лист</span>
+                                        <span class="student-portal-cs-card__title">№ {{ cs.id }}</span>
+                                        <span class="student-portal-cs-card__date">
+                                            Выдан {{ cs.issued_at|date:"d.m.Y" }}
+                                        </span>
+                                        {% if cs.completed_at and not cs.trajectory_total %}
+                                            <span class="student-portal-cs-card__note">
+                                                Завершён без прохождения этапов
                                             </span>
                                         {% endif %}
-                                    </span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </article>
-                {% endfor %}
-            </div>
+                                    </div>
+                                    <div class="student-portal-cs-card__aside">
+                                        {% if cs.completed_at %}
+                                            <span class="student-portal-cs-card__status student-portal-cs-card__status--done">
+                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                                {% trans 'Завершен' %} · {{ cs.completed_at|date:"d.m.Y" }}
+                                            </span>
+                                        {% else %}
+                                            <span class="student-portal-cs-card__status student-portal-cs-card__status--active">
+                                                <i class="fas fa-spinner" aria-hidden="true"></i>
+                                                {% trans 'В процессе' %}
+                                            </span>
+                                        {% endif %}
+                                        {% if cs.trajectory_total %}
+                                            <span class="student-portal-cs-card__progress">
+                                                {{ cs.trajectory_done }}/{{ cs.trajectory_total }} этапов
+                                            </span>
+                                            <i class="fas fa-chevron-down student-portal-cs-card__chevron" aria-hidden="true"></i>
+                                        {% elif not cs.completed_at %}
+                                            <i class="fas fa-chevron-down student-portal-cs-card__chevron" aria-hidden="true"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if cs.trajectory_total %}
+                                    <div class="student-portal-cs-card__bar" aria-hidden="true">
+                                        <span style="width: {% widthratio cs.trajectory_done cs.trajectory_total 100 %}%;"></span>
+                                    </div>
+                                {% endif %}
+                            {% if cs.trajectory_total or not cs.completed_at %}
+                            </button>
+                            {% else %}
+                            </div>
+                            {% endif %}
+
+                            {% if cs.trajectory_total or not cs.completed_at %}
+                            <div class="student-portal-cs-card__body" id="cs-stages-{{ cs.id }}">
+                                {% if cs.trajectory_set.all %}
+                                    <ul class="student-portal-stages">
+                                        {% for trajectory in cs.trajectory_set.all %}
+                                            <li class="student-portal-stages__item{% if trajectory.completed_at %} is-done{% else %} is-wait{% endif %}">
+                                                <div class="student-portal-stages__row">
+                                                    <div class="student-portal-stages__main">
+                                                        <span class="student-portal-stages__num">{{ forloop.counter }}</span>
+                                                        <span class="student-portal-stages__name">
+                                                            {{ trajectory.template_stage.stage.name }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="student-portal-stages__meta">
+                                                        {% if trajectory.completed_at %}
+                                                            <span class="student-portal-stages__badge student-portal-stages__badge--done">
+                                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                                                {{ trajectory.completed_at|date:"d.m.Y H:i" }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="student-portal-stages__badge student-portal-stages__badge--wait">
+                                                                <i class="fas fa-clock" aria-hidden="true"></i>
+                                                                Ожидание
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% with statuses=trajectory.stagestatus_set.all %}
+                                                    {% if statuses %}
+                                                        <ul class="student-portal-stages__history">
+                                                            {% for status in statuses %}
+                                                                <li>
+                                                                    <time datetime="{{ status.created_at|date:'c' }}">
+                                                                        {{ status.created_at|date:"d.m.Y H:i" }}
+                                                                    </time>
+                                                                    {% if status.comment_text %}
+                                                                        <span>{{ status.comment_text }}</span>
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <div class="student-portal-stages__empty">
+                                        <i class="fas fa-route" aria-hidden="true"></i>
+                                        Этапы ещё не назначены. Ожидайте формирования траектории.
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
         {% else %}
             <div class="student-portal-panel">
                 <div class="student-portal-panel__head">
@@ -92,7 +173,9 @@
             </div>
         {% endif %}
     </div>
+{% endblock %}
 
+{% block modals %}
     <div class="modal fade" id="requestCS" tabindex="-1" aria-labelledby="requestCSModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -115,4 +198,22 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-cs-card]:not([data-cs-static])').forEach(function (card) {
+                var toggle = card.querySelector('.student-portal-cs-card__toggle');
+                if (!toggle) {
+                    return;
+                }
+                toggle.addEventListener('click', function () {
+                    var isOpen = card.classList.contains('is-open');
+                    card.classList.toggle('is-open', !isOpen);
+                    toggle.setAttribute('aria-expanded', String(!isOpen));
+                });
+            });
+        });
+    </script>
 {% endblock %}

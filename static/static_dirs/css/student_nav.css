@@ -7,6 +7,111 @@
     --student-nav-text: #222;
 }
 
+/* ── Профиль в шапке ── */
+.student-header-user {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.student-header-user__avatar {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.85rem;
+    border-radius: 50%;
+}
+
+.student-header-user__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+}
+
+.student-header-user__name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.student-header-user__email {
+    font-size: 0.72rem;
+    line-height: 1.25;
+    opacity: 0.88;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.student-header-user--topbar {
+    margin-left: auto;
+    padding-left: 0.75rem;
+}
+
+.student-header-user--topbar .student-header-user__avatar {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.student-header-user--topbar .student-header-user__name,
+.student-header-user--topbar .student-header-user__email {
+    color: #fff;
+}
+
+.student-header-user--main {
+    flex: 1;
+    min-width: 0;
+    margin: 0 0.75rem;
+    padding: 0.35rem 0.65rem;
+    background: #faf5f4;
+    border: 1px solid rgba(160, 14, 7, 0.12);
+    border-radius: 8px;
+}
+
+.student-header-user--main .student-header-user__avatar {
+    color: var(--student-nav-red);
+    background: #fce8e6;
+}
+
+.student-header-user--main .student-header-user__name {
+    color: var(--student-nav-text);
+}
+
+.student-header-user--main .student-header-user__email {
+    color: #666;
+}
+
+@media (min-width: 992px) {
+    .student-header-user--main {
+        display: none;
+    }
+}
+
+@media (max-width: 991px) {
+    .student-header-user--topbar {
+        display: none !important;
+    }
+
+    .student-header-user--main {
+        margin: 0 0.45rem 0 0.55rem;
+        padding: 0.28rem 0.5rem;
+        max-width: calc(100% - 130px);
+    }
+
+    .student-header-user--main .student-header-user__email {
+        display: none;
+    }
+}
+
 /* ── Hamburger ── */
 @media (max-width: 991px) {
     .student-hamburger {
@@ -159,10 +264,21 @@ body.student-menu-open {
     min-width: 0;
 }
 
-.student-mobile-menu__email {
-    font-size: 0.8rem;
+.student-mobile-menu__name {
+    display: block;
+    font-size: 0.85rem;
     color: #fff;
-    font-weight: 500;
+    font-weight: 600;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.student-mobile-menu__email {
+    display: block;
+    margin-top: 0.1rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 400;
     word-break: break-all;
     line-height: 1.25;
 }
