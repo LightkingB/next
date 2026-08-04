@@ -1,149 +1,181 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_debts.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/app_modals.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
+    <div class="stepper-debts">
         {% if not student %}
-            <h4 class="text-center text-danger">Не удалось найти студента или отсутствует связь с MyEDU</h4>
+            <div class="stepper-debts__alert-error">
+                Не удалось найти студента или отсутствует связь с MyEDU
+            </div>
         {% endif %}
-        {% if CUSTOM_ROLES.STDEBT in DB_ROLES %}
-            <div class="row">
-                {% if history %}
-                    <div class="col-md-3"></div>
-                    <div class="col-md-6">
-                        <div class="card border-success mb-3 text-center">
-                            <div class="card-header bg-transparent border-success">
-                                <h4 class="mb-0 text-primary text-center">{{ student.student_fio }}</h4>
-                            </div>
-                            <div class="card-body text-left">
-                                {% if not sync_myedu %}
-                                    <h6 class="text-center text-danger">Данные из MyEDU временно недоступны.</h6>
-                                {% endif %}
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <ul class="list-group">
-                                            <li class="list-group-item"><b> Приказ:</b> № {{ student.info }}</li>
-                                            <li class="list-group-item"><b>Дата:</b> {{ student.date_movement }}</li>
-                                            <li class="list-group-item"><b>Статус:</b> {{ student.id_movement_info }}
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <ul class="list-group">
-                                            <li class="list-group-item"><b> Форма обучения:</b> {{ student.edu_form }}
-                                            </li>
-                                            <li class="list-group-item"><b>Форма оплаты:</b> {{ student.payment_form }}
-                                            </li>
-                                        </ul>
 
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        {% if CUSTOM_ROLES.STDEBT in DB_ROLES %}
+            <div class="stepper-debts__shell">
+                <header class="stepper-debts__head stepper-debts__head--compact">
+                    {% if history %}
+                        <a href="{% url 'stepper:debts-history' %}" class="stepper-debts__back">
+                            <i class="fa fa-arrow-left" aria-hidden="true"></i> Назад
+                        </a>
+                    {% elif request.resolver_match.url_name == 'teacher-debt-comments' %}
+                        <a href="{% url 'stepper:teacher-debts' %}" class="stepper-debts__back">
+                            <i class="fa fa-arrow-left" aria-hidden="true"></i> Назад
+                        </a>
+                    {% else %}
+                        <a href="{% url 'stepper:debts' %}" class="stepper-debts__back">
+                            <i class="fa fa-arrow-left" aria-hidden="true"></i> Назад
+                        </a>
+                    {% endif %}
+                    <div class="stepper-debts__head-main">
+                        <h1><i class="fas fa-user-graduate" aria-hidden="true"></i>Карточка студента</h1>
+                        {% if student %}
+                            <span class="stepper-debts__head-name">{{ student.student_fio }}</span>
+                        {% endif %}
                     </div>
-                    <div class="col-md-3"></div>
-                {% else %}
-                    <div class="col-md-5">
-                        {% include 'utils/_messages.html' %}
-                        <div class="text-center">
-                            <form action="" method="post">
-                                {% csrf_token %}
-                                <div class="form-group mb-1">
-                                    <h4 class="form-label text-center">
-                                        Комментировать
-                                    </h4>
-                                    <textarea class="form-control form-control-sm" rows="3" name="comment_text"
-                                              id="comment"
-                                              required></textarea>
-                                </div>
-                                <div class="form-group mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="disabledFieldsetCheck"
-                                               name="end">
-                                        <label class="form-check-label" for="disabledFieldsetCheck">
-                                            Завершить (без долгов)
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="mb-2">
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-comment"></i> Сохранить
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="col-md-7">
-                        <div class="card border-success mb-3 text-center">
-                            <div class="card-header bg-transparent border-success">
-                                <h4 class="mb-0 text-primary text-center">{{ student.student_fio }}</h4>
+                </header>
+
+                {% if history %}
+                    <div class="stepper-debts__workspace">
+                        <div class="admin-module__panel stepper-debts__card">
+                            <div class="admin-module__panel-head">
+                                <span><i class="fas fa-database" aria-hidden="true"></i>MyEDU</span>
                             </div>
-                            <div class="card-body text-left">
+                            <div class="admin-module__panel-body">
                                 {% if not sync_myedu %}
-                                    <h6 class="text-center text-danger">
-                                        Данные из MyEDU временно недоступны. Вы можете продолжить
-                                        работу и оставить комментарий.</h6>
+                                    <p class="stepper-debts__myedu-warn">Данные MyEDU недоступны</p>
                                 {% endif %}
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <ul class="list-group">
-                                            <li class="list-group-item"><b> Приказ:</b> № {{ student.info }}</li>
-                                            <li class="list-group-item"><b>Дата:</b> {{ student.date_movement }}</li>
-                                            <li class="list-group-item"><b>Статус:</b> {{ student.id_movement_info }}
-                                            </li>
-                                        </ul>
+                                <dl class="stepper-debts__info-list">
+                                    <div class="stepper-debts__info-row">
+                                        <dt>Приказ</dt>
+                                        <dd>№ {{ student.info }}</dd>
                                     </div>
-                                    <div class="col-md-6">
-                                        <ul class="list-group">
-                                            <li class="list-group-item"><b> Форма обучения:</b> {{ student.edu_form }}
-                                            </li>
-                                            <li class="list-group-item"><b>Форма оплаты:</b> {{ student.payment_form }}
-                                            </li>
-                                        </ul>
+                                    <div class="stepper-debts__info-row">
+                                        <dt>Дата</dt>
+                                        <dd>{{ student.date_movement }}</dd>
                                     </div>
+                                    <div class="stepper-debts__info-row">
+                                        <dt>Статус</dt>
+                                        <dd>{{ student.id_movement_info }}</dd>
+                                    </div>
+                                    <div class="stepper-debts__info-row">
+                                        <dt>Оплата</dt>
+                                        <dd>{{ student.payment_form }}</dd>
+                                    </div>
+                                    <div class="stepper-debts__info-row">
+                                        <dt>Обучение</dt>
+                                        <dd>{{ student.edu_form }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="admin-module__panel stepper-debts__card stepper-debts__card--history">
+                            <div class="admin-module__panel-head">
+                                <span><i class="fas fa-history" aria-hidden="true"></i>История комментариев</span>
+                            </div>
+                            <div class="admin-module__panel-body admin-module__panel-body--flush">
+                                {% include 'teachers/steppers/_debts_comment_history_table.html' %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="stepper-debts__workspace">
+                        <div class="stepper-debts__messages">
+                            {% include 'utils/_messages.html' %}
+                        </div>
+
+                        <div class="stepper-debts__split">
+                            <div class="admin-module__panel stepper-debts__card stepper-debts__card--form">
+                                <div class="admin-module__panel-head">
+                                    <span><i class="fas fa-pen" aria-hidden="true"></i>Комментарий</span>
                                 </div>
+                                <div class="admin-module__panel-body admin-module__panel-body--grid">
+                                    <form action="" method="post" class="admin-module__form stepper-debts__comment-form">
+                                        {% csrf_token %}
+                                        <div class="admin-module__form-field">
+                                            <label for="comment">Текст комментария</label>
+                                            <textarea class="form-control"
+                                                      name="comment_text"
+                                                      id="comment"
+                                                      rows="4"
+                                                      placeholder="Задолженность или решение по студенту"
+                                                      required></textarea>
+                                        </div>
+                                        <div class="stepper-debts__form-controls">
+                                            <label class="admin-module__checkbox" for="disabledFieldsetCheck">
+                                                <input type="checkbox"
+                                                       id="disabledFieldsetCheck"
+                                                       name="end">
+                                                <span>Завершить (без долгов)</span>
+                                            </label>
+                                            <button type="submit" class="btn btn-sm admin-module__btn-primary">
+                                                <i class="fas fa-save" aria-hidden="true"></i> Сохранить
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="admin-module__panel stepper-debts__card stepper-debts__card--info">
+                                <div class="admin-module__panel-head">
+                                    <span><i class="fas fa-database" aria-hidden="true"></i>MyEDU</span>
+                                </div>
+                                <div class="admin-module__panel-body">
+                                    {% if not sync_myedu %}
+                                        <p class="stepper-debts__myedu-warn">Данные MyEDU недоступны</p>
+                                    {% endif %}
+                                    <dl class="stepper-debts__info-list">
+                                        <div class="stepper-debts__info-row">
+                                            <dt>Приказ</dt>
+                                            <dd>№ {{ student.info }}</dd>
+                                        </div>
+                                        <div class="stepper-debts__info-row">
+                                            <dt>Дата</dt>
+                                            <dd>{{ student.date_movement }}</dd>
+                                        </div>
+                                        <div class="stepper-debts__info-row">
+                                            <dt>Статус</dt>
+                                            <dd>{{ student.id_movement_info }}</dd>
+                                        </div>
+                                        <div class="stepper-debts__info-row">
+                                            <dt>Оплата</dt>
+                                            <dd>{{ student.payment_form }}</dd>
+                                        </div>
+                                        <div class="stepper-debts__info-row">
+                                            <dt>Обучение</dt>
+                                            <dd>{{ student.edu_form }}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-module__panel stepper-debts__card stepper-debts__card--history">
+                            <div class="admin-module__panel-head">
+                                <span><i class="fas fa-history" aria-hidden="true"></i>История комментариев</span>
+                            </div>
+                            <div class="admin-module__panel-body admin-module__panel-body--flush">
+                                {% include 'teachers/steppers/_debts_comment_history_table.html' %}
                             </div>
                         </div>
                     </div>
                 {% endif %}
-            </div>
-            <hr/>
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-md"
-                       id="table-ajax-facultytranscript">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">{% trans 'Комментарий и решение' %}</th>
-                        <th scope="col">{% trans 'Дата создания' %}</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for comment in comments %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ comment.comment_text }}</td>
-                            <td>{{ comment.created_at|date:"d.m.Y H:i" }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
             </div>
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
 
-    <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document">
+    <div class="modal fade stepper-debts-modal" id="confirmationModal" tabindex="-1" role="dialog"
+         aria-labelledby="confirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="confirmationModalLabel">Подтверждение</h5>
@@ -155,7 +187,8 @@
                     Вы подтверждаете, что студент не имеет задолженностей и процесс можно завершить?
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-secondary" id="modalCancel" data-dismiss="modal">Отмена
+                    <button type="button" class="btn btn-sm btn-secondary" id="modalCancel" data-dismiss="modal">
+                        Отмена
                     </button>
                     <button type="button" class="btn btn-sm btn-success" id="modalConfirm">Подтвердить</button>
                 </div>

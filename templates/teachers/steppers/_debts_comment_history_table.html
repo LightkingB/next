@@ -1,0 +1,28 @@
+{% load i18n %}
+<table class="stepper-debts__table" id="table-ajax-facultytranscript">
+    <thead>
+    <tr>
+        <th class="stepper-debts__col-num">№</th>
+        <th>{% trans 'Комментарий и решение' %}</th>
+        <th>{% trans 'Дата создания' %}</th>
+    </tr>
+    </thead>
+    <tbody class="order">
+    {% for comment in comments %}
+        <tr>
+            <td class="stepper-debts__col-num">{{ forloop.counter }}</td>
+            <td><span class="stepper-debts__comment-text">{{ comment.comment_text }}</span></td>
+            <td><span class="stepper-debts__comment-date">{{ comment.created_at|date:"d.m.Y H:i" }}</span></td>
+        </tr>
+    {% empty %}
+        <tr class="stepper-debts__empty-row nosort">
+            <td colspan="3" class="stepper-debts__empty">
+                <div class="stepper-debts__empty-state">
+                    <i class="fas fa-comments" aria-hidden="true"></i>
+                    <p>{% trans 'Пусто' %}</p>
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

@@ -1,129 +1,139 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_debts.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container-fluid">
+    <div class="stepper-debts">
         {% if CUSTOM_ROLES.STDEBT in DB_ROLES %}
-            {% if history %}
-                <h3 class="text-center text-success">
-                    История студентов, уже прошедших этапы обходного листа
-                </h3>
-            {% else %}
-                <h3 class="text-center text-primary">
-                    Студенты, проходящие этапы обходного листа
-                </h3>
-                <h4 class="text-center text-danger mb-0">Текущий этап ({{ employee.template_stage.stage }})</h4>
-            {% endif %}
-            <hr/>
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-6">
-                        <form action="" method="get">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <label for="search">ФИО / MyEDU ID:</label>
-                                    <input type="text" class="form-control form-control-sm" name="search"
-                                           placeholder="230795"
-                                           id="search"/>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="my-2 mt-md-4 mb-md-0">
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-search"></i> Поиск
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
+            <div class="stepper-debts__shell">
+                <header class="stepper-debts__head{% if history %} stepper-debts__head--history{% endif %}">
+                    <div class="stepper-debts__head-row">
+                        <div class="stepper-debts__head-main">
+                            {% if history %}
+                                <h1><i class="fas fa-history" aria-hidden="true"></i>История прохождения этапов</h1>
+                                <p class="stepper-debts__head-desc">Студенты, уже прошедшие этап обходного листа.</p>
+                            {% else %}
+                                <h1><i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>Задолженности</h1>
+                                <p class="stepper-debts__head-desc">Студенты, проходящие этапы обходного листа.</p>
+                            {% endif %}
+                        </div>
+                        {% if not history and employee %}
+                            <span class="stepper-debts__head-stage">
+                                <span class="stepper-debts__head-stage-label">Этап:</span>
+                                {{ employee.template_stage.stage }}
+                            </span>
+                        {% endif %}
                     </div>
-                    <div class="col-md-4">
+                </header>
+
+                <div class="stepper-debts__toolbar">
+                    <form action="" method="get" class="stepper-debts__search">
+                        <div class="stepper-debts__field">
+                            <label for="search">ФИО / MyEDU ID</label>
+                            <input type="text"
+                                   class="form-control form-control-sm"
+                                   name="search"
+                                   placeholder="230795"
+                                   id="search"
+                                   value="{{ request.GET.search|default:'' }}"/>
+                        </div>
+                        <button type="submit" class="btn btn-sm stepper-debts__btn">
+                            <i class="fas fa-search" aria-hidden="true"></i> Поиск
+                        </button>
+                    </form>
+
+                    <div class="stepper-debts__status">
+                        <label for="status-select">Статус</label>
                         {% if not history %}
-                            <label for="status-form">Статус:</label>
                             <form action="" method="post" id="status-form">
                                 {% csrf_token %}
                                 <select class="custom-select custom-select-sm" name="status" id="status-select">
                                     <option value="0" {% if not request.POST.status %}selected{% endif %}>Все активные</option>
-                                    <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>В процессе
-                                    </option>
-                                    <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные
-                                    </option>
-                                    <option value="3" {% if request.POST.status == '3' %}selected{% endif %}>История
-                                    </option>
+                                    <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>В процессе</option>
+                                    <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные</option>
+                                    <option value="3" {% if request.POST.status == '3' %}selected{% endif %}>История</option>
                                 </select>
                             </form>
                         {% else %}
-                            <label for="status-form">Статус:</label>
-
                             <select class="custom-select custom-select-sm" name="status" id="status-select">
-
                                 <option value="0" {% if not request.POST.status %}selected{% endif %}>Все активные</option>
-                                <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>В процессе
-                                </option>
-                                <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные
-                                </option>
+                                <option value="2" {% if request.POST.status == '2' %}selected{% endif %}>В процессе</option>
+                                <option value="1" {% if request.POST.status == '1' %}selected{% endif %}>Отложенные</option>
                                 <option value="3" selected>История</option>
                             </select>
                         {% endif %}
                     </div>
                 </div>
-            </div>
 
-            <hr/>
-
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm"
-                       id="table-ajax-facultytranscript">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">{% trans 'ФИО' %}</th>
-                        <th scope="col">{% trans 'Кафедра' %}</th>
-                        <th scope="col">{% trans 'Специальность' %}</th>
-                        <th scope="col">Приказ</th>
-                        <th scope="col">Дата приказа</th>
-                        <th scope="col">Статус</th>
-                        {% if not history %}
-                            <th scope="col">Ваш вердикт</th>
-                        {% endif %}
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for student in students %}
+                <div class="stepper-debts__table-wrap">
+                    <table class="stepper-debts__table" id="table-ajax-facultytranscript">
+                        <thead>
                         <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>
-                                {% if history %}
-                                    <a href="{% url 'stepper:debts-comment-history' id=student.current_trajectory_id %}">
-                                        {{ student.student_fio }} ({{ student.myedu_id }})
-                                    </a>
-                                {% else %}
-                                    <a href="{% url 'stepper:debts-comment' id=student.current_trajectory_id %}">
-                                        {{ student.student_fio }} ({{ student.myedu_id }})
-                                    </a>
-                                {% endif %}
-                            </td>
-                            <td>{{ student.myedu_faculty }}</td>
-                            <td>{{ student.myedu_spec }}</td>
-                            <td>{{ student.order|default:"-" }}</td>
-                            <td>{{ student.order_date|default:"-" }}</td>
-                            <td>{{ student.order_status|default:"-" }}</td>
+                            <th class="stepper-debts__col-num">№</th>
+                            <th>{% trans 'ФИО' %}</th>
+                            <th>{% trans 'Кафедра' %}</th>
+                            <th>{% trans 'Специальность' %}</th>
+                            <th>Приказ</th>
+                            <th>Дата приказа</th>
+                            <th>Статус</th>
                             {% if not history %}
-                                <td>{{ student.last_comment|default:"-" }}</td>
+                                <th>Ваш вердикт</th>
                             {% endif %}
                         </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="order">
+                        {% for student in students %}
+                            <tr>
+                                <td class="stepper-debts__col-num">{{ forloop.counter }}</td>
+                                <td>
+                                    {% if history %}
+                                        <a href="{% url 'stepper:debts-comment-history' id=student.current_trajectory_id %}"
+                                           class="stepper-debts__link">
+                                            {{ student.student_fio }}
+                                        </a>
+                        <span class="stepper-debts__id">{{ student.myedu_id }}</span>
+                                    {% else %}
+                                        <a href="{% url 'stepper:debts-comment' id=student.current_trajectory_id %}"
+                                           class="stepper-debts__link">
+                                            {{ student.student_fio }}
+                                        </a>
+                        <span class="stepper-debts__id">{{ student.myedu_id }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ student.myedu_faculty }}</td>
+                                <td>{{ student.myedu_spec }}</td>
+                                <td>{{ student.order|default:"—" }}</td>
+                                <td>{{ student.order_date|default:"—" }}</td>
+                                <td>{{ student.order_status|default:"—" }}</td>
+                                {% if not history %}
+                                    <td>
+                                        <span class="stepper-debts__verdict">{{ student.last_comment|default:"—" }}</span>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% empty %}
+                            <tr class="stepper-debts__empty-row nosort">
+                                <td colspan="{% if history %}7{% else %}8{% endif %}" class="stepper-debts__empty">
+                                    <div class="stepper-debts__empty-state">
+                                        <i class="fas fa-inbox" aria-hidden="true"></i>
+                                        <p>{% trans 'Пусто' %}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-                {% include "utils/_pagination.html" with page_obj=students %}
-
+                <div class="stepper-debts__footer">
+                    {% include "utils/_pagination.html" with page_obj=students %}
+                </div>
             </div>
         {% else %}
             {% include 'utils/_access.html' %}
