@@ -84,10 +84,10 @@
                         <tbody>
                         {% for doc in issuance %}
                             <tr id="row-{{ doc.id }}">
-                                <td class="stepper-issuance__col-cert">
+                                <td class="stepper-issuance__col-cert" data-label="Справка">
                                     <span class="stepper-issuance__cert-num">{{ doc.id }}</span>
                                 </td>
-                                <td class="stepper-issuance__col-student">
+                                <td class="stepper-issuance__col-student" data-label="Студент">
                                     {% if doc.display_fio %}
                                         <span class="stepper-issuance__student-name">{{ doc.display_fio }}</span>
                                     {% else %}
@@ -107,7 +107,7 @@
                                         <span class="stepper-issuance__student-sub">{{ doc.speciality.title }}</span>
                                     {% endif %}
                                 </td>
-                                <td class="stepper-issuance__col-doc">
+                                <td class="stepper-issuance__col-doc" data-label="Диплом">
                                     <span class="stepper-issuance__doc-main">№ {{ doc.doc_number }}</span>
                                     {% if doc.reg_number %}
                                         <span class="stepper-issuance__doc-sub">Рег. № {{ doc.reg_number }}</span>
@@ -116,7 +116,7 @@
                                         <span class="stepper-issuance__doc-sub">Выдан {{ doc.date_issue|date:"d.m.Y" }}</span>
                                     {% endif %}
                                 </td>
-                                <td class="stepper-issuance__col-cs">
+                                <td class="stepper-issuance__col-cs" data-label="Обходной">
                                     {% if doc.cs_id %}
                                         <a href="{% url 'stepper:cs-report' cs_id=doc.cs_id %}"
                                            class="stepper-issuance__cs-link"
@@ -127,7 +127,7 @@
                                         <span class="text-muted">—</span>
                                     {% endif %}
                                 </td>
-                                <td class="stepper-issuance__col-type">
+                                <td class="stepper-issuance__col-type" data-label="Раздел">
                                     {% if doc.type_choices == 'speciality' %}
                                         <span class="stepper-issuance__badge stepper-issuance__badge--spec" title="Спец. часть">
                                             <i class="fas fa-graduation-cap" aria-hidden="true"></i> Спец.
@@ -141,11 +141,11 @@
                                         <span class="stepper-issuance__badge stepper-issuance__badge--double">Дубликат</span>
                                     {% endif %}
                                 </td>
-                                <td class="stepper-issuance__col-date">
+                                <td class="stepper-issuance__col-date" data-label="Записано">
                                     <span class="stepper-issuance__date-main">{{ doc.created_at|date:"d.m.Y" }}</span>
                                     <span class="stepper-issuance__date-sub">{{ doc.created_at|date:"H:i" }}</span>
                                 </td>
-                                <td class="stepper-issuance__col-actions">
+                                <td class="stepper-issuance__col-actions" data-label="">
                                     <button type="button"
                                             class="stepper-issuance__delete-btn btn-issuance-delete"
                                             data-id="{{ doc.id }}"
