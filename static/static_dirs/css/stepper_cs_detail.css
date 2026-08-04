@@ -1,0 +1,949 @@
+/* Stepper — карточка студента (/stepper/student/<id>/detail/) */
+
+.stepper-cs-detail {
+    --scd-red: var(--am-red, #A00E07);
+    --scd-red-dark: var(--am-red-dark, #8a0c06);
+    --scd-red-soft: var(--am-red-soft, #faf5f4);
+    --scd-red-line: var(--am-red-line, #e8d4d4);
+    --scd-ink: var(--am-ink, #1c1c1c);
+    --scd-text: var(--am-text, #333);
+    --scd-muted: var(--am-muted, #6b6b6b);
+    --scd-line: var(--am-line, #ddd9d4);
+    --scd-surface: var(--am-surface, #f7f5f2);
+    --scd-paper: var(--am-paper, #fcfbfa);
+
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem 1.5rem;
+    font-family: var(--am-font-body, 'Roboto', sans-serif);
+    font-size: 0.875rem;
+    color: var(--scd-text);
+}
+
+.stepper-cs-detail__shell {
+    background: var(--scd-paper);
+    border: 1px solid var(--scd-line);
+    border-radius: var(--am-radius, 8px);
+    overflow: hidden;
+}
+
+.stepper-cs-detail__head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1.15rem;
+    border-bottom: 1px solid var(--scd-line);
+    border-left: 4px solid var(--scd-red);
+    background: var(--scd-paper);
+}
+
+.stepper-cs-detail__head-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.stepper-cs-detail__head-title-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.65rem;
+}
+
+.stepper-cs-detail__head h1 {
+    margin: 0;
+    font-family: var(--am-font-heading, 'Roboto Slab', serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--scd-ink);
+    line-height: 1.3;
+}
+
+.stepper-cs-detail__head h1 i {
+    margin-right: 0.4rem;
+    color: var(--scd-red);
+    font-size: 0.88em;
+}
+
+.stepper-cs-detail__head-sheet {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--scd-red);
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.stepper-cs-detail__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    min-height: 32px;
+    padding: 0 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--scd-red) !important;
+    background: var(--scd-red-soft) !important;
+    border: 1px solid var(--scd-red-line) !important;
+    border-radius: 7px;
+    text-decoration: none !important;
+}
+
+.stepper-cs-detail__back:hover {
+    background: #fff !important;
+    border-color: var(--scd-red) !important;
+}
+
+.stepper-cs-detail__workspace {
+    padding: 1rem 1.15rem 1.15rem;
+    background: var(--scd-surface);
+}
+
+.stepper-cs-detail__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.stepper-cs-detail__main,
+.stepper-cs-detail__aside {
+    min-width: 0;
+}
+
+.stepper-cs-detail__aside-sticky {
+    position: sticky;
+    top: 0.75rem;
+}
+
+.stepper-cs-detail__panel-head-light {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.9rem 1.15rem 0.9rem 1.2rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--scd-ink);
+    background: #fff;
+    border-bottom: 1px solid var(--scd-line);
+}
+
+.stepper-cs-detail__panel-head-light::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--scd-red);
+}
+
+.stepper-cs-detail__panel-head-light i {
+    color: var(--scd-red);
+    font-size: 0.95em;
+    flex-shrink: 0;
+    margin-right: 0.55rem;
+}
+
+.stepper-cs-detail__panel-head-light span {
+    display: inline-flex;
+    align-items: center;
+}
+
+.stepper-cs-detail__student-panel .admin-module__panel-body {
+    padding: 1rem 1.1rem 1.05rem;
+}
+
+.stepper-cs-detail__student-name {
+    margin: 0 0 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+    font-family: var(--am-font-heading, 'Roboto Slab', serif);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--scd-ink);
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.stepper-cs-detail__workspace .admin-module__panel {
+    box-shadow: none;
+    margin-bottom: 0;
+}
+
+.stepper-cs-detail__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 0.85rem;
+    margin-bottom: 1rem;
+    padding: 0.85rem 1.1rem;
+    background: var(--scd-paper);
+    border: 1px solid var(--scd-line);
+    border-radius: var(--am-radius-sm, 6px);
+}
+
+.stepper-cs-detail__toolbar-label {
+    flex-shrink: 0;
+    min-width: 4.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--scd-muted);
+}
+
+.stepper-cs-detail__toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.stepper-cs-detail__toolbar-primary {
+    margin-left: auto;
+}
+
+.stepper-cs-detail__toolbar-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.stepper-cs-detail__completed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #1a5c32;
+    background: #e8f5ec;
+    border: 1px solid #b8dfc8;
+    border-radius: 999px;
+}
+
+.stepper-cs-detail__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 34px;
+    padding: 0 0.85rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: var(--am-radius-sm, 6px);
+    border: 1px solid transparent;
+    text-decoration: none !important;
+    white-space: nowrap;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.stepper-cs-detail__btn--success {
+    color: #fff !important;
+    background: #2e7d32 !important;
+    border-color: #256628 !important;
+}
+
+.stepper-cs-detail__btn--success:hover {
+    background: #256628 !important;
+    border-color: #1b5e20 !important;
+    color: #fff !important;
+}
+
+.stepper-cs-detail__btn--primary {
+    color: #fff !important;
+    background: var(--scd-red) !important;
+    border-color: var(--scd-red) !important;
+}
+
+.stepper-cs-detail__btn--primary:hover {
+    background: var(--scd-red-dark) !important;
+    border-color: var(--scd-red-dark) !important;
+    color: #fff !important;
+}
+
+.stepper-cs-detail__btn--outline {
+    color: var(--scd-text) !important;
+    background: #fff !important;
+    border-color: var(--scd-line) !important;
+}
+
+.stepper-cs-detail__btn--outline:hover {
+    color: var(--scd-ink) !important;
+    border-color: #bbb5af !important;
+    background: var(--scd-surface) !important;
+}
+
+.stepper-cs-detail__btn--danger-soft {
+    color: #9a1f1f !important;
+    background: #fff !important;
+    border-color: #e8c4c4 !important;
+}
+
+.stepper-cs-detail__btn--danger-soft:hover {
+    color: #7f1818 !important;
+    background: #fdf5f5 !important;
+    border-color: #d49090 !important;
+}
+
+.stepper-cs-detail__btn--danger {
+    color: #fff !important;
+    background: #c0392b !important;
+    border-color: #a93226 !important;
+}
+
+.stepper-cs-detail__btn--danger:hover {
+    background: #a93226 !important;
+    border-color: #922b21 !important;
+    color: #fff !important;
+}
+
+.stepper-cs-detail__messages {
+    margin-bottom: 0.85rem;
+}
+
+.stepper-cs-detail__messages:empty {
+    display: none;
+    margin-bottom: 0;
+}
+
+.stepper-cs-detail__trajectory-setup {
+    margin-bottom: 0.85rem;
+}
+
+.stepper-cs-detail__trajectory-setup .admin-module__panel-body {
+    text-align: center;
+}
+
+.stepper-cs-detail__trajectory-setup label {
+    display: block;
+    margin-bottom: 0.55rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--scd-ink);
+}
+
+.stepper-cs-detail__stages {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.45rem 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.stepper-cs-detail__stages input {
+    margin: 0;
+}
+
+.stepper-cs-detail__stages label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--scd-text);
+    cursor: pointer;
+}
+
+.stepper-cs-detail__stages label:hover {
+    color: var(--scd-red);
+}
+
+.stepper-cs-detail__stages-panel,
+.stepper-cs-detail__student-panel {
+    overflow: hidden;
+    background: #fff;
+}
+
+.stepper-cs-detail__stages-panel {
+    margin-top: 0.15rem;
+}
+
+.stepper-cs-detail__stage-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.stepper-cs-detail__stage-item {
+    border-bottom: 1px solid var(--scd-line);
+}
+
+.stepper-cs-detail__stage-item:last-child {
+    border-bottom: none;
+}
+
+.stepper-cs-detail__stage-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    padding: 0.8rem 1rem;
+    background: #fff;
+}
+
+.stepper-cs-detail__stage-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.stepper-cs-detail__stage-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--scd-ink);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.stepper-cs-detail__stage-note {
+    font-size: 0.78rem;
+    color: var(--scd-muted);
+    line-height: 1.35;
+}
+
+.stepper-cs-detail__stage-detail {
+    padding: 0 0.75rem 0.55rem;
+    background: var(--scd-surface);
+    border-top: 1px dashed var(--am-line-soft, #eceae6);
+}
+
+.stepper-cs-detail__stage-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 1.55rem;
+    height: 1.55rem;
+    padding: 0 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--scd-muted);
+    background: var(--scd-surface);
+    border: 1px solid var(--scd-line);
+    border-radius: 4px;
+}
+
+.stepper-cs-detail__stage-meta {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--scd-muted);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.stepper-cs-detail__stage-meta--done {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #1a5c32;
+    font-weight: 600;
+}
+
+.stepper-cs-detail__stage-meta a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: #1a4f78 !important;
+    font-weight: 600;
+    text-decoration: none !important;
+}
+
+.stepper-cs-detail__stage-meta a:hover {
+    color: #123a5a !important;
+    text-decoration: underline !important;
+}
+
+.stepper-cs-detail__status-table-wrap {
+    overflow-x: auto;
+}
+
+.stepper-cs-detail__status-table {
+    width: 100%;
+    margin: 0;
+    font-size: 0.8125rem;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.stepper-cs-detail__status-table thead th {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--scd-muted);
+    background: var(--scd-surface);
+    border-bottom: 1px solid var(--scd-line);
+    white-space: nowrap;
+}
+
+.stepper-cs-detail__status-table tbody td {
+    padding: 0.5rem 0.65rem;
+    vertical-align: top;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.stepper-cs-detail__status-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.stepper-cs-detail__status-empty {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.78rem;
+    color: var(--scd-muted);
+    text-align: left;
+}
+
+.stepper-cs-detail__info-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.stepper-cs-detail__info-row {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: baseline;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+}
+
+.stepper-cs-detail__info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.stepper-cs-detail__info-row dt {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--scd-muted);
+    line-height: 1.4;
+}
+
+.stepper-cs-detail__info-row dd {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--scd-ink);
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.stepper-cs-detail__debt {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: center;
+    border-top: 1px solid var(--scd-line);
+}
+
+.stepper-cs-detail__debt--ok {
+    color: #1a5c32;
+    background: #f0faf3;
+}
+
+.stepper-cs-detail__debt--bad {
+    color: #9a1f1f;
+    background: #fdf2f2;
+}
+
+.stepper-cs-detail__alert-error {
+    max-width: 1280px;
+    margin: 0 auto 0.75rem;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.8125rem;
+    color: #842029;
+    background: #fff0f0;
+    border: 1px solid #f5c2c7;
+    border-left: 4px solid #c62828;
+    border-radius: 7px;
+}
+
+@media (max-width: 991px) {
+    .stepper-cs-detail {
+        padding: 0 0.65rem 1rem;
+    }
+
+    .stepper-cs-detail__head {
+        padding: 0.7rem 0.85rem;
+        gap: 0.65rem;
+    }
+
+    .stepper-cs-detail__workspace {
+        padding: 0.75rem 0.85rem 0.85rem;
+    }
+
+    .stepper-cs-detail__layout {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .stepper-cs-detail__toolbar {
+        padding: 0.65rem 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .stepper-cs-detail__panel-head-light {
+        padding: 0.75rem 0.85rem 0.75rem 1rem;
+    }
+
+    .stepper-cs-detail__student-panel .admin-module__panel-body {
+        padding: 0.85rem 0.9rem 0.95rem;
+    }
+
+    .stepper-cs-detail__stage-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 0.7rem 0.85rem;
+    }
+
+    .stepper-cs-detail__aside {
+        order: -1;
+    }
+
+    .stepper-cs-detail__aside-sticky {
+        position: static;
+    }
+
+    .stepper-cs-detail__stage-meta {
+        grid-column: 2;
+        text-align: left;
+        white-space: normal;
+    }
+}
+
+/* ── Восстановление этапов (/stepper/cs/<id>/step/undo/) ── */
+
+.stepper-cs-detail__undo-panel {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.stepper-cs-detail__undo-hint {
+    margin: 0 0 0.85rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--scd-text);
+    background: var(--scd-paper);
+    border: 1px solid var(--scd-line);
+    border-radius: var(--am-radius-sm, 6px);
+}
+
+.stepper-cs-detail__undo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.stepper-cs-detail__undo-item {
+    margin: 0;
+}
+
+.stepper-cs-detail__undo-label {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--scd-ink);
+    background: var(--scd-paper);
+    border: 1px solid var(--scd-line);
+    border-radius: var(--am-radius-sm, 6px);
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+}
+
+.stepper-cs-detail__undo-label:hover {
+    border-color: #ccc6c0;
+}
+
+.stepper-cs-detail__undo-label input {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    accent-color: var(--scd-red);
+}
+
+.stepper-cs-detail__undo-label--done {
+    border-color: #b8dfc8;
+    background: #f5fbf7;
+}
+
+.stepper-cs-detail__undo-label--done:hover {
+    border-color: #8ecfaa;
+}
+
+.stepper-cs-detail__undo-label--pending {
+    color: var(--scd-muted);
+    background: var(--scd-surface);
+    border-style: dashed;
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+.stepper-cs-detail__undo-label--pending input {
+    cursor: not-allowed;
+}
+
+.stepper-cs-detail__undo-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--scd-red);
+    border-radius: 4px;
+}
+
+.stepper-cs-detail__undo-label--pending .stepper-cs-detail__undo-num {
+    background: #b0aaa4;
+}
+
+.stepper-cs-detail__undo-name {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.stepper-cs-detail__undo-badge {
+    flex-shrink: 0;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.stepper-cs-detail__undo-badge--done {
+    color: #1a5c32;
+    background: #e8f5ec;
+    border: 1px solid #b8dfc8;
+}
+
+.stepper-cs-detail__undo-badge--pending {
+    color: var(--scd-muted);
+    background: #eeebe7;
+    border: 1px solid var(--scd-line);
+}
+
+.stepper-cs-detail__undo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--am-line-soft, #eceae6);
+}
+
+.stepper-cs-detail__empty {
+    margin: 0;
+    padding: 1.5rem 1rem;
+    font-size: 0.875rem;
+    text-align: center;
+    color: var(--scd-muted);
+    background: var(--scd-paper);
+    border: 1px dashed var(--scd-line);
+    border-radius: var(--am-radius-sm, 6px);
+}
+
+.stepper-cs-detail__modal-check {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.75rem !important;
+}
+
+.stepper-cs-detail__modal-check .form-check {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 0;
+    margin: 0;
+}
+
+.stepper-cs-detail__modal-check .form-check-input {
+    position: static;
+    margin: 0 0.5rem 0 0;
+}
+
+/* ── История маршрутов (/stepper/cs/<id>/history/<cs_id>/detail/) ── */
+
+.stepper-cs-history__student-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.65rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--scd-paper);
+    border: 1px solid var(--scd-line);
+    border-radius: var(--am-radius-sm, 6px);
+}
+
+.stepper-cs-history__student-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--scd-muted);
+}
+
+.stepper-cs-history__student-name {
+    font-family: var(--am-font-heading, 'Roboto Slab', serif);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--scd-ink);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.stepper-cs-history__issuances {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.stepper-cs-history__issuance {
+    overflow: hidden;
+    background: #fff;
+}
+
+.stepper-cs-history__issuance-type {
+    font-weight: 600;
+}
+
+.stepper-cs-history__issuance-type--spec {
+    color: #1a5c32;
+}
+
+.stepper-cs-history__issuance-type--archive {
+    color: var(--scd-red);
+}
+
+.stepper-cs-history__issuance-body {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.85rem;
+    padding: 0.85rem 1rem 1rem;
+}
+
+.stepper-cs-history__issuance-photo {
+    width: 6.5rem;
+    height: 8rem;
+    overflow: hidden;
+    border: 1px solid var(--scd-line);
+    border-radius: var(--am-radius-sm, 6px);
+    background: var(--scd-surface);
+}
+
+.stepper-cs-history__issuance-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.stepper-cs-history__issuance-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    min-width: 0;
+}
+
+.stepper-cs-history__issuance-row {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 0.5rem;
+    align-items: baseline;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+}
+
+.stepper-cs-history__issuance-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.stepper-cs-history__issuance-row dt {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--scd-muted);
+    line-height: 1.35;
+}
+
+.stepper-cs-history__issuance-row dd {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--scd-ink);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.stepper-cs-history__toolbar {
+    margin-bottom: 1rem;
+}
+
+.stepper-cs-history__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    background: var(--scd-paper);
+    border: 1px dashed var(--scd-line);
+    border-radius: var(--am-radius-sm, 6px);
+}
+
+.stepper-cs-history__empty-title {
+    margin: 0;
+    font-family: var(--am-font-heading, 'Roboto Slab', serif);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--scd-ink);
+}
+
+.stepper-cs-history__empty-meta {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--scd-muted);
+}
+
+@media (max-width: 575px) {
+    .stepper-cs-history__issuance-body {
+        grid-template-columns: 1fr;
+    }
+
+    .stepper-cs-history__issuance-photo {
+        width: 100%;
+        max-width: 8rem;
+        height: 9rem;
+    }
+}

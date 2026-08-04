@@ -1,90 +1,110 @@
 {% extends 'admin_base.html' %}
 {% load static i18n custom_filters crispy_forms_tags %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_spec.css' %}"/>
+{% endblock %}
+
 {% block content %}
-    <div class="container-fluid">
-        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
-        <hr/>
+    <div class="stepper-spec">
         {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
-            {% include 'utils/_messages.html' %}
-            <form action="" method="get">
-                <div class="row">
-                    <div class="col-md-4"></div>
-                    <div class="col-md-3">
-                        <label for="search">ФИО / MyEDU ID / Обх. № / № диплома:</label>
-                        <input type="text"
-                               class="form-control form-control-sm"
-                               name="search"
-                               placeholder="230795"
-                               id="search"
-                               value="{{ request.GET.search }}"
-                        />
+            <div class="stepper-spec__shell">
+                <header class="stepper-spec__head">
+                    <div class="stepper-spec__head-main">
+                        <h1>
+                            <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                            {% if history %}История{% else %}Спец. часть{% endif %}
+                        </h1>
+                        <p class="stepper-spec__head-desc">{{ title }}</p>
+                    </div>
+                </header>
+
+                <div class="stepper-spec__workspace">
+                    {% include 'utils/_messages.html' %}
+
+                    <div class="stepper-spec__search-bar">
+                        <form action="" method="get" class="stepper-spec__search-bar-form">
+                            <span class="stepper-spec__search-bar-icon" aria-hidden="true">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control form-control-sm"
+                                   name="search"
+                                   placeholder="ФИО / MyEDU ID / Обх. № / № диплома"
+                                   id="search"
+                                   value="{{ request.GET.search }}"
+                                   aria-label="ФИО / MyEDU ID / Обх. № / № диплома"/>
+                            <button type="submit" class="stepper-spec__search-bar-btn">
+                                <i class="fas fa-search" aria-hidden="true"></i> Найти
+                            </button>
+                        </form>
                     </div>
 
-                    <div class="col-md-2">
-                        <div class="mt-2 mt-md-4">
-                            <button type="submit" class="btn btn-sm btn-danger">
-                                <i class="fas fa-search"></i> Поиск
-                            </button>
+                    <div class="admin-module__panel">
+                        <div class="stepper-spec__panel-head">
+                            <span><i class="fas fa-table" aria-hidden="true"></i>Студенты</span>
+                        </div>
+                        <div class="stepper-spec__table-zone admin-module__table-zone">
+                            <table class="table table-sm admin-module__table mb-0">
+                                <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">ФИО</th>
+                                    <th scope="col">№ Обх. листа</th>
+                                    {% if history %}
+                                        <th scope="col">№ диплома</th>
+                                        <th scope="col">Рег. номер</th>
+                                        <th scope="col">Дата выдачи</th>
+                                    {% endif %}
+                                    <th scope="col">Приказ</th>
+                                    <th scope="col">Дата приказа</th>
+                                    <th scope="col">Статус</th>
+                                    <th scope="col">Факультет</th>
+                                    <th scope="col">Специальность</th>
+                                    <th scope="col">№ справки</th>
+                                </tr>
+                                </thead>
+                                <tbody class="order">
+                                {% for student in objects %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <a href="{% url 'stepper:spec-part' id=student.id myedu_id=student.myedu_id %}">
+                                                {{ student.student_fio }} ({{ student.myedu_id }})
+                                            </a>
+                                        </td>
+                                        <td>{{ student.id }}</td>
+                                        {% if history %}
+                                            <td>{{ student.issuance_doc_number }}</td>
+                                            <td>{{ student.issuance_reg_number }}</td>
+                                            <td>{{ student.issuance_date_issue|date:"d-m-Y" }}</td>
+                                        {% endif %}
+                                        <td>{{ student.order|default:"-" }}</td>
+                                        <td>{{ student.order_date|default:"-" }}</td>
+                                        <td>{{ student.order_status|default:"-" }}</td>
+                                        <td>{{ student.myedu_faculty }}</td>
+                                        <td>{{ student.myedu_spec }}</td>
+                                        <td>{{ student.issuance_id|default:"-" }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr class="stepper-spec__empty nosort">
+                                        <td colspan="100%">
+                                            <small>{% trans 'Пусто' %}</small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+
+                    <div class="stepper-spec__pagination">
+                        {% include "utils/_pagination.html" with page_obj=objects %}
+                    </div>
                 </div>
-            </form>
-            <hr/>
-
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-md">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">ФИО</th>
-                        <th scope="col">№ Обх. листа</th>
-                        {% if history %}
-                            <th scope="col">№ диплома</th>
-                            <th scope="col">Рег. номер</th>
-                            <th scope="col">Дата выдачи</th>
-                        {% endif %}
-                        <th scope="col">Приказ</th>
-                        <th scope="col">Дата приказа</th>
-                        <th scope="col">Статус</th>
-                        <th scope="col">Факультет</th>
-                        <th scope="col">Специальность</th>
-                        <th scope="col">№ справки</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for student in objects %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>
-                                <a href="{% url  'stepper:spec-part' id=student.id myedu_id=student.myedu_id %}">
-                                    {{ student.student_fio }} ({{ student.myedu_id }})
-                                </a>
-                            </td>
-                            <td>{{ student.id }}</td>
-                            {% if history %}
-                                <td>{{ student.issuance_doc_number }}</td>
-                                <td>{{ student.issuance_reg_number }}</td>
-                                <td>{{ student.issuance_date_issue|date:"d-m-Y" }}</td>
-                            {% endif %}
-                            <td>{{ student.order|default:"-" }}</td>
-                            <td>{{ student.order_date|default:"-" }}</td>
-                            <td>{{ student.order_status|default:"-" }}</td>
-                            <td>{{ student.myedu_faculty }}</td>
-                            <td>{{ student.myedu_spec }}</td>
-                            <td>{{ student.issuance_id|default:"-" }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-
-                {% include "utils/_pagination.html" with page_obj=objects %}
             </div>
         {% else %}
             {% include 'utils/_access.html' %}

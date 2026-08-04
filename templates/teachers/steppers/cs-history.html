@@ -1,182 +1,231 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_cs_detail.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/app_modals.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        {% if student %}
-            <h4 class="text-center text-primary">{% trans 'Запись пройденных маршрутов' %}: {{ student.student_fio }}</h4>
-
-            {% if issuances %}
-                <hr/>
-                <div class="row {% if issuances|length == 1 %}justify-content-center{% endif %}">
-                    {% for issuance in issuances %}
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="row no-gutters">
-                                    <div class="col-md-4">
-                                        {% if  issuance.signature %}
-                                            <img src="{{ issuance.signature.url }}" class="card-img" alt="...">
-                                        {% else %}
-                                            <img src="{% static 'img/No-photo-m.png' %}" class="card-img" alt="...">
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-8">
-                                        <div class="card-body">
-                                            <h5 class="card-title">
-                                                {% if issuance.type_choices == "speciality" %}
-                                                    <span class="text-success">Спец. часть</span>
-                                                {% else %}
-                                                    <span class="text-danger">Архив (ОК)</span>
-                                                {% endif %}
-
-                                            </h5>
-                                            <h6 class="card-text">
-                                                № справки: {{ issuance.id }}<br/>
-                                                Диплом №: {{ issuance.doc_number }}<br/>
-                                                Регистрационный №: {{ issuance.reg_number|default:"-" }}<br/>
-                                                Дата выдачи: {{ issuance.date_issue|date:"d-m-Y"|default:"-" }} <br/>
-                                                Статус: Выдан {% if issuance.status == "received" %}
-                                                однократно {% else %}
-                                                более одного раза {% endif %}<br/>
-                                                Примечание: {{ issuance.note|default:"-" }}
-                                            </h6>
-                                            <hr/>
-                                            <h6>
-                                                Обходной лист №: {{ cs_student.id }}
-                                                <br/>
-                                                Дата и время записи - {{ issuance.created_at|date:"d-m-Y H:i" }}
-                                            </h6>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            {% if cs_student and cs_student.type_choices != "speciality" %}
-                <hr/>
-                <div class="text-center">
-                    <!-- Button trigger modal -->
-                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal"
-                            data-target="#exampleModal">
-                        Восстановить в спец. часть <i class="fas fa-upload"></i>
-                    </button>
-                </div>
-
-                <!-- Modal -->
-                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                     aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <form method="post" action="">
-                                {% csrf_token %}
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Процесс восстановления!!!</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    Вы действительно хотите восстановить <b>{{ cs_student.student_fio }}</b> в спец.
-                                    часть ?
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">
-                                        Закрыть
-                                    </button>
-                                    <button type="submit" class="btn btn-sm btn-danger">Восстановить</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-            <hr/>
-            <div class="stage-status">
-                {% for trajectory in trajectories %}
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between flex-wrap">
-                                <h5 class="mb-0">
-                                    <strong>#{{ forloop.counter }}</strong> {{ trajectory.template_stage.stage.name }}
-                                </h5>
-                                <h5>
-                                    {% if trajectory.completed_at %}
-                                        <span class="text-success">
-                                    {% trans 'Завершен' %} <i class="far fa-check-square"></i> :
-                                    {{ trajectory.completed_at|date:"d.m.Y H:i" }}
-                                     </span>
-                                    {% endif %}
-                                </h5>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            {% with trajectory.stagestatus_set.all as statuses %}
-                                {% if statuses %}
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-bordered mb-0">
-                                            <thead>
-                                            <tr>
-                                                <th>Обработал</th>
-                                                <th>Комментарий</th>
-                                                <th>Дата создания</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for status in statuses %}
-                                                <tr>
-                                                    <td>{{ status.processed_by|default:"—" }}</td>
-                                                    <td>{{ status.comment_text|default:"—" }}</td>
-                                                    <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
-                                                </tr>
-                                            {% empty %}
-                                                <tr>
-                                                    <td colspan="4" class="text-center">Статусов пока нет
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                {% else %}
-                                    <p class="mb-0">Статусов пока нет</p>
-                                {% endif %}
-                            {% endwith %}
-                        </div>
-                    </div>
-                {% empty %}
-
-                    <div class="d-flex justify-content-center align-items-center">
-                        <div class="card text-center" style="width: 20em">
-                            {% if not cs_student.completed_at %}
-                                <div class="card-header">
-                                    <h5> Нет доступных траекторий</h5>
-                                </div>
-                                <div class="card-body">
-                                    <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}"
-                                       class="text-danger">
-                                        <h5 class="card-title">
-                                            Назначить траектории
-                                        </h5>
-                                    </a>
-                                </div>
-                            {% else %}
-                                <div class="card-header">
-                                    <h5>Обходной лист успешно завершен</h5>
-                                </div>
-                                <div class="card-body">
-                                    Дата завершения: {{ cs_student.completed_at|date:'d/m/Y H:i' }}
-                                </div>
+    {% if student %}
+        <div class="stepper-cs-detail stepper-cs-history">
+            <div class="stepper-cs-detail__shell">
+                <header class="stepper-cs-detail__head">
+                    <a href="{% url 'stepper:cs-done' %}" class="stepper-cs-detail__back">
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i> Назад
+                    </a>
+                    <div class="stepper-cs-detail__head-main">
+                        <div class="stepper-cs-detail__head-title-row">
+                            <h1><i class="fas fa-history" aria-hidden="true"></i>{% trans 'Запись пройденных маршрутов' %}</h1>
+                            {% if cs_student %}
+                                <span class="stepper-cs-detail__head-sheet">№ {{ cs_student.id }}</span>
                             {% endif %}
                         </div>
                     </div>
-                {% endfor %}
+                </header>
+
+                <div class="stepper-cs-detail__workspace">
+                    <div class="stepper-cs-history__student-bar">
+                        <span class="stepper-cs-history__student-label">{% trans 'Студент' %}</span>
+                        <span class="stepper-cs-history__student-name">{{ student.student_fio }}</span>
+                    </div>
+
+                    {% if issuances %}
+                        <div class="stepper-cs-history__issuances">
+                            {% for issuance in issuances %}
+                                <div class="admin-module__panel stepper-cs-history__issuance">
+                                    <div class="stepper-cs-detail__panel-head-light">
+                                        <span>
+                                            <i class="fas fa-certificate" aria-hidden="true"></i>
+                                            {% if issuance.type_choices == "speciality" %}
+                                                <span class="stepper-cs-history__issuance-type stepper-cs-history__issuance-type--spec">Спец. часть</span>
+                                            {% else %}
+                                                <span class="stepper-cs-history__issuance-type stepper-cs-history__issuance-type--archive">Архив (ОК)</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="stepper-cs-history__issuance-body">
+                                        <div class="stepper-cs-history__issuance-photo">
+                                            {% if issuance.signature %}
+                                                <img src="{{ issuance.signature.url }}" alt="">
+                                            {% else %}
+                                                <img src="{% static 'img/No-photo-m.png' %}" alt="">
+                                            {% endif %}
+                                        </div>
+                                        <dl class="stepper-cs-history__issuance-list">
+                                            <div class="stepper-cs-history__issuance-row">
+                                                <dt>№ справки</dt>
+                                                <dd>{{ issuance.id }}</dd>
+                                            </div>
+                                            <div class="stepper-cs-history__issuance-row">
+                                                <dt>Диплом №</dt>
+                                                <dd>{{ issuance.doc_number }}</dd>
+                                            </div>
+                                            <div class="stepper-cs-history__issuance-row">
+                                                <dt>Рег. №</dt>
+                                                <dd>{{ issuance.reg_number|default:"-" }}</dd>
+                                            </div>
+                                            <div class="stepper-cs-history__issuance-row">
+                                                <dt>Дата выдачи</dt>
+                                                <dd>{{ issuance.date_issue|date:"d-m-Y"|default:"-" }}</dd>
+                                            </div>
+                                            <div class="stepper-cs-history__issuance-row">
+                                                <dt>Статус</dt>
+                                                <dd>
+                                                    Выдан {% if issuance.status == "received" %}однократно{% else %}более одного раза{% endif %}
+                                                </dd>
+                                            </div>
+                                            <div class="stepper-cs-history__issuance-row">
+                                                <dt>Примечание</dt>
+                                                <dd>{{ issuance.note|default:"-" }}</dd>
+                                            </div>
+                                            <div class="stepper-cs-history__issuance-row">
+                                                <dt>Обходной лист</dt>
+                                                <dd>№ {{ cs_student.id }}</dd>
+                                            </div>
+                                            <div class="stepper-cs-history__issuance-row">
+                                                <dt>Запись</dt>
+                                                <dd>{{ issuance.created_at|date:"d-m-Y H:i" }}</dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if cs_student and cs_student.type_choices != "speciality" %}
+                        <div class="stepper-cs-detail__toolbar stepper-cs-history__toolbar">
+                            <span class="stepper-cs-detail__toolbar-label">Действия</span>
+                            <div class="stepper-cs-detail__toolbar-actions">
+                                <button type="button"
+                                        class="stepper-cs-detail__btn stepper-cs-detail__btn--primary"
+                                        data-toggle="modal"
+                                        data-target="#exampleModal">
+                                    <i class="fas fa-upload" aria-hidden="true"></i>
+                                    Восстановить в спец. часть
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                             aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form method="post" action="">
+                                        {% csrf_token %}
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalLabel">Процесс восстановления!!!</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Вы действительно хотите восстановить <b>{{ cs_student.student_fio }}</b> в спец.
+                                            часть ?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">
+                                                Закрыть
+                                            </button>
+                                            <button type="submit" class="btn btn-sm btn-danger">Восстановить</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if trajectories %}
+                        <div class="admin-module__panel stepper-cs-detail__stages-panel">
+                            <div class="stepper-cs-detail__panel-head-light">
+                                <span><i class="fas fa-list-ol" aria-hidden="true"></i>Этапы</span>
+                            </div>
+                            <div class="stage-status stepper-cs-detail__stage-list">
+                                {% for trajectory in trajectories %}
+                                    {% with trajectory.stagestatus_set.all as statuses %}
+                                    <div class="stepper-cs-detail__stage-item">
+                                        <div class="stepper-cs-detail__stage-row">
+                                            <span class="stepper-cs-detail__stage-num">#{{ forloop.counter }}</span>
+                                            <div class="stepper-cs-detail__stage-main">
+                                                <span class="stepper-cs-detail__stage-title">
+                                                    {{ trajectory.template_stage.stage.name }}
+                                                </span>
+                                                {% if not statuses %}
+                                                    <span class="stepper-cs-detail__stage-note">Статусов пока нет</span>
+                                                {% endif %}
+                                            </div>
+                                            <span class="stepper-cs-detail__stage-meta">
+                                                {% if trajectory.completed_at %}
+                                                    <span class="stepper-cs-detail__stage-meta--done">
+                                                        {% trans 'Завершен' %}
+                                                        <i class="far fa-check-square" aria-hidden="true"></i>
+                                                        {{ trajectory.completed_at|date:"d.m.Y H:i" }}
+                                                    </span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        {% if statuses %}
+                                            <div class="stepper-cs-detail__stage-detail">
+                                                <div class="stepper-cs-detail__status-table-wrap">
+                                                    <table class="stepper-cs-detail__status-table mb-0">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Обработал</th>
+                                                            <th>Комментарий</th>
+                                                            <th>Дата создания</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        {% for status in statuses %}
+                                                            <tr>
+                                                                <td>{{ status.processed_by|default:"—" }}</td>
+                                                                <td>{{ status.comment_text|default:"—" }}</td>
+                                                                <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
+                                                            </tr>
+                                                        {% empty %}
+                                                            <tr>
+                                                                <td colspan="4" class="text-center">Статусов пока нет</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="stepper-cs-history__empty">
+                            {% if not cs_student.completed_at %}
+                                <p class="stepper-cs-history__empty-title">Нет доступных траекторий</p>
+                                <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}"
+                                   class="stepper-cs-detail__btn stepper-cs-detail__btn--primary">
+                                    <i class="fas fa-route" aria-hidden="true"></i>
+                                    Назначить траектории
+                                </a>
+                            {% else %}
+                                <p class="stepper-cs-history__empty-title">Обходной лист успешно завершен</p>
+                                <p class="stepper-cs-history__empty-meta">
+                                    Дата завершения: {{ cs_student.completed_at|date:'d/m/Y H:i' }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <h4 class="text-center text-danger">Не удалось найти студента или отсутствует связь с MyEDU</h4>
-        {% endif %}
-    </div>
+        </div>
+    {% else %}
+        <div class="stepper-cs-detail">
+            <div class="stepper-cs-detail__alert-error">
+                Не удалось найти студента или отсутствует связь с MyEDU
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}

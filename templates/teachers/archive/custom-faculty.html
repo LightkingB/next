@@ -1,62 +1,93 @@
 {% extends 'admin_base.html' %}
 {% load static i18n custom_filters crispy_forms_tags %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/archive_acts.css' %}"/>
+{% endblock %}
+
 {% block content %}
-    <div class="container">
-        <a href="{% url 'archive:act-index' %}" class="btn btn-danger btn-sm">
-            <i class="fa fa-arrow-left"></i> Список актов
-        </a>
-        <hr/>
-        <h5>Добавить факультет</h5>
-        {% include 'utils/_messages.html' %}
-        <form action="" method="post">
-            {% csrf_token %}
-            <div class="form-row">
-                <div class="col-md-3">
-                    <label for="title" class="form-label">Название</label>
-                    <input type="text" class="form-control form-control-sm" placeholder="Информационные технологии"
-                           name="title" id="title" required/>
+    <div class="archive-acts">
+        <div class="archive-acts__shell">
+            <header class="archive-acts__head">
+                <a href="{% url 'archive:act-index' %}" class="archive-acts__back">
+                    <i class="fa fa-arrow-left" aria-hidden="true"></i> Список актов
+                </a>
+                <div class="archive-acts__head-main">
+                    <h1><i class="fas fa-university" aria-hidden="true"></i>Факультеты</h1>
+                    <p class="archive-acts__head-desc">Добавление и редактирование факультетов для актов архива</p>
                 </div>
-                <div class="col-md-3">
-                    <label for="short_name" class="form-label">Короткое название</label>
-                    <input type="text" class="form-control form-control-sm" placeholder="МФТИТ"
-                           name="short_name" id="short_name" required/>
+            </header>
+
+            <div class="archive-acts__workspace">
+                {% include 'utils/_messages.html' %}
+
+                <div class="admin-module__panel">
+                    <div class="archive-acts__panel-head">
+                        <span><i class="fas fa-plus-circle" aria-hidden="true"></i>Добавить факультет</span>
+                    </div>
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <div class="archive-acts__form-body archive-acts__form-body--compact">
+                            <div class="archive-acts__inline-form">
+                                <div class="archive-acts__inline-field">
+                                    <label for="title">Название</label>
+                                    <input type="text" class="form-control" placeholder="Информационные технологии"
+                                           name="title" id="title" required/>
+                                </div>
+                                <div class="archive-acts__inline-field">
+                                    <label for="short_name">Короткое название</label>
+                                    <input type="text" class="form-control" placeholder="МФТИТ"
+                                           name="short_name" id="short_name" required/>
+                                </div>
+                                <div class="archive-acts__inline-submit">
+                                    <button type="submit" class="btn archive-acts__btn archive-acts__btn--primary">
+                                        Сохранить
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-md-2 mt-4 text-center text-md-left">
-                    <button type="submit" class="btn btn-sm btn-danger">Сохранить</button>
+
+                <div class="admin-module__panel">
+                    <div class="archive-acts__panel-head">
+                        <span><i class="fas fa-table" aria-hidden="true"></i>Список факультетов</span>
+                    </div>
+                    <div class="archive-acts__table-zone admin-module__table-zone">
+                        <table class="table table-sm admin-module__table mb-0">
+                            <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Факультет</th>
+                                <th scope="col">Короткое название</th>
+                                <th scope="col"></th>
+                            </tr>
+                            </thead>
+                            <tbody class="order">
+                            {% for faculty in faculties %}
+                                {% include 'teachers/archive/includes/faculty-row.html' with faculty=faculty %}
+                            {% empty %}
+                                <tr class="archive-acts__empty nosort">
+                                    <td colspan="100%">
+                                        <small>{% trans 'Пусто' %}</small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="archive-acts__pagination">
+                    {% include "utils/_pagination.html" with page_obj=faculties %}
                 </div>
             </div>
-        </form>
-        <hr/>
-
-        <div class="table-responsive">
-            <table class="table table-bordered table-sm table-responsive-md">
-                <thead class="thead-light">
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Факультет</th>
-                    <th scope="col">Короткое название</th>
-                    <th scope="col"></th>
-                </tr>
-                </thead>
-                <tbody class="order">
-                {% for faculty in faculties %}
-                    {% include 'teachers/archive/includes/faculty-row.html' with faculty=faculty %}
-                {% empty %}
-                    <tr class="table-warning nosort">
-                        <td colspan="100%" class="text-center">
-                            <small class="text-muted">{% trans 'Пусто' %}</small>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-
-            {% include "utils/_pagination.html" with page_obj=faculties %}
         </div>
     </div>
 
-    <!-- Модальное окно -->
     <div class="modal fade" id="modalFacultyEdit" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -66,19 +97,15 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body" id="modalFacultyEditBody">
-                    <!-- Здесь подгрузим форму через AJAX -->
-                </div>
+                <div class="modal-body" id="modalFacultyEditBody"></div>
             </div>
         </div>
     </div>
-
 {% endblock %}
 
 {% block scripts %}
     <script type="text/javascript">
         $(function () {
-            // Открыть модалку
             $(document).on("click", ".js-edit-faculty", function () {
                 let url = $(this).data("url");
                 $.ajax({
@@ -92,7 +119,6 @@
                 });
             });
 
-            // Отправка формы (AJAX)
             $("#modalFacultyEdit").on("submit", "#faculty-edit-form", function (e) {
                 e.preventDefault();
                 let form = $(this);
@@ -104,14 +130,10 @@
                     dataType: "json",
                     success: function (data) {
                         if (data.success) {
-                            // обновляем только строку
                             $("#faculty-row-" + data.faculty_id).replaceWith(data.html_row);
-
-                            // закрываем модалку
                             $("#modalFacultyEdit").modal("hide");
                             toastr["success"]("Факультет успешно обновлён");
                         } else {
-                            // перерисовать форму с ошибками
                             $("#modalFacultyEditBody").html(data.html_form);
                             toastr["error"](data.error || "Ошибка при обновлении");
                         }

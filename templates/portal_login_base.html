@@ -39,6 +39,44 @@
 {% block modals %}{% endblock %}
 
 {% include 'component/footer.html' %}
+<script>
+    (function () {
+        function initPasswordToggle() {
+            var input = document.getElementById('password');
+            if (!input || input.closest('.portal-login__password-wrap')) {
+                return;
+            }
+
+            var wrap = document.createElement('div');
+            wrap.className = 'portal-login__password-wrap';
+            input.parentNode.insertBefore(wrap, input);
+            wrap.appendChild(input);
+
+            var toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'portal-login__password-toggle';
+            toggle.setAttribute('aria-label', 'Показать пароль');
+            toggle.setAttribute('aria-pressed', 'false');
+            toggle.innerHTML = '<i class="far fa-eye" aria-hidden="true"></i>';
+
+            toggle.addEventListener('click', function () {
+                var visible = input.type === 'text';
+                input.type = visible ? 'password' : 'text';
+                toggle.setAttribute('aria-label', visible ? 'Показать пароль' : 'Скрыть пароль');
+                toggle.setAttribute('aria-pressed', visible ? 'false' : 'true');
+                toggle.querySelector('i').className = visible ? 'far fa-eye' : 'far fa-eye-slash';
+            });
+
+            wrap.appendChild(toggle);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initPasswordToggle);
+        } else {
+            initPasswordToggle();
+        }
+    })();
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

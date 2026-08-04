@@ -97,6 +97,44 @@
     box-shadow: 0 0 0 2px rgba(160, 14, 7, 0.12);
 }
 
+.portal-login__password-wrap {
+    position: relative;
+}
+
+.portal-login__password-wrap .form-control {
+    padding-right: 2.75rem;
+}
+
+.portal-login__password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.35rem;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #76777a;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.portal-login__password-toggle:hover {
+    color: #A00E07;
+    background: rgba(160, 14, 7, 0.06);
+}
+
+.portal-login__password-toggle:focus {
+    outline: none;
+    color: #A00E07;
+    box-shadow: 0 0 0 2px rgba(160, 14, 7, 0.15);
+}
+
 .portal-login__agreement {
     position: relative;
     margin: 1.1rem 0 1.25rem;

@@ -49,7 +49,7 @@
                                 <th scope="col">#</th>
                                 <th scope="col">{% trans 'ФИО' %}</th>
                                 <th scope="col">{% trans 'Роль' %}</th>
-                                <th scope="col">{% trans 'Операции' %}</th>
+                                <th scope="col" class="text-center">{% trans 'Операции' %}</th>
                                 <th scope="col">{% trans 'Активный' %}</th>
                             </tr>
                             </thead>
@@ -61,7 +61,7 @@
                                         {{ obj.employee.full_name }} ({{ obj.employee.email }})
                                     </td>
                                     <td>{{ obj.template_stage.stage.name }}</td>
-                                    <td>
+                                    <td class="text-center">
                                         <a href="{% url 'stepper:stage-employee-update' pk=obj.id %}"
                                            class="admin-module__table-action">
                                             <i class="fas fa-user-edit" aria-hidden="true"></i>

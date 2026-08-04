@@ -1,57 +1,79 @@
 {% extends 'admin_base.html' %}
 {% load static i18n custom_filters crispy_forms_tags %}
 
-{% block content %}
-    <div class="container">
-        <h4 class="text-center mb-0">Модуль#2: {{ title }}</h4>
-        <hr/>
-        <form action="" method="post">
-            {% csrf_token %}
+{% block body_class %}admin-module-page{% endblock %}
 
-            <div class="form-row">
-                <div class="col-md-3 mb-3 mb-md-0">
-                    <select name="edu_year" class="form-control">
-                        {% for edu_year in edu_years %}
-                            <option value="{{ edu_year.id }}"
-                                    {% if edu_year.id == active_edu_year.id %}
-                                    selected {% endif %}>
-                                {{ edu_year.title }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2 text-center text-md-left">
-                    <button type="submit" class="btn btn-danger"><i class="fa fa-search"></i> Поиск</button>
-                </div>
-            </div>
-        </form>
-        <hr/>
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_spec.css' %}"/>
+{% endblock %}
+
+{% block content %}
+    <div class="stepper-spec">
         {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm table-responsive-md">
-                    <thead class="thead-light">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Факультет</th>
-                        <th scope="col">Количество</th>
-                    </tr>
-                    </thead>
-                    <tbody class="order">
-                    {% for faculty in statistics %}
-                        <tr {% if forloop.last %}class="total-row"{% endif %}>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ faculty.myedu_faculty }}</td>
-                            <td>{{ faculty.total }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr class="table-warning nosort">
-                            <td colspan="100%" class="text-center">
-                                <small class="text-muted">{% trans 'Пусто' %}</small>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+            <div class="stepper-spec__shell">
+                <header class="stepper-spec__head">
+                    <div class="stepper-spec__head-main">
+                        <h1><i class="fas fa-chart-bar" aria-hidden="true"></i>Отчёт</h1>
+                        <p class="stepper-spec__head-desc">{{ title }}</p>
+                    </div>
+                </header>
+
+                <div class="stepper-spec__workspace">
+                    <div class="admin-module__panel">
+                        <div class="stepper-spec__panel-head">
+                            <span><i class="fas fa-filter" aria-hidden="true"></i>Учебный год</span>
+                        </div>
+                        <div class="admin-module__panel-body">
+                            <form action="" method="post" class="stepper-spec__filter-row">
+                                {% csrf_token %}
+                                <select name="edu_year" class="form-control">
+                                    {% for edu_year in edu_years %}
+                                        <option value="{{ edu_year.id }}"
+                                                {% if edu_year.id == active_edu_year.id %}selected{% endif %}>
+                                            {{ edu_year.title }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fa fa-search" aria-hidden="true"></i> Поиск
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="admin-module__panel">
+                        <div class="stepper-spec__panel-head">
+                            <span><i class="fas fa-university" aria-hidden="true"></i>Статистика по факультетам</span>
+                        </div>
+                        <div class="stepper-spec__table-zone admin-module__table-zone">
+                            <table class="table table-sm admin-module__table mb-0">
+                                <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Факультет</th>
+                                    <th scope="col">Количество</th>
+                                </tr>
+                                </thead>
+                                <tbody class="order">
+                                {% for faculty in statistics %}
+                                    <tr {% if forloop.last %}class="stepper-spec__total-row total-row"{% endif %}>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ faculty.myedu_faculty }}</td>
+                                        <td>{{ faculty.total }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr class="stepper-spec__empty nosort">
+                                        <td colspan="100%">
+                                            <small>{% trans 'Пусто' %}</small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         {% else %}
             {% include 'utils/_access.html' %}

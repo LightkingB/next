@@ -1,0 +1,557 @@
+/* Stepper — спец. часть (/stepper/spec/, /stepper/spec/<id>/<myedu>/student/, /stepper/spec/report/) */
+
+.stepper-spec {
+    --ss-red: var(--am-red, #A00E07);
+    --ss-red-dark: var(--am-red-dark, #8a0c06);
+    --ss-red-soft: var(--am-red-soft, #faf5f4);
+    --ss-red-line: var(--am-red-line, #e8d4d4);
+    --ss-ink: var(--am-ink, #1c1c1c);
+    --ss-text: var(--am-text, #333);
+    --ss-muted: var(--am-muted, #6b6b6b);
+    --ss-line: var(--am-line, #ddd9d4);
+    --ss-surface: var(--am-surface, #f7f5f2);
+    --ss-paper: var(--am-paper, #fcfbfa);
+
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem 1.5rem;
+    font-family: var(--am-font-body, 'Roboto', sans-serif);
+    font-size: 0.875rem;
+    color: var(--ss-text);
+}
+
+.stepper-spec__shell {
+    background: var(--ss-paper);
+    border: 1px solid var(--ss-line);
+    border-radius: var(--am-radius, 8px);
+    overflow: hidden;
+}
+
+.stepper-spec__head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1.15rem;
+    border-bottom: 1px solid var(--ss-line);
+    border-left: 4px solid var(--ss-red);
+    background: var(--ss-paper);
+}
+
+.stepper-spec__head-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.stepper-spec__head h1 {
+    margin: 0;
+    font-family: var(--am-font-heading, 'Roboto Slab', serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ss-ink);
+    line-height: 1.35;
+}
+
+.stepper-spec__head h1 i {
+    margin-right: 0.45rem;
+    color: var(--ss-red);
+    font-size: 0.88em;
+}
+
+.stepper-spec__head-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--ss-muted);
+    line-height: 1.45;
+}
+
+.stepper-spec__head-sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--ss-muted);
+    line-height: 1.4;
+}
+
+.stepper-spec__head-sub strong {
+    color: var(--ss-ink);
+    font-weight: 600;
+}
+
+.stepper-spec__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    min-height: 32px;
+    padding: 0 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ss-red) !important;
+    background: var(--ss-red-soft) !important;
+    border: 1px solid var(--ss-red-line) !important;
+    border-radius: 7px;
+    text-decoration: none !important;
+}
+
+.stepper-spec__back:hover {
+    background: #fff !important;
+    border-color: var(--ss-red) !important;
+}
+
+.stepper-spec__workspace {
+    padding: 1rem 1.15rem 1.15rem;
+    background: var(--ss-surface);
+}
+
+.stepper-spec__workspace .admin-module__panel {
+    box-shadow: none;
+    margin-bottom: 0.85rem;
+}
+
+.stepper-spec__workspace .admin-module__panel:last-child {
+    margin-bottom: 0;
+}
+
+.stepper-spec__panel-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.15rem 0.8rem 1.2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ss-ink);
+    background: #fff;
+    border-bottom: 1px solid var(--ss-line);
+}
+
+.stepper-spec__panel-head::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--ss-red);
+}
+
+.stepper-spec__panel-head i {
+    color: var(--ss-red);
+    margin-right: 0.55rem;
+    font-size: 0.95em;
+}
+
+.stepper-spec__search-bar {
+    max-width: 40rem;
+    margin-bottom: 0.85rem;
+}
+
+.stepper-spec__search-bar-form {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0;
+    padding: 0.3rem 0.3rem 0.3rem 0.85rem;
+    background: #fff;
+    border: 1px solid var(--ss-line);
+    border-radius: 8px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.stepper-spec__search-bar-form:focus-within {
+    border-color: #ccc6c0;
+    box-shadow: 0 0 0 3px rgba(160, 14, 7, 0.08);
+}
+
+.stepper-spec__search-bar-icon {
+    display: inline-flex;
+    align-items: center;
+    color: var(--ss-muted);
+    font-size: 0.875rem;
+    padding-right: 0.55rem;
+}
+
+.stepper-spec__search-bar-form .form-control {
+    min-height: 36px;
+    padding: 0.4rem 0.65rem 0.4rem 0;
+    font-size: 0.875rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.stepper-spec__search-bar-form .form-control:focus {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.stepper-spec__search-bar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 36px;
+    padding: 0 0.95rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ss-red);
+    border: 1px solid var(--ss-red);
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.stepper-spec__search-bar-btn:hover {
+    background: var(--ss-red-dark);
+    border-color: var(--ss-red-dark);
+    color: #fff;
+}
+
+.stepper-spec__toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 32rem;
+    margin-bottom: 0.85rem;
+}
+
+.stepper-spec__search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.65rem;
+    max-width: 36rem;
+}
+
+.stepper-spec__search label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ss-muted);
+}
+
+.stepper-spec__search .form-control {
+    min-height: 38px;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    border-color: #d0ccc7;
+}
+
+.stepper-spec__search .admin-module__btn-primary,
+.stepper-spec__search .btn-danger {
+    min-height: 38px;
+    padding: 0 1rem;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.stepper-spec__filter-row {
+    display: grid;
+    grid-template-columns: minmax(0, 16rem) auto;
+    align-items: end;
+    gap: 0.65rem;
+    max-width: 24rem;
+}
+
+.stepper-spec__filter-row .form-control {
+    min-height: 38px;
+    font-size: 0.875rem;
+    border-radius: 6px;
+}
+
+.stepper-spec__filter-row .btn-danger {
+    min-height: 38px;
+    padding: 0 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.stepper-spec__table-zone {
+    overflow-x: auto;
+}
+
+.stepper-spec__table-zone .admin-module__table a {
+    font-weight: 600;
+}
+
+.stepper-spec__empty td {
+    padding: 1.25rem 1rem !important;
+    text-align: center;
+    color: var(--ss-muted);
+}
+
+.stepper-spec__total-row td {
+    font-weight: 700;
+    background: var(--ss-red-soft) !important;
+    color: var(--ss-ink);
+}
+
+.stepper-spec__alert {
+    margin-bottom: 0.85rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: #842029;
+    background: #fff0f0;
+    border: 1px solid #f5c2c7;
+    border-left: 4px solid #c62828;
+    border-radius: 6px;
+}
+
+.stepper-spec__form-body {
+    padding: 1rem 1.1rem;
+    background: #fff;
+}
+
+.stepper-spec__form-body .form-group {
+    margin-bottom: 0.85rem;
+}
+
+.stepper-spec__form-body label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ss-muted);
+}
+
+.stepper-spec__form-body .form-control {
+    border-radius: 6px;
+    border-color: #d0ccc7;
+    font-size: 0.875rem;
+}
+
+.stepper-spec__form-body .form-control:focus {
+    border-color: var(--ss-red);
+    box-shadow: 0 0 0 3px rgba(160, 14, 7, 0.1);
+}
+
+.stepper-spec__media-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    margin-top: 0.5rem;
+}
+
+.stepper-spec__media-block {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.stepper-spec__media-block .form-group {
+    width: 100%;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.stepper-spec__media-block label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ss-muted);
+    text-align: left;
+}
+
+.stepper-spec__media-block .signature-preview-container {
+    width: 100%;
+    max-width: none;
+    height: 160px;
+    min-height: 160px;
+    max-height: 160px;
+    margin-bottom: 0.65rem !important;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.stepper-spec__media-block .signature-preview-img {
+    width: 100%;
+    height: 100%;
+    max-height: 160px;
+    object-fit: contain;
+}
+
+.stepper-spec__media-block--note textarea.form-control {
+    min-height: 160px;
+    height: 160px;
+    resize: vertical;
+}
+
+.stepper-spec__media-block .stepper-spec__btn,
+.stepper-spec__media-block .btn {
+    align-self: center;
+    margin-top: 0;
+}
+
+.stepper-spec__form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--am-line-soft, #eceae6);
+}
+
+.stepper-spec__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 34px;
+    padding: 0 0.9rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    text-decoration: none !important;
+    white-space: nowrap;
+}
+
+.stepper-spec__btn--primary {
+    color: #fff !important;
+    background: var(--ss-red) !important;
+    border-color: var(--ss-red) !important;
+}
+
+.stepper-spec__btn--primary:hover {
+    background: var(--ss-red-dark) !important;
+    border-color: var(--ss-red-dark) !important;
+    color: #fff !important;
+}
+
+.stepper-spec__btn--success {
+    color: #fff !important;
+    background: #2e7d32 !important;
+    border-color: #256628 !important;
+}
+
+.stepper-spec__btn--outline {
+    color: var(--ss-text) !important;
+    background: #fff !important;
+    border-color: var(--ss-line) !important;
+}
+
+.stepper-spec__btn--danger-soft {
+    color: #9a1f1f !important;
+    background: #fff !important;
+    border-color: #e8c4c4 !important;
+}
+
+.stepper-spec__issuance {
+    max-width: 720px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.stepper-spec__issuance-body {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) 6.5rem;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+}
+
+.stepper-spec__issuance-photo .signature-preview-container {
+    width: 6.5rem;
+    height: 8.5rem;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.stepper-spec__issuance-main h2 {
+    margin: 0 0 0.65rem;
+    font-family: var(--am-font-heading, 'Roboto Slab', serif);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--ss-ink);
+}
+
+.stepper-spec__issuance-list {
+    margin: 0 0 0.85rem;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--ss-text);
+}
+
+.stepper-spec__issuance-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.stepper-spec__pagination {
+    padding: 0.65rem 0 0;
+}
+
+@media (max-width: 991px) {
+    .stepper-spec {
+        padding: 0 0.65rem 1rem;
+    }
+
+    .stepper-spec__workspace {
+        padding: 0.75rem 0.85rem 0.85rem;
+    }
+
+    .stepper-spec__media-row {
+        grid-template-columns: 1fr;
+    }
+
+    .stepper-spec__media-block .signature-preview-container,
+    .stepper-spec__media-block--note textarea.form-control {
+        height: 150px;
+        min-height: 150px;
+        max-height: none;
+    }
+
+    .stepper-spec__issuance-body {
+        grid-template-columns: 1fr;
+    }
+
+    .stepper-spec__issuance-photo .signature-preview-container {
+        width: 100%;
+        max-width: 8rem;
+        height: 9rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .stepper-spec__search-bar-form {
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 0.55rem 0.65rem 0.65rem;
+        gap: 0.45rem;
+    }
+
+    .stepper-spec__search-bar-form .form-control {
+        grid-column: 1 / -1;
+        padding: 0.45rem 0.55rem;
+        background: var(--ss-surface);
+        border: 1px solid var(--ss-line);
+        border-radius: 6px;
+    }
+
+    .stepper-spec__search-bar-btn {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    .stepper-spec__toolbar,
+    .stepper-spec__search,
+    .stepper-spec__filter-row {
+        grid-template-columns: 1fr;
+        max-width: none;
+    }
+
+    .stepper-spec__toolbar .btn-danger,
+    .stepper-spec__search .btn-danger,
+    .stepper-spec__filter-row .btn-danger {
+        width: 100%;
+    }
+}

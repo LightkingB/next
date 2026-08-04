@@ -1,199 +1,217 @@
 {% extends 'admin_base.html' %}
 {% load static i18n custom_filters %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_spec.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/app_modals.css' %}"/>
+{% endblock %}
+
 {% block content %}
-    <div class="container">
-
-        <h4 class="text-center mb-0">Модуль#2: {{ student.student_fio }}</h4>
-        <p class="mb-0 text-primary text-center">({{ student.myedu_faculty }} - {{ student.myedu_spec }})</p>
-        <hr/>
-        {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
-            {% if has_active_cs %}
-                <div class="alert alert-danger" role="alert">
-                    Процесс выдачи обходного листа остается незавершенным; требуется его завершение. Есть непогашенные
-                    задолженности.
-                </div>
-            {% else %}
-                {% include 'utils/_messages.html' %}
-                {% if not issuance %}
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="form-row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Номер диплома</label>
-                                    <input type="text" name="doc_number" class="form-control form-control-sm" required
-                                           value="{{ form.doc_number.value|default:'' }}" placeholder="0000012345">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Регистрационный номер</label>
-                                    <input type="text" name="reg_number" class="form-control form-control-sm"
-                                           value="{{ form.reg_number.value|default:'' }}" placeholder="1234">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Дата выдачи</label>
-                                    <input type="date" name="date_issue" class="form-control form-control-sm" required
-                                           value="{{ form.date_issue.value|default:'' }}">
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="form-row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Учебный год</label>
-                                    <select name="edu_year_id" required class="form-control form-control-sm">
-                                        <option value="">---------------</option>
-                                        {% for year in years %}
-                                            <option value="{{ year.id }}" {% if selected_edu_year_id == year.id %}
-                                                    selected {% endif %}>{{ year.title }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Паспортные данные</label>
-                                    <input type="text" name="inn" class="form-control form-control-sm"
-                                           value="{{ form.inn.value|default:'' }}" placeholder="ID123456">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="col-md-4 text-center">
-                                <div class="form-group" id="openSignature">
-                                    <label>Вставьте подпись</label>
-                                    <div class="signature-preview-container mb-3">
-                                        <img id="signature-preview" class="signature-preview-img"
-                                             src="{% static 'img/signature.jpg' %}" alt="Нет подписи">
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-signature"></i> Подписаться
-                                    </button>
-                                </div>
-                                {#                                <div class="form-group">#}
-                                {#                                    <canvas id="signature-pad"#}
-                                {#                                            height="200"#}
-                                {#                                            style="border: 2px solid #000; border-radius: 6px; background: #fefeff;">#}
-                                {##}
-                                {#                                    </canvas>#}
-                                {#                                    <br>#}
-                                {#                                    <button type="button" class="btn btn-sm btn-warning" onclick="clearSignature()">#}
-                                {#                                        <i class="fas fa-broom"></i> Очистить#}
-                                {#                                    </button>#}
-                                {#                                </div>#}
-                            </div>
-                            <div class="col-md-5">
-                                <div class="form-group">
-                                    <label>Примечание (если есть)</label>
-                                    {#                                    <input type="text" name="note" class="form-control form-control-sm"#}
-                                    {#                                           value="{{ form.note.value|default:'' }}" placeholder="123456789">#}
-                                    <textarea name="note" class="form-control" placeholder="Доверенность..."
-                                              rows="4">{{ form.note.value|default:'' }}</textarea>
-                                </div>
-                            </div>
-                            <div class="col-md-3 text-center">
-
-                                <div class="form-group">
-                                    <label>Снимите студента на камеру</label>
-                                    <div class="signature-preview-container mb-3">
-                                        <img id="profile-preview"
-                                             class="signature-preview-img"
-                                             src="{% static 'img/nophoto.jpg' %}"
-                                             alt="Нет подписи">
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-danger"
-                                            data-toggle="modal"
-                                            data-target="#cameraModal">
-                                        <i class="fas fa-camera"></i> Камера
-                                    </button>
-                                </div>
-                            </div>
-
-
-                        </div>
-                        <input type="hidden" name="profile" id="photo">
-                        <input type="hidden" name="signature" id="signature">
-                        <hr/>
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="fas fa-save"></i> Сохранить
-                            </button>
-                            {% if diploma %}
-                                <button type="button" class="btn btn-sm btn-success" data-toggle="modal"
-                                        data-target="#syncs">
-                                    <i class="fas fa-burn"></i> Синхронизировать
-                                </button>
-                            {% endif %}
-                        </div>
-                    </form>
+    <div class="stepper-spec">
+        <div class="stepper-spec__shell">
+            <header class="stepper-spec__head">
+                {% if navbar == 'spec-history' %}
+                    <a href="{% url 'stepper:spec-history' %}" class="stepper-spec__back">
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i> Назад
+                    </a>
+                {% else %}
+                    <a href="{% url 'stepper:spec' %}" class="stepper-spec__back">
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i> Назад
+                    </a>
                 {% endif %}
-            {% endif %}
-            <hr/>
-            {% if issuance %}
-                <div class="card mb-3" style="max-width: 650px;">
-                    <div class="row no-gutters">
-                        <div class="col-md-3">
-                            <div class="signature-preview-container">
-                                {% if issuance.signature %}
-                                    <img src="{{ issuance.signature.url }}" class="signature-preview-img" alt="Подпись">
-                                {% else %}
-                                    <img src="{% static 'img/No-photo-m.png' %}" class="signature-preview-img"
-                                         alt="Нет подписи">
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    Обходной лист №: {{ student.id }}
-                                </h5>
-
-                                <h6 class="card-text">
-                                    № справки: {{ issuance.id }}<br/>
-                                    Регистрационный №: {{ issuance.reg_number }}<br/>
-                                    Диплом №: {{ issuance.doc_number }}<br/>
-                                    Дата выдачи диплома: {{ issuance.date_issue|date:"d-m-Y" }} <br/>
-                                    Паспортные данные: {{ issuance.inn|default:"-" }} <br/>
-                                    Статус: Выдан {% if issuance.status == "received" %} однократно {% else %}
-                                    более одного раза {% endif %}<br/>
-                                    Примечание: {{ issuance.note|default:"-" }}<br/>
-                                    Дата создания записи: {{ issuance.created_at|date:"d-m-Y" }}
-                                </h6>
-                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal"
-                                        data-target="#doubleCS">
-                                    <i class="fas fa-question-circle"></i> Выдать дубликат
-                                </button>
-
-                                <button type="button" class="btn btn-sm btn-danger"
-                                        data-toggle="modal"
-                                        data-target="#removeCS">
-                                    <i class="fas fa-trash-alt"></i> Удалить
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="signature-preview-container">
-                                {% if issuance.profile %}
-                                    <img src="{{ issuance.profile.url }}" class="signature-preview-img" alt="Подпись">
-                                {% else %}
-                                    <img src="{% static 'img/No-photo-m.png' %}" class="signature-preview-img"
-                                         alt="Нет подписи">
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+                <div class="stepper-spec__head-main">
+                    <h1><i class="fas fa-user-graduate" aria-hidden="true"></i>Выдача справки</h1>
+                    <p class="stepper-spec__head-sub">
+                        <strong>{{ student.student_fio }}</strong>
+                        · {{ student.myedu_faculty }} — {{ student.myedu_spec }}
+                    </p>
                 </div>
-            {% else %}
+            </header>
 
-            {% endif %}
-        {% else %}
-            {% include 'utils/_access.html' %}
-        {% endif %}
+            <div class="stepper-spec__workspace">
+                {% if CUSTOM_ROLES.STSPEC in DB_ROLES %}
+                    {% if has_active_cs %}
+                        <div class="stepper-spec__alert" role="alert">
+                            Процесс выдачи обходного листа остается незавершенным; требуется его завершение. Есть непогашенные
+                            задолженности.
+                        </div>
+                    {% else %}
+                        {% include 'utils/_messages.html' %}
+
+                        {% if not issuance %}
+                            <div class="admin-module__panel">
+                                <div class="stepper-spec__panel-head">
+                                    <span><i class="fas fa-file-alt" aria-hidden="true"></i>Данные диплома</span>
+                                </div>
+                                <form method="POST" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <div class="stepper-spec__form-body">
+                                        <div class="form-row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Номер диплома</label>
+                                                    <input type="text" name="doc_number" class="form-control form-control-sm" required
+                                                           value="{{ form.doc_number.value|default:'' }}" placeholder="0000012345">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Регистрационный номер</label>
+                                                    <input type="text" name="reg_number" class="form-control form-control-sm"
+                                                           value="{{ form.reg_number.value|default:'' }}" placeholder="1234">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Дата выдачи</label>
+                                                    <input type="date" name="date_issue" class="form-control form-control-sm" required
+                                                           value="{{ form.date_issue.value|default:'' }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Учебный год</label>
+                                                    <select name="edu_year_id" required class="form-control form-control-sm">
+                                                        <option value="">---------------</option>
+                                                        {% for year in years %}
+                                                            <option value="{{ year.id }}" {% if selected_edu_year_id == year.id %}
+                                                                    selected {% endif %}>{{ year.title }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Паспортные данные</label>
+                                                    <input type="text" name="inn" class="form-control form-control-sm"
+                                                           value="{{ form.inn.value|default:'' }}" placeholder="ID123456">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="stepper-spec__media-row">
+                                            <div class="stepper-spec__media-block">
+                                                <div class="form-group" id="openSignature">
+                                                    <label>Вставьте подпись</label>
+                                                    <div class="signature-preview-container mb-3">
+                                                        <img id="signature-preview" class="signature-preview-img"
+                                                             src="{% static 'img/signature.jpg' %}" alt="Нет подписи">
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary">
+                                                        <i class="fas fa-signature" aria-hidden="true"></i> Подписаться
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="stepper-spec__media-block stepper-spec__media-block--note">
+                                                <div class="form-group">
+                                                    <label>Примечание (если есть)</label>
+                                                    <textarea name="note" class="form-control" placeholder="Доверенность..."
+                                                              rows="4">{{ form.note.value|default:'' }}</textarea>
+                                                </div>
+                                            </div>
+                                            <div class="stepper-spec__media-block">
+                                                <div class="form-group">
+                                                    <label>Снимите студента на камеру</label>
+                                                    <div class="signature-preview-container mb-3">
+                                                        <img id="profile-preview"
+                                                             class="signature-preview-img"
+                                                             src="{% static 'img/nophoto.jpg' %}"
+                                                             alt="Нет подписи">
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-danger stepper-spec__btn stepper-spec__btn--primary"
+                                                            data-toggle="modal"
+                                                            data-target="#cameraModal">
+                                                        <i class="fas fa-camera" aria-hidden="true"></i> Камера
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" name="profile" id="photo">
+                                        <input type="hidden" name="signature" id="signature">
+
+                                        <div class="stepper-spec__form-actions">
+                                            <button type="submit" class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary">
+                                                <i class="fas fa-save" aria-hidden="true"></i> Сохранить
+                                            </button>
+                                            {% if diploma %}
+                                                <button type="button" class="btn btn-sm btn-success stepper-spec__btn stepper-spec__btn--success"
+                                                        data-toggle="modal"
+                                                        data-target="#syncs">
+                                                    <i class="fas fa-burn" aria-hidden="true"></i> Синхронизировать
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if issuance %}
+                        <div class="admin-module__panel stepper-spec__issuance">
+                            <div class="stepper-spec__panel-head">
+                                <span><i class="fas fa-certificate" aria-hidden="true"></i>Выданная справка</span>
+                            </div>
+                            <div class="stepper-spec__issuance-body">
+                                <div class="stepper-spec__issuance-photo">
+                                    <div class="signature-preview-container">
+                                        {% if issuance.signature %}
+                                            <img src="{{ issuance.signature.url }}" class="signature-preview-img" alt="Подпись">
+                                        {% else %}
+                                            <img src="{% static 'img/No-photo-m.png' %}" class="signature-preview-img"
+                                                 alt="Нет подписи">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="stepper-spec__issuance-main">
+                                    <h2>Обходной лист № {{ student.id }}</h2>
+                                    <div class="stepper-spec__issuance-list">
+                                        № справки: {{ issuance.id }}<br/>
+                                        Регистрационный №: {{ issuance.reg_number }}<br/>
+                                        Диплом №: {{ issuance.doc_number }}<br/>
+                                        Дата выдачи диплома: {{ issuance.date_issue|date:"d-m-Y" }}<br/>
+                                        Паспортные данные: {{ issuance.inn|default:"-" }}<br/>
+                                        Статус: Выдан {% if issuance.status == "received" %}однократно{% else %}более одного раза{% endif %}<br/>
+                                        Примечание: {{ issuance.note|default:"-" }}<br/>
+                                        Дата создания записи: {{ issuance.created_at|date:"d-m-Y" }}
+                                    </div>
+                                    <div class="stepper-spec__issuance-actions">
+                                        <button type="button" class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary"
+                                                data-toggle="modal"
+                                                data-target="#doubleCS">
+                                            <i class="fas fa-question-circle" aria-hidden="true"></i> Выдать дубликат
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger stepper-spec__btn stepper-spec__btn--danger-soft"
+                                                data-toggle="modal"
+                                                data-target="#removeCS">
+                                            <i class="fas fa-trash-alt" aria-hidden="true"></i> Удалить
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="stepper-spec__issuance-photo">
+                                    <div class="signature-preview-container">
+                                        {% if issuance.profile %}
+                                            <img src="{{ issuance.profile.url }}" class="signature-preview-img" alt="Фото">
+                                        {% else %}
+                                            <img src="{% static 'img/No-photo-m.png' %}" class="signature-preview-img"
+                                                 alt="Нет фото">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    {% include 'utils/_access.html' %}
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel"
@@ -206,7 +224,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body text-center">
                     <div id="camera">
                         <div class="camera-ring"></div>
                     </div>
@@ -278,11 +296,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
-
                         <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-burn"></i>
                             Синхронизировать
                         </button>
-
                     </div>
                 </form>
             </div>
@@ -314,7 +330,6 @@
         </div>
     </div>
 
-    <!-- ПОЛНОЭКРАННЫЙ CANVAS -->
     <div id="signatureScreen">
         <canvas id="signatureCanvas"></canvas>
         <div class="signature-controls">

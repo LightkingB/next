@@ -1,7 +1,7 @@
-<tr id="act-row-{{ act.id }}" class="text-{% if act.is_confirm %}success{% endif %}">
+<tr id="act-row-{{ act.id }}" class="{% if act.is_confirm %}archive-acts__row--confirmed{% endif %}">
     <td>{{ counter }}</td>
     <td>
-        <a href="{% url 'archive:act-detail'  act.id %}">
+        <a href="{% url 'archive:act-detail' act.id %}">
             {{ act.faculty.title }} ({{ act.studentsact_set.count }})
         </a>
     </td>
@@ -15,13 +15,18 @@
     <td>
         {% if not act.is_confirm and act.created_user == current_user %}
             <button type="button"
-                    class="btn btn-warning btn-sm js-edit-act"
-                    data-url="{% url 'archive:act-edit' act.id %}">
-                <i class="fas fa-edit"></i>
+                    class="btn archive-acts__icon-btn archive-acts__icon-btn--edit js-edit-act"
+                    data-url="{% url 'archive:act-edit' act.id %}"
+                    title="Редактировать"
+                    aria-label="Редактировать">
+                <i class="fas fa-edit" aria-hidden="true"></i>
             </button>
-            <button type="button" class="btn btn-danger btn-sm js-delete-act"
-                    data-url="{% url 'archive:act-delete' act.id %}">
-                <i class="fas fa-trash"></i>
+            <button type="button"
+                    class="btn archive-acts__icon-btn archive-acts__icon-btn--delete js-delete-act"
+                    data-url="{% url 'archive:act-delete' act.id %}"
+                    title="Удалить"
+                    aria-label="Удалить">
+                <i class="fas fa-trash" aria-hidden="true"></i>
             </button>
         {% endif %}
     </td>

@@ -4,9 +4,11 @@
     <td>{{ faculty.short_name }}</td>
     <td>
         <button type="button"
-                class="btn btn-warning btn-sm js-edit-faculty"
-                data-url="{% url 'archive:custom-faculty-edit' faculty.id %}">
-            <i class="fas fa-edit"></i>
+                class="btn archive-acts__icon-btn archive-acts__icon-btn--edit js-edit-faculty"
+                data-url="{% url 'archive:custom-faculty-edit' faculty.id %}"
+                title="Редактировать"
+                aria-label="Редактировать">
+            <i class="fas fa-edit" aria-hidden="true"></i>
         </button>
     </td>
 </tr>

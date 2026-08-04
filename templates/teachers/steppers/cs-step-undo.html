@@ -1,52 +1,102 @@
 {% extends 'admin_base.html' %}
 {% load static i18n %}
 
+{% block body_class %}admin-module-page{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_cs_detail.css' %}"/>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h3 class="text-center">Обходной лист №: {{ clearance_sheet.id }} - {{ clearance_sheet.student_fio }}</h3>
-        <hr/>
-        {% if trajectories %}
-            <form method="post">
-                {% csrf_token %}
-
-                <ul id="trajectory-list" class="list-group list-group-horizontal">
-                    {% for trajectory in trajectories %}
-                        <li class="list-group-item">
-                            <label>
-                                <input type="checkbox"
-                                       name="trajectory_{{ trajectory.id }}"
-                                       class="trajectory-checkbox"
-                                       {% if trajectory.completed_at %}checked{% endif %}
-                                       {% if not trajectory.completed_at %}disabled{% endif %}
-                                       data-index="{{ forloop.counter0 }}">
-                                {{ trajectory.template_stage.stage.name }}
-                            </label>
-                        </li>
-                    {% endfor %}
-                </ul>
-
-                <div class="mt-2">
-                    {% if request.GET.type == 'student' %}
-                        <a href="{% url 'stepper:cs-detail' myedu_id=clearance_sheet.myedu_id %}"
-                           class="btn btn-sm btn-danger mr-2">
-                            <i class="fa fa-arrow-left"></i> {% trans 'Назад' %}
-                        </a>
-                    {% elif request.GET.type == 'teacher' %}
-                        <a href="{% url 'stepper:teacher-cs-detail' myedu_id=clearance_sheet.myedu_id %}"
-                           class="btn btn-sm btn-danger mr-2">
-                            <i class="fa fa-arrow-left"></i> {% trans 'Назад' %}
-                        </a>
-                    {% endif %}
-                    <button type="submit" class="btn btn-sm btn-danger">
-                        <i class="fas fa-edit"></i> {% trans 'Обновить' %}
-                    </button>
+    <div class="stepper-cs-detail">
+        <div class="stepper-cs-detail__shell">
+            <header class="stepper-cs-detail__head">
+                {% if request.GET.type == 'student' %}
+                    <a href="{% url 'stepper:cs-detail' myedu_id=clearance_sheet.myedu_id %}"
+                       class="stepper-cs-detail__back">
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i> {% trans 'Назад' %}
+                    </a>
+                {% elif request.GET.type == 'teacher' %}
+                    <a href="{% url 'stepper:teacher-cs-detail' myedu_id=clearance_sheet.myedu_id %}"
+                       class="stepper-cs-detail__back">
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i> {% trans 'Назад' %}
+                    </a>
+                {% endif %}
+                <div class="stepper-cs-detail__head-main">
+                    <h1><i class="fas fa-undo" aria-hidden="true"></i>{% trans 'Восстановление этапов' %}</h1>
+                    <div class="stepper-cs-detail__head-sub">
+                        <span class="stepper-cs-detail__head-student">{{ clearance_sheet.student_fio }}</span>
+                        <span class="stepper-cs-detail__head-sheet">
+                            {% trans 'Лист' %} <strong>№ {{ clearance_sheet.id }}</strong>
+                        </span>
+                    </div>
                 </div>
-            </form>
-        {% else %}
-            <h5 class="text-center">На данном этапе обходной лист еще не сформирован.</h5>
-        {% endif %}
+            </header>
 
+            <div class="stepper-cs-detail__workspace">
+                <div class="stepper-cs-detail__undo-panel">
+                    {% if trajectories %}
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <p class="stepper-cs-detail__undo-hint">
+                                Снимите отметку с этапов, которые нужно восстановить. Доступны только завершённые этапы.
+                            </p>
+
+                            <ul id="trajectory-list" class="stepper-cs-detail__undo-list">
+                                {% for trajectory in trajectories %}
+                                    <li class="stepper-cs-detail__undo-item">
+                                        <label class="stepper-cs-detail__undo-label{% if trajectory.completed_at %} stepper-cs-detail__undo-label--done{% else %} stepper-cs-detail__undo-label--pending{% endif %}">
+                                            <span class="stepper-cs-detail__undo-num">{{ forloop.counter }}</span>
+                                            <input type="checkbox"
+                                                   name="trajectory_{{ trajectory.id }}"
+                                                   class="trajectory-checkbox"
+                                                   {% if trajectory.completed_at %}checked{% endif %}
+                                                   {% if not trajectory.completed_at %}disabled{% endif %}
+                                                   data-index="{{ forloop.counter0 }}">
+                                            <span class="stepper-cs-detail__undo-name">
+                                                {{ trajectory.template_stage.stage.name }}
+                                            </span>
+                                            {% if trajectory.completed_at %}
+                                                <span class="stepper-cs-detail__undo-badge stepper-cs-detail__undo-badge--done">
+                                                    {% trans 'Завершен' %}
+                                                </span>
+                                            {% else %}
+                                                <span class="stepper-cs-detail__undo-badge stepper-cs-detail__undo-badge--pending">
+                                                    {% trans 'Не завершен' %}
+                                                </span>
+                                            {% endif %}
+                                        </label>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+
+                            <div class="stepper-cs-detail__undo-actions">
+                                {% if request.GET.type == 'student' %}
+                                    <a href="{% url 'stepper:cs-detail' myedu_id=clearance_sheet.myedu_id %}"
+                                       class="stepper-cs-detail__btn stepper-cs-detail__btn--primary">
+                                        <i class="fa fa-arrow-left" aria-hidden="true"></i> {% trans 'Назад' %}
+                                    </a>
+                                {% elif request.GET.type == 'teacher' %}
+                                    <a href="{% url 'stepper:teacher-cs-detail' myedu_id=clearance_sheet.myedu_id %}"
+                                       class="stepper-cs-detail__btn stepper-cs-detail__btn--primary">
+                                        <i class="fa fa-arrow-left" aria-hidden="true"></i> {% trans 'Назад' %}
+                                    </a>
+                                {% endif %}
+                                <button type="submit" class="stepper-cs-detail__btn stepper-cs-detail__btn--danger">
+                                    <i class="fas fa-edit" aria-hidden="true"></i> {% trans 'Обновить' %}
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <p class="stepper-cs-detail__empty">
+                            На данном этапе обходной лист еще не сформирован.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
