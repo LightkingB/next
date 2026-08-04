@@ -10,13 +10,12 @@
 {% endblock %}
 
 {% block content %}
-    <div class="survey-student survey-student--take">
-        <a href="{% url 'students:survey' %}" class="survey-student-back">
-            <i class="fas fa-arrow-left"></i> К анкетам
-        </a>
-
+    <div class="student-portal-page survey-student survey-student--take">
         <div class="survey-student-form-card">
             <div class="survey-student-card-head survey-student-card-head--fixed">
+                <a href="{% url 'students:survey' %}" class="survey-student-back survey-student-back--in-head">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i> К анкетам
+                </a>
                 <h4>{{ survey.title }}</h4>
                 {% if survey.description %}
                     <p class="desc">{{ survey.description }}</p>

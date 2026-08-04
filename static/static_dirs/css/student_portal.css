@@ -267,17 +267,18 @@ body.student-portal-scene-page .student-portal-user {
 }
 
 .student-portal-panel__head {
-    padding: 0.5rem 0.85rem;
+    padding: 0.55rem 0.9rem;
     background: var(--sp-red);
     color: #fff;
     border-bottom: none;
     font-family: var(--sp-font-body);
     font-size: 0.8125rem;
     font-weight: 600;
+    line-height: 1.35;
 }
 
 .student-portal-panel__head i {
-    margin-right: 0.35rem;
+    margin-right: 0.5rem;
     color: rgba(255, 255, 255, 0.92);
     opacity: 1;
     font-size: 0.8rem;
@@ -745,6 +746,11 @@ body.student-portal-scene-page .student-portal-cs-card__summary {
 
     .student-portal-stages__history {
         margin-left: 0;
+    }
+
+    .student-portal-action .student-portal-btn {
+        width: 100%;
+        min-height: 44px;
     }
 }
 

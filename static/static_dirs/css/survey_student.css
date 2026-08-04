@@ -85,6 +85,14 @@
     border-bottom: 1px solid var(--sv-line);
 }
 
+.survey-student-entries--flat .survey-student-entry:nth-child(even) {
+    background: #fff6f5;
+}
+
+.survey-student-entries--flat .survey-student-entry--history:nth-child(even) {
+    background: #faf8f7;
+}
+
 .survey-student-entries--flat .survey-student-entry:last-child {
     border-bottom: none;
 }
@@ -93,7 +101,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
-    padding: 0.75rem 0.9rem;
+    padding: 0.8rem 0.95rem;
     border-bottom: 1px solid var(--sv-line);
     background: var(--sv-red-soft);
 }
@@ -118,7 +126,7 @@
 .survey-student-entry__title {
     font-family: var(--sv-font-body);
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--sv-ink);
     margin: 0 0 0.3rem;
     line-height: 1.4;
@@ -159,9 +167,9 @@
     font-weight: 500;
     letter-spacing: 0.01em;
     text-transform: none;
-    padding: 0.25rem 0.5rem;
+    padding: 0.28rem 0.55rem;
     border: 1px solid var(--sv-line);
-    border-radius: 5px;
+    border-radius: 999px;
     background: var(--sv-cream);
     color: var(--sv-muted);
     line-height: 1.3;
@@ -185,9 +193,9 @@
 }
 
 .survey-student-entry__status--done {
-    border-color: #c5c5c5;
-    background: #f5f5f5;
-    color: #444;
+    border-color: #c8e6c9;
+    background: #e8f5e9;
+    color: #2e7d32;
 }
 
 .survey-student-entry__status--muted {
@@ -199,10 +207,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.45rem 0.85rem;
+    min-height: 40px;
+    padding: 0.45rem 0.95rem;
     font-family: var(--sv-font-body);
     font-size: 0.8125rem;
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0;
     text-transform: none;
     text-decoration: none !important;
@@ -367,6 +376,19 @@
     width: 100%;
 }
 
+.survey-student-btn--outline {
+    color: var(--sv-red) !important;
+    background: #fff !important;
+    border: 1px solid rgba(160, 14, 7, 0.28) !important;
+}
+
+.survey-student-btn--outline:hover,
+.survey-student-btn--outline:active {
+    background: var(--sv-red-soft) !important;
+    border-color: var(--sv-red) !important;
+    color: var(--sv-red-dark) !important;
+}
+
 /* ── Карточка (форма, телефон) ── */
 .survey-student-card {
     background: var(--sv-paper);
@@ -406,11 +428,43 @@
     color: var(--sv-red-dark);
 }
 
+.survey-student-back--in-head {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 0.4rem;
+    min-height: auto;
+    padding: 0;
+    color: rgba(255, 255, 255, 0.88) !important;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.survey-student-back--in-head:hover,
+.survey-student-back--in-head:active {
+    color: #fff !important;
+}
+
+body.student-portal-scene-page .student-portal-page.survey-student--take,
 body.student-portal-scene-page .survey-student--take,
 body.student-portal-scene-page .survey-student--phone {
     max-width: 720px;
     margin: 0 auto;
-    padding-bottom: 1rem;
+    padding-bottom: 0;
+}
+
+body.student-portal-scene-page .student-portal-page.survey-student--take {
+    padding: 0;
+    overflow: hidden;
+}
+
+body.student-portal-scene-page .student-portal-page.survey-student--take .survey-student-form-card {
+    max-width: none;
+    margin: 0;
+    max-height: calc(100dvh - 165px);
+    border: none;
+    box-shadow: none;
+    border-radius: inherit;
 }
 
 .survey-student-form-card {
@@ -577,12 +631,39 @@ body.student-portal-scene-page .survey-student--phone {
     margin: 0 auto;
 }
 
-.survey-student-phone-wrap .survey-student-card-body {
-    text-align: left;
-    padding: 0.85rem 1rem;
+body.student-portal-scene-page .student-portal-page.survey-student--phone {
+    max-width: 440px;
+    padding: 0;
+    overflow: hidden;
 }
 
-.survey-student-phone-wrap .form-control {
+body.student-portal-scene-page .student-portal-page.survey-student--phone .survey-student-form-card {
+    max-width: none;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    border-radius: inherit;
+}
+
+.survey-student-form-card--phone .survey-student-card-body {
+    padding: 1rem 1.05rem 1.05rem;
+    background: var(--sv-surface);
+}
+
+.survey-student-phone-lead {
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    color: var(--sv-muted);
+    line-height: 1.5;
+}
+
+.survey-student-phone-wrap .survey-student-card-body,
+.survey-student-form-card--phone .survey-student-card-body {
+    text-align: left;
+}
+
+.survey-student-phone-wrap .form-control,
+.survey-student-form-card--phone .form-control {
     border-radius: var(--sv-radius-sm);
     border-color: var(--sv-line);
     font-family: var(--sv-font-body);
@@ -590,16 +671,19 @@ body.student-portal-scene-page .survey-student--phone {
     min-height: 46px;
 }
 
-.survey-student-phone-wrap .form-control:focus {
+.survey-student-phone-wrap .form-control:focus,
+.survey-student-form-card--phone .form-control:focus {
     border-color: var(--sv-red);
     box-shadow: 0 0 0 1px var(--sv-red);
 }
 
 .survey-student-phone-actions {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: 1.15rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(160, 14, 7, 0.1);
 }
 
 .survey-student-phone-actions .survey-student-btn {
@@ -673,15 +757,16 @@ body.student-portal-scene-page .survey-student--phone {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
-        padding: 0.7rem 0.9rem;
+        padding: 0.8rem 0.95rem;
         gap: 1rem;
     }
 
     .survey-student-entry__aside {
         flex-shrink: 0;
+        flex-direction: row;
         justify-content: flex-end;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.55rem;
     }
 
     .survey-student-form-footer .survey-student-btn {
@@ -690,11 +775,13 @@ body.student-portal-scene-page .survey-student--phone {
 
     .survey-student-phone-actions {
         flex-direction: row;
-        justify-content: center;
+        justify-content: flex-end;
+        align-items: center;
     }
 
     .survey-student-phone-actions .survey-student-btn {
         width: auto;
+        min-width: 7.5rem;
     }
 
     .survey-student-modal-footer {
@@ -708,6 +795,17 @@ body.student-portal-scene-page .survey-student--phone {
 
 /* ── Mobile: форма ── */
 @media (max-width: 767px) {
+    .survey-student--index .survey-student-entry__aside {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+    }
+
+    .survey-student--index .survey-student-entry__status {
+        align-self: flex-start;
+    }
+
     .survey-student--take,
     .survey-student--phone {
         margin-left: -14px;
@@ -724,25 +822,8 @@ body.student-portal-scene-page .survey-student--phone {
         padding-right: 0;
     }
 
-    .survey-student--take .survey-student-back,
-    .survey-student--phone .survey-student-back {
-        margin-left: 14px;
-    }
-
-    body.student-portal-scene-page .survey-student--take .survey-student-back,
-    body.student-portal-scene-page .survey-student--phone .survey-student-back {
-        margin-left: 0;
-    }
-
-    .survey-student--take .survey-student-form-card {
-        max-height: calc(100dvh - 110px);
-        max-width: none;
-        border-left: none;
-        border-right: none;
-        border-radius: var(--sv-radius) var(--sv-radius) 0 0;
-    }
-
-    body.student-portal-scene-page .survey-student--take .survey-student-form-card {
+    body.student-portal-scene-page .student-portal-page.survey-student--take .survey-student-form-card {
+        max-height: calc(100dvh - 145px);
         border-left: 1px solid var(--sv-line);
         border-right: 1px solid var(--sv-line);
         border-radius: var(--sv-radius);

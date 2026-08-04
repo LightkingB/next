@@ -3,44 +3,50 @@
 
 {% block title %}<title>Телефон | Анкетирование</title>{% endblock %}
 
-{% block content %}
-    <div class="survey-student survey-student--phone">
-        <a href="{% url 'students:survey' %}" class="survey-student-back">
-            <i class="fas fa-arrow-left"></i> К анкетам
-        </a>
+{% block body_class %}student-portal-scene-page{% endblock %}
 
-        <div class="survey-student-phone-wrap">
-            <div class="survey-student-form-card">
-                <div class="survey-student-card-head">
-                    <h4 class="mb-0">Рабочий телефон</h4>
-                </div>
-                <div class="survey-student-card-body">
-                    <p class="text-muted mb-3">
-                        Перед прохождением анкеты укажите рабочий номер телефона.
-                    </p>
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ next_url }}">
-                        <div class="form-group">
-                            <label for="id_work_phone" class="survey-student-question-label">
-                                {{ form.work_phone.label }}
-                            </label>
-                            {{ form.work_phone }}
-                            {% if form.work_phone.errors %}
-                                <div class="text-danger small mt-1">{{ form.work_phone.errors }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="survey-student-phone-actions">
-                            <a href="{% url 'students:survey' %}" class="survey-student-back mb-0">Отмена</a>
-                            <button type="submit" class="survey-student-btn border-0">Сохранить</button>
-                        </div>
-                    </form>
-                </div>
+{% block portal_scene %}
+    {% include 'component/portal_scene.html' with warm=True %}
+{% endblock %}
+
+{% block content %}
+    <div class="student-portal-page survey-student survey-student--phone">
+        <div class="survey-student-form-card survey-student-form-card--phone">
+            <div class="survey-student-card-head">
+                <a href="{% url 'students:survey' %}" class="survey-student-back survey-student-back--in-head">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i> К анкетам
+                </a>
+                <h4 class="mb-0">Рабочий телефон</h4>
+            </div>
+            <div class="survey-student-card-body">
+                <p class="survey-student-phone-lead">
+                    Перед прохождением анкеты укажите рабочий номер телефона.
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next_url }}">
+                    <div class="form-group mb-0">
+                        <label for="id_work_phone" class="survey-student-question-label">
+                            {{ form.work_phone.label }}
+                        </label>
+                        {{ form.work_phone }}
+                        {% if form.work_phone.errors %}
+                            <div class="text-danger small mt-1">{{ form.work_phone.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="survey-student-phone-actions">
+                        <a href="{% url 'students:survey' %}" class="survey-student-btn survey-student-btn--outline">
+                            Отмена
+                        </a>
+                        <button type="submit" class="survey-student-btn border-0">Сохранить</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 {% endblock %}
 
 {% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}"/>
     <link rel="stylesheet" href="{% static 'css/survey_student.css' %}"/>
 {% endblock %}
