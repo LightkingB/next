@@ -1,6 +1,4 @@
 (function () {
-    const SIGNATURE_MAX_WIDTH = 900;
-    const SIGNATURE_MAX_HEIGHT = 450;
     const STROKE_PAD = 4;
 
     function showSavingOverlay(message) {
@@ -120,13 +118,11 @@
         }
 
         function resizeCanvas() {
-            const width = Math.min(window.innerWidth - 32, SIGNATURE_MAX_WIDTH);
-            const height = Math.min(window.innerHeight - 96, SIGNATURE_MAX_HEIGHT);
-            canvas.width = width;
-            canvas.height = height;
-            canvas.style.width = width + "px";
-            canvas.style.height = height + "px";
-            ctx.clearRect(0, 0, width, height);
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.width = "";
+            canvas.style.height = "";
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             resetBounds();
         }
 

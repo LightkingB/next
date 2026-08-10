@@ -99,36 +99,36 @@
                                             </div>
                                         </div>
 
-                                        <div class="stepper-spec__media-row">
-                                            <div class="stepper-spec__media-block">
-                                                <div class="form-group">
+                                        <div class="form-row">
+                                            <div class="col-md-4 text-center">
+                                                <div class="form-group" id="openSignature">
                                                     <label>Вставьте подпись</label>
                                                     <div class="signature-preview-container mb-3 stepper-spec__signature-empty">
                                                         <img id="signature-preview" class="signature-preview-img"
                                                              src="{% static 'img/nophoto.jpg' %}" alt="Подпись не добавлена">
                                                         <span class="stepper-spec__signature-hint" data-signature-hint>Подпись не добавлена</span>
                                                     </div>
-                                                    <button type="button" id="openSignature"
+                                                    <button type="button"
                                                             class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary">
                                                         <i class="fas fa-signature" aria-hidden="true"></i> Подписаться
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div class="stepper-spec__media-block stepper-spec__media-block--note">
+                                            <div class="col-md-5">
                                                 <div class="form-group">
                                                     <label>Примечание (если есть)</label>
                                                     <textarea name="note" class="form-control" placeholder="Доверенность..."
                                                               rows="4">{{ form.note.value|default:'' }}</textarea>
                                                 </div>
                                             </div>
-                                            <div class="stepper-spec__media-block">
+                                            <div class="col-md-3 text-center">
                                                 <div class="form-group">
                                                     <label>Снимите студента на камеру</label>
                                                     <div class="signature-preview-container mb-3">
                                                         <img id="profile-preview"
                                                              class="signature-preview-img"
                                                              src="{% static 'img/nophoto.jpg' %}"
-                                                             alt="Нет подписи">
+                                                             alt="Нет фото">
                                                     </div>
                                                     <button type="button" class="btn btn-sm btn-danger stepper-spec__btn stepper-spec__btn--primary"
                                                             data-toggle="modal"

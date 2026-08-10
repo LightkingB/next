@@ -363,12 +363,18 @@
     box-shadow: 0 0 0 3px rgba(160, 14, 7, 0.1);
 }
 
-.stepper-spec__media-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
-    gap: 1rem;
-    align-items: start;
+.stepper-spec__form-body .form-row {
     margin-top: 0.5rem;
+}
+
+.stepper-spec__form-body .text-center .signature-preview-container {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stepper-spec__form-body .text-center .stepper-spec__btn,
+.stepper-spec__form-body .text-center .btn {
+    margin-top: 0;
 }
 
 .stepper-spec__media-block {

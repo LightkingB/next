@@ -653,15 +653,11 @@ table.no-border th {
 
 #signatureCanvas {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-width: calc(100vw - 32px);
-    max-height: calc(100vh - 96px);
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
     touch-action: none;
     cursor: crosshair;
 }
