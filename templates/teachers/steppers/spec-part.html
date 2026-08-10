@@ -10,6 +10,11 @@
 {% endblock %}
 
 {% block content %}
+    <div id="loading-overlay" class="stepper-spec__overlay" aria-hidden="true">
+        <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+        <span data-saving-label>Сохранение…</span>
+    </div>
+
     <div class="stepper-spec">
         <div class="stepper-spec__shell">
             <header class="stepper-spec__head">
@@ -96,13 +101,15 @@
 
                                         <div class="stepper-spec__media-row">
                                             <div class="stepper-spec__media-block">
-                                                <div class="form-group" id="openSignature">
+                                                <div class="form-group">
                                                     <label>Вставьте подпись</label>
-                                                    <div class="signature-preview-container mb-3">
+                                                    <div class="signature-preview-container mb-3 stepper-spec__signature-empty">
                                                         <img id="signature-preview" class="signature-preview-img"
-                                                             src="{% static 'img/signature.jpg' %}" alt="Нет подписи">
+                                                             src="{% static 'img/nophoto.jpg' %}" alt="Подпись не добавлена">
+                                                        <span class="stepper-spec__signature-hint" data-signature-hint>Подпись не добавлена</span>
                                                     </div>
-                                                    <button type="button" class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary">
+                                                    <button type="button" id="openSignature"
+                                                            class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary">
                                                         <i class="fas fa-signature" aria-hidden="true"></i> Подписаться
                                                     </button>
                                                 </div>
@@ -362,9 +369,9 @@
     <div id="signatureScreen">
         <canvas id="signatureCanvas"></canvas>
         <div class="signature-controls">
-            <button class="btn btn-primary" id="saveSignature">Сохранить</button>
-            <button class="btn btn-danger" id="clearSignature">Очистить</button>
-            <button class="btn btn-warning" id="cancelSignature">Отмена</button>
+            <button type="button" class="btn btn-primary" id="saveSignature">Сохранить</button>
+            <button type="button" class="btn btn-danger" id="clearSignature">Очистить</button>
+            <button type="button" class="btn btn-warning" id="cancelSignature">Отмена</button>
         </div>
     </div>
 {% endblock %}

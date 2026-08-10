@@ -20,6 +20,27 @@
     color: var(--sa-text);
 }
 
+.stepper-archive__overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: rgba(20, 16, 14, 0.48);
+    color: #fff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: center;
+    pointer-events: all;
+}
+
+.stepper-archive__overlay.is-visible {
+    display: flex;
+}
+
 .stepper-archive__shell {
     background: var(--sa-paper);
     border: 1px solid var(--sa-line);

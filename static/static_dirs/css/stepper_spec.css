@@ -20,6 +20,36 @@
     color: var(--ss-text);
 }
 
+.stepper-spec__overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: rgba(20, 16, 14, 0.48);
+    color: #fff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: center;
+    pointer-events: all;
+}
+
+.stepper-spec__overlay.is-visible {
+    display: flex;
+}
+
+.stepper-spec__overlay i {
+    color: #fff;
+}
+
+.stepper-spec__overlay span {
+    max-width: 16rem;
+    line-height: 1.45;
+}
+
 .stepper-spec__shell {
     background: var(--ss-paper);
     border: 1px solid var(--ss-line);
@@ -289,6 +319,10 @@
     color: var(--ss-ink);
 }
 
+.stepper-spec__workspace .alert {
+    margin-bottom: 0.85rem;
+}
+
 .stepper-spec__alert {
     margin-bottom: 0.85rem;
     padding: 0.75rem 1rem;
@@ -370,6 +404,36 @@
     margin-bottom: 0.65rem !important;
     border-radius: 6px;
     overflow: hidden;
+    position: relative;
+}
+
+.stepper-spec__signature-empty .stepper-spec__signature-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ss-muted);
+    text-align: center;
+    pointer-events: none;
+}
+
+.stepper-spec__signature-empty .signature-preview-img {
+    opacity: 0.35;
+}
+
+.signature-preview-container:not(.stepper-spec__signature-empty) .stepper-spec__signature-hint,
+.signature-preview-container:not(.stepper-archive__signature-empty) [data-signature-hint],
+.signature-preview-img[data-has-signature="1"] + .stepper-spec__signature-hint,
+.signature-preview-img[data-has-signature="1"] ~ [data-signature-hint] {
+    display: none !important;
+}
+
+.signature-preview-img[data-has-signature="1"] {
+    opacity: 1 !important;
 }
 
 .stepper-spec__media-block .signature-preview-img {

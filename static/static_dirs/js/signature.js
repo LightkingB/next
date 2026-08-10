@@ -1,192 +1,287 @@
-Webcam.set({
-    width: 360,
-    height: 290,
-    image_format: 'jpeg',
-    jpeg_quality: 90
-});
+(function () {
+    const SIGNATURE_MAX_WIDTH = 900;
+    const SIGNATURE_MAX_HEIGHT = 450;
+    const STROKE_PAD = 4;
 
-$('#cameraModal').on('shown.bs.modal', function () {
-    Webcam.attach('#camera');
-});
-
-$('#cameraModal').on('hidden.bs.modal', function () {
-    Webcam.reset();
-});
-
-function takeSnapshot() {
-    Webcam.snap(function (dataUri) {
-        document.getElementById('photo').value = dataUri;
-        const preview = document.getElementById('profile-preview');
-        if (preview) {
-            preview.src = dataUri;
+    function showSavingOverlay(message) {
+        const overlay = document.getElementById("loading-overlay");
+        if (!overlay) {
+            return;
         }
-        $('#cameraModal').modal('hide');
-    });
-}
-
-
-$('#imageModal').on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget);
-    var imagePath = button.data('image');
-
-    var modal = $(this);
-    var imgElement = modal.find('#imageModalContent');
-    var noImageText = modal.find('#noImageText');
-
-    if (imagePath) {
-        imgElement.attr('src', imagePath).show();
-        noImageText.hide();
-    } else {
-        imgElement.hide();
-        noImageText.show();
-    }
-});
-document.addEventListener("DOMContentLoaded", function () {
-    const canvas = document.getElementById("signatureCanvas");
-    const screen = document.getElementById("signatureScreen");
-    const openSignature = document.getElementById("openSignature");
-    const previewImg = document.getElementById("signature-preview");
-    const signatureInput = document.getElementById("signature");
-    const clearBtn = document.getElementById("clearSignature");
-    const cancelBtn = document.getElementById("cancelSignature");
-    const saveBtn = document.getElementById("saveSignature");
-
-    if (!canvas || !screen || !openSignature || !previewImg || !signatureInput) {
-        return;
+        const label = overlay.querySelector("[data-saving-label]");
+        if (label && message) {
+            label.textContent = message;
+        }
+        overlay.classList.add("is-visible");
+        overlay.setAttribute("aria-hidden", "false");
     }
 
-    const ctx = canvas.getContext("2d");
-
-    let drawing = false;
-    let isSigned = false;
-
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function hideSavingOverlay() {
+        const overlay = document.getElementById("loading-overlay");
+        if (!overlay) {
+            return;
+        }
+        overlay.classList.remove("is-visible");
+        overlay.setAttribute("aria-hidden", "true");
     }
 
-    function getPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        return e.touches ? {
-            x: e.touches[0].clientX - rect.left,
-            y: e.touches[0].clientY - rect.top
-        } : {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        };
+    window.showSavingOverlay = showSavingOverlay;
+    window.hideSavingOverlay = hideSavingOverlay;
+
+    if (typeof Webcam !== "undefined" && document.getElementById("cameraModal")) {
+        Webcam.set({
+            width: 360,
+            height: 290,
+            image_format: "jpeg",
+            jpeg_quality: 90
+        });
+
+        $("#cameraModal").on("shown.bs.modal", function () {
+            Webcam.attach("#camera");
+        });
+
+        $("#cameraModal").on("hidden.bs.modal", function () {
+            Webcam.reset();
+        });
     }
 
-    function startDraw(e) {
-        e.preventDefault();
-        const pos = getPos(e);
-        drawing = true;
-        isSigned = true;
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
+    window.takeSnapshot = function takeSnapshot() {
+        const photoInput = document.getElementById("photo");
+        if (!photoInput || typeof Webcam === "undefined") {
+            return;
+        }
+        Webcam.snap(function (dataUri) {
+            photoInput.value = dataUri;
+            const preview = document.getElementById("profile-preview");
+            if (preview) {
+                preview.src = dataUri;
+            }
+            $("#cameraModal").modal("hide");
+        });
+    };
+
+    if (typeof $ !== "undefined" && $("#imageModal").length) {
+        $("#imageModal").on("show.bs.modal", function (event) {
+            var button = $(event.relatedTarget);
+            var imagePath = button.data("image");
+
+            var modal = $(this);
+            var imgElement = modal.find("#imageModalContent");
+            var noImageText = modal.find("#noImageText");
+
+            if (imagePath) {
+                imgElement.attr("src", imagePath).show();
+                noImageText.hide();
+            } else {
+                imgElement.hide();
+                noImageText.show();
+            }
+        });
     }
 
-    function draw(e) {
-        if (!drawing) return;
-        e.preventDefault();
-        const pos = getPos(e);
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = "blue";
-        ctx.lineCap = "round";
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+        const canvas = document.getElementById("signatureCanvas");
+        const screen = document.getElementById("signatureScreen");
+        const openSignature = document.getElementById("openSignature");
+        const previewImg = document.getElementById("signature-preview");
+        const signatureInput = document.getElementById("signature");
+        const clearBtn = document.getElementById("clearSignature");
+        const cancelBtn = document.getElementById("cancelSignature");
+        const saveBtn = document.getElementById("saveSignature");
 
-    function stopDraw(e) {
-        e.preventDefault();
-        drawing = false;
-        ctx.closePath();
-    }
+        if (!canvas || !screen || !openSignature || !previewImg || !signatureInput) {
+            return;
+        }
 
-    function trimCanvas(canvas) {
-        const ctx = canvas.getContext("2d");
-        const width = canvas.width;
-        const height = canvas.height;
-        const imageData = ctx.getImageData(0, 0, width, height);
-        const data = imageData.data;
+        const ctx = canvas.getContext("2d", {alpha: true});
+        let drawing = false;
+        let isSigned = false;
+        let bounds = null;
 
-        let top = null, bottom = null, left = null, right = null;
+        function resetBounds() {
+            bounds = null;
+        }
 
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const alpha = data[(y * width + x) * 4 + 3];
-                if (alpha > 0) {
-                    if (top === null) top = y;
-                    bottom = y;
-                    if (left === null || x < left) left = x;
-                    if (right === null || x > right) right = x;
+        function extendBounds(x, y) {
+            const minX = x - STROKE_PAD;
+            const minY = y - STROKE_PAD;
+            const maxX = x + STROKE_PAD;
+            const maxY = y + STROKE_PAD;
+
+            if (!bounds) {
+                bounds = {minX: minX, minY: minY, maxX: maxX, maxY: maxY};
+                return;
+            }
+
+            bounds.minX = Math.min(bounds.minX, minX);
+            bounds.minY = Math.min(bounds.minY, minY);
+            bounds.maxX = Math.max(bounds.maxX, maxX);
+            bounds.maxY = Math.max(bounds.maxY, maxY);
+        }
+
+        function resizeCanvas() {
+            const width = Math.min(window.innerWidth - 32, SIGNATURE_MAX_WIDTH);
+            const height = Math.min(window.innerHeight - 96, SIGNATURE_MAX_HEIGHT);
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+            ctx.clearRect(0, 0, width, height);
+            resetBounds();
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            if (e.touches) {
+                return {
+                    x: (e.touches[0].clientX - rect.left) * scaleX,
+                    y: (e.touches[0].clientY - rect.top) * scaleY
+                };
+            }
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function exportSignatureCanvas() {
+            if (!bounds) {
+                return null;
+            }
+
+            const left = Math.max(0, Math.floor(bounds.minX));
+            const top = Math.max(0, Math.floor(bounds.minY));
+            const right = Math.min(canvas.width, Math.ceil(bounds.maxX));
+            const bottom = Math.min(canvas.height, Math.ceil(bounds.maxY));
+            const width = right - left;
+            const height = bottom - top;
+
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+
+            const trimmed = document.createElement("canvas");
+            trimmed.width = width;
+            trimmed.height = height;
+            trimmed.getContext("2d").drawImage(canvas, left, top, width, height, 0, 0, width, height);
+            return trimmed;
+        }
+
+        function markSignatureSaved(dataURL) {
+            signatureInput.value = dataURL;
+            previewImg.src = dataURL;
+            previewImg.dataset.hasSignature = "1";
+
+            const previewBox = previewImg.closest(".signature-preview-container");
+            if (previewBox) {
+                previewBox.classList.remove("stepper-spec__signature-empty", "stepper-archive__signature-empty");
+                const hint = previewBox.querySelector("[data-signature-hint]");
+                if (hint) {
+                    hint.hidden = true;
                 }
             }
         }
 
-        if (top === null) return null;
+        function startDraw(e) {
+            e.preventDefault();
+            const pos = getPos(e);
+            drawing = true;
+            isSigned = true;
+            extendBounds(pos.x, pos.y);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
 
-        const trimmedWidth = right - left + 1;
-        const trimmedHeight = bottom - top + 1;
-        const trimmedCanvas = document.createElement("canvas");
-        trimmedCanvas.width = trimmedWidth;
-        trimmedCanvas.height = trimmedHeight;
-        const trimmedCtx = trimmedCanvas.getContext("2d");
+        function draw(e) {
+            if (!drawing) {
+                return;
+            }
+            e.preventDefault();
+            const pos = getPos(e);
+            extendBounds(pos.x, pos.y);
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = "blue";
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
 
-        trimmedCtx.clearRect(0, 0, trimmedWidth, trimmedHeight);
-        trimmedCtx.drawImage(canvas, left, top, trimmedWidth, trimmedHeight, 0, 0, trimmedWidth, trimmedHeight);
+        function stopDraw(e) {
+            e.preventDefault();
+            drawing = false;
+            ctx.closePath();
+        }
 
-        return trimmedCanvas;
-    }
+        canvas.addEventListener("mousedown", startDraw);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDraw);
+        canvas.addEventListener("mouseout", stopDraw);
 
-// События canvas
-    canvas.addEventListener("mousedown", startDraw);
-    canvas.addEventListener("mousemove", draw);
-    canvas.addEventListener("mouseup", stopDraw);
-    canvas.addEventListener("mouseout", stopDraw);
+        canvas.addEventListener("touchstart", startDraw, {passive: false});
+        canvas.addEventListener("touchmove", draw, {passive: false});
+        canvas.addEventListener("touchend", stopDraw);
 
-    canvas.addEventListener("touchstart", startDraw, {passive: false});
-    canvas.addEventListener("touchmove", draw, {passive: false});
-    canvas.addEventListener("touchend", stopDraw);
-
-// Открытие
-    openSignature.onclick = () => {
-        screen.style.display = "block";
-        resizeCanvas();
-        isSigned = false;
-    };
-
-// Очистка
-    if (clearBtn) {
-        clearBtn.onclick = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        openSignature.addEventListener("click", function (event) {
+            event.preventDefault();
+            screen.style.display = "block";
+            resizeCanvas();
             isSigned = false;
-        };
-    }
+        });
 
-// Отмена
-    if (cancelBtn) {
-        cancelBtn.onclick = () => {
-            screen.style.display = "none";
-        };
-    }
+        if (clearBtn) {
+            clearBtn.onclick = function () {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                isSigned = false;
+                resetBounds();
+            };
+        }
 
-// Сохранение
-    if (saveBtn) {
-        saveBtn.onclick = () => {
-            if (!isSigned) return alert("Пожалуйста, нарисуйте подпись.");
-            const trimmed = trimCanvas(canvas);
-            if (!trimmed) return alert("Подпись пуста.");
-            const dataURL = trimmed.toDataURL("image/png");
+        if (cancelBtn) {
+            cancelBtn.onclick = function () {
+                screen.style.display = "none";
+            };
+        }
 
-            signatureInput.value = dataURL;
-            previewImg.src = dataURL;
-            screen.style.display = "none";
-        };
-    }
+        if (saveBtn) {
+            saveBtn.onclick = function () {
+                if (!isSigned || !bounds) {
+                    alert("Пожалуйста, нарисуйте подпись.");
+                    return;
+                }
 
-// Адаптация к окну
-    window.addEventListener("resize", () => {
-        if (screen.style.display === "block") resizeCanvas();
+                const trimmed = exportSignatureCanvas();
+                if (!trimmed) {
+                    alert("Подпись пуста.");
+                    return;
+                }
+
+                markSignatureSaved(trimmed.toDataURL("image/png"));
+                screen.style.display = "none";
+            };
+        }
+
+        const form = signatureInput.closest("form");
+        if (form) {
+            form.addEventListener("submit", function () {
+                if (!(signatureInput.value || "").trim().startsWith("data:image/")) {
+                    return;
+                }
+                showSavingOverlay("Сохранение данных…");
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn && !submitBtn.disabled) {
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+
+        window.addEventListener("resize", function () {
+            if (screen.style.display === "block") {
+                resizeCanvas();
+                isSigned = false;
+            }
+        });
     });
-});
+})();

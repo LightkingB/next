@@ -10,6 +10,11 @@
 {% endblock %}
 
 {% block content %}
+    <div id="loading-overlay" class="stepper-archive__overlay" aria-hidden="true">
+        <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+        <span data-saving-label>Сохранение…</span>
+    </div>
+
     <div class="stepper-archive">
         <div class="stepper-archive__shell">
             <header class="stepper-archive__head">
@@ -79,13 +84,14 @@
                                                 </div>
                                             </div>
                                             <div class="stepper-archive__media-block">
-                                                <div class="form-group" id="openSignature">
+                                                <div class="form-group">
                                                     <label>Вставьте подпись</label>
                                                     <div class="signature-preview-container mb-3">
                                                         <img id="signature-preview" class="signature-preview-img"
                                                              src="{% static 'img/signature.jpg' %}" alt="Нет подписи">
                                                     </div>
-                                                    <button type="button" class="btn btn-sm btn-primary stepper-archive__btn stepper-archive__btn--primary">
+                                                    <button type="button" id="openSignature"
+                                                            class="btn btn-sm btn-primary stepper-archive__btn stepper-archive__btn--primary">
                                                         <i class="fas fa-signature" aria-hidden="true"></i> Подписаться
                                                     </button>
                                                 </div>
