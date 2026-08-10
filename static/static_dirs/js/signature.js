@@ -1,5 +1,6 @@
 (function () {
     const STROKE_PAD = 4;
+    const SIGNATURE_JPEG_QUALITY = 0.85;
 
     function showSavingOverlay(message) {
         const overlay = document.getElementById("loading-overlay");
@@ -12,6 +13,7 @@
         }
         overlay.classList.add("is-visible");
         overlay.setAttribute("aria-hidden", "false");
+        document.body.classList.add("issuance-saving");
     }
 
     function hideSavingOverlay() {
@@ -21,17 +23,66 @@
         }
         overlay.classList.remove("is-visible");
         overlay.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("issuance-saving");
     }
 
     window.showSavingOverlay = showSavingOverlay;
     window.hideSavingOverlay = hideSavingOverlay;
 
+    function bindIssuanceForms() {
+        document.querySelectorAll("form.js-issuance-form").forEach(function (form) {
+            if (form.dataset.issuanceBound === "1") {
+                return;
+            }
+            form.dataset.issuanceBound = "1";
+
+            const signatureInput = form.querySelector("#signature");
+            const photoInput = form.querySelector("#photo");
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const savingMessage = form.dataset.savingMessage || "Сохранение данных…";
+
+            form.addEventListener("submit", function (event) {
+                if (form.dataset.issuanceSubmitting === "1") {
+                    return;
+                }
+                event.preventDefault();
+
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                if (signatureInput) {
+                    const signatureValue = (signatureInput.value || "").trim();
+                    if (!signatureValue.startsWith("data:image/")) {
+                        alert("Пожалуйста, добавьте подпись перед сохранением.");
+                        return;
+                    }
+                }
+
+                if (photoInput && !(photoInput.value || "").trim()) {
+                    photoInput.disabled = true;
+                }
+
+                form.dataset.issuanceSubmitting = "1";
+                showSavingOverlay(savingMessage);
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+
+                requestAnimationFrame(function () {
+                    form.submit();
+                });
+            });
+        });
+    }
+
     if (typeof Webcam !== "undefined" && document.getElementById("cameraModal")) {
         Webcam.set({
-            width: 360,
-            height: 290,
+            width: 320,
+            height: 240,
             image_format: "jpeg",
-            jpeg_quality: 90
+            jpeg_quality: 85
         });
 
         $("#cameraModal").on("shown.bs.modal", function () {
@@ -49,6 +100,7 @@
             return;
         }
         Webcam.snap(function (dataUri) {
+            photoInput.disabled = false;
             photoInput.value = dataUri;
             const preview = document.getElementById("profile-preview");
             if (preview) {
@@ -78,6 +130,8 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+        bindIssuanceForms();
+
         const canvas = document.getElementById("signatureCanvas");
         const screen = document.getElementById("signatureScreen");
         const openSignature = document.getElementById("openSignature");
@@ -165,7 +219,25 @@
             return trimmed;
         }
 
+        function exportSignatureDataUrl() {
+            const trimmed = exportSignatureCanvas();
+            if (!trimmed) {
+                return null;
+            }
+
+            const jpegCanvas = document.createElement("canvas");
+            jpegCanvas.width = trimmed.width;
+            jpegCanvas.height = trimmed.height;
+            const jpegCtx = jpegCanvas.getContext("2d");
+            jpegCtx.fillStyle = "#ffffff";
+            jpegCtx.fillRect(0, 0, jpegCanvas.width, jpegCanvas.height);
+            jpegCtx.drawImage(trimmed, 0, 0);
+
+            return jpegCanvas.toDataURL("image/jpeg", SIGNATURE_JPEG_QUALITY);
+        }
+
         function markSignatureSaved(dataURL) {
+            signatureInput.disabled = false;
             signatureInput.value = dataURL;
             previewImg.src = dataURL;
             previewImg.dataset.hasSignature = "1";
@@ -248,29 +320,15 @@
                     return;
                 }
 
-                const trimmed = exportSignatureCanvas();
-                if (!trimmed) {
+                const dataUrl = exportSignatureDataUrl();
+                if (!dataUrl) {
                     alert("Подпись пуста.");
                     return;
                 }
 
-                markSignatureSaved(trimmed.toDataURL("image/png"));
+                markSignatureSaved(dataUrl);
                 screen.style.display = "none";
             };
-        }
-
-        const form = signatureInput.closest("form");
-        if (form) {
-            form.addEventListener("submit", function () {
-                if (!(signatureInput.value || "").trim().startsWith("data:image/")) {
-                    return;
-                }
-                showSavingOverlay("Сохранение данных…");
-                const submitBtn = form.querySelector('button[type="submit"]');
-                if (submitBtn && !submitBtn.disabled) {
-                    submitBtn.disabled = true;
-                }
-            });
         }
 
         window.addEventListener("resize", function () {

@@ -41,6 +41,10 @@
     display: flex;
 }
 
+body.issuance-saving {
+    overflow: hidden;
+}
+
 .stepper-archive__shell {
     background: var(--sa-paper);
     border: 1px solid var(--sa-line);

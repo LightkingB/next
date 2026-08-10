@@ -338,7 +338,7 @@ def spec_part(request, id, myedu_id):
     student = get_object_or_404(ClearanceSheet, myedu_id=myedu_id, id=id)
     selected_edu_year_id = student.edu_year_id
     if request.method == "POST":
-        form = IssuanceForm(request.POST, request.FILES)
+        form = IssuanceForm(request.POST)
         signature_base64 = request.POST.get('signature')
         profile_base64 = request.POST.get('profile')
         edu_year_id = request.POST.get('edu_year_id', 0)
@@ -351,18 +351,19 @@ def spec_part(request, id, myedu_id):
             faculty_id=student.myedu_faculty_id,
             specialty_id=student.myedu_spec_id,
             type=Issuance.SPEC,
-            profile_base64=profile_base64
+            profile_base64=profile_base64,
+            student_fio=student.student_fio,
         )
         if edu_year_id:
             selected_edu_year_id = int(edu_year_id)
-        if edu_year_id and not error:
-            student.edu_year_id = edu_year_id
-            student.save()
         if error:
             messages.error(request, error)
         else:
+            if edu_year_id:
+                student.edu_year_id = edu_year_id
+                student.save(update_fields=['edu_year_id'])
             messages.success(request, "Данные успешно сохранены.")
-            form = IssuanceForm()
+            return redirect('stepper:spec-part', id=id, myedu_id=myedu_id)
     else:
         form = IssuanceForm()
 
@@ -389,7 +390,7 @@ def archive_part(request, id, myedu_id):
     student = get_object_or_404(ClearanceSheet, myedu_id=myedu_id, id=id)
 
     if request.method == "POST":
-        form = IssuanceForm(request.POST, request.FILES)
+        form = IssuanceForm(request.POST)
         signature_base64 = request.POST.get('signature')
         instance, error = request.stepper.create_issuance_form(
             form=form,
@@ -399,13 +400,14 @@ def archive_part(request, id, myedu_id):
             cs_id=student.id,
             faculty_id=student.myedu_faculty_id,
             specialty_id=student.myedu_spec_id,
-            type=Issuance.OTHER
+            type=Issuance.OTHER,
+            student_fio=student.student_fio,
         )
         if error:
             messages.error(request, error)
         else:
             messages.success(request, "Данные успешно сохранены.")
-            form = IssuanceForm()
+            return redirect('stepper:archive-part', id=id, myedu_id=myedu_id)
     else:
         form = IssuanceForm()
 

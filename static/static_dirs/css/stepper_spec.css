@@ -50,6 +50,10 @@
     line-height: 1.45;
 }
 
+body.issuance-saving {
+    overflow: hidden;
+}
+
 .stepper-spec__shell {
     background: var(--ss-paper);
     border: 1px solid var(--ss-line);

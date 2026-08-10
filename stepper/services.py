@@ -57,35 +57,43 @@ class StepperService:
         if not form.is_valid():
             return None, "Введите корректные данные"
 
-        instance = form.save(commit=False)
+        profile_base64 = (myedu.get('profile_base64') or '').strip()
 
-        faculty = Faculty.objects.filter(myedu_faculty_id=myedu['faculty_id']).first()
-        speciality = Speciality.objects.filter(myedu_spec_id=myedu['specialty_id']).first()
-        instance.faculty = faculty
-        instance.speciality = speciality
-        instance.student = myedu['myeduid']
-        instance.type_choices = myedu['type']
-        if myedu.get('cs_id', None):
-            instance.cs_id = myedu['cs_id']
+        with transaction.atomic():
+            instance = form.save(commit=False)
 
-        if not (instance.fio or '').strip() and instance.cs_id:
-            cs_fio = ClearanceSheet.objects.filter(pk=instance.cs_id).values_list('student_fio', flat=True).first()
-            if cs_fio:
-                instance.fio = cs_fio.strip()
+            faculty = Faculty.objects.filter(myedu_faculty_id=myedu['faculty_id']).first()
+            speciality = Speciality.objects.filter(myedu_spec_id=myedu['specialty_id']).first()
+            instance.faculty = faculty
+            instance.speciality = speciality
+            instance.student = myedu['myeduid']
+            instance.type_choices = myedu['type']
+            if myedu.get('cs_id', None):
+                instance.cs_id = myedu['cs_id']
 
-        signature_file = save_signature_image(signature_base64)
+            if not (instance.fio or '').strip():
+                fio = (myedu.get('student_fio') or '').strip()
+                if not fio and instance.cs_id:
+                    fio = (
+                        ClearanceSheet.objects
+                        .filter(pk=instance.cs_id)
+                        .values_list('student_fio', flat=True)
+                        .first() or ''
+                    ).strip()
+                if fio:
+                    instance.fio = fio
 
-        if signature_file:
-            instance.signature = signature_file
+            signature_file = save_signature_image(signature_base64)
+            if signature_file:
+                instance.signature = signature_file
 
-        if myedu.get('profile_base64', None):
-            profile_file = save_signature_image(myedu['profile_base64'], storage="users")
+            if profile_base64:
+                profile_file = save_signature_image(profile_base64, storage="users")
+                if profile_file:
+                    instance.profile = profile_file
 
-            if profile_file:
-                instance.profile = profile_file
-
-        instance.employee = user
-        instance.save()
+            instance.employee = user
+            instance.save()
 
         return instance, None
 

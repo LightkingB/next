@@ -51,7 +51,7 @@
                                 <div class="stepper-archive__panel-head">
                                     <span><i class="fas fa-file-alt" aria-hidden="true"></i>Данные документа</span>
                                 </div>
-                                <form method="POST" enctype="multipart/form-data">
+                                <form method="POST" class="js-issuance-form" data-saving-message="Сохранение данных…">
                                     {% csrf_token %}
                                     <div class="stepper-archive__form-body">
                                         <div class="form-row">
