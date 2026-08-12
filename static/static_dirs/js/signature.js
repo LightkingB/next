@@ -1,6 +1,5 @@
 (function () {
     const STROKE_PAD = 4;
-    const SIGNATURE_JPEG_QUALITY = 0.85;
 
     function showSavingOverlay(message) {
         const overlay = document.getElementById("loading-overlay");
@@ -225,21 +224,14 @@
                 return null;
             }
 
-            const jpegCanvas = document.createElement("canvas");
-            jpegCanvas.width = trimmed.width;
-            jpegCanvas.height = trimmed.height;
-            const jpegCtx = jpegCanvas.getContext("2d");
-            jpegCtx.fillStyle = "#ffffff";
-            jpegCtx.fillRect(0, 0, jpegCanvas.width, jpegCanvas.height);
-            jpegCtx.drawImage(trimmed, 0, 0);
-
-            return jpegCanvas.toDataURL("image/jpeg", SIGNATURE_JPEG_QUALITY);
+            return trimmed.toDataURL("image/png");
         }
 
         function markSignatureSaved(dataURL) {
             signatureInput.disabled = false;
             signatureInput.value = dataURL;
             previewImg.src = dataURL;
+            previewImg.alt = "Подпись";
             previewImg.dataset.hasSignature = "1";
 
             const previewBox = previewImg.closest(".signature-preview-container");

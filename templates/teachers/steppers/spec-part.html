@@ -104,9 +104,11 @@
                                                 <div class="form-group" id="openSignature">
                                                     <label>Вставьте подпись</label>
                                                     <div class="signature-preview-container mb-3 stepper-spec__signature-empty">
-                                                        <img id="signature-preview" class="signature-preview-img"
-                                                             src="{% static 'img/nophoto.jpg' %}" alt="Подпись не добавлена">
-                                                        <span class="stepper-spec__signature-hint" data-signature-hint>Подпись не добавлена</span>
+                                                        <img id="signature-preview" class="signature-preview-img" src="" alt="">
+                                                        <span class="stepper-spec__signature-hint" data-signature-hint>
+                                                            <i class="fas fa-signature" aria-hidden="true"></i>
+                                                            Подпись не добавлена
+                                                        </span>
                                                     </div>
                                                     <button type="button"
                                                             class="btn btn-sm btn-primary stepper-spec__btn stepper-spec__btn--primary">
