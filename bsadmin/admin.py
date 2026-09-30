@@ -29,8 +29,86 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Role)
-admin.site.register(Faculty)
-admin.site.register(Speciality)
+# admin.site.register(Faculty)
+# admin.site.register(Speciality)
+@admin.register(Faculty)
+class FacultyAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "title",
+        "short_name",
+        "category",
+        "myedu_faculty_id",
+        "is_myedu",
+        "visit",
+    )
+    list_display_links = ("id", "title")
+
+    list_filter = (
+        "category",
+        "is_myedu",
+        "visit",
+    )
+
+    search_fields = (
+        "title",
+        "short_name",
+        "myedu_faculty_id",
+    )
+
+    list_editable = (
+        "short_name",
+        "category",
+        "is_myedu",
+        "visit",
+    )
+
+    list_per_page = 50
+    ordering = ("title",)
+    save_on_top = True
+    show_full_result_count = True
+
+
+@admin.register(Speciality)
+class SpecialityAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "title",
+        "short_name",
+        "code",
+        "faculty",
+        "myedu_spec_id",
+        "visit",
+    )
+    list_display_links = ("id", "title")
+
+    list_filter = (
+        "faculty",
+        "visit",
+    )
+
+    search_fields = (
+        "title",
+        "short_name",
+        "code",
+        "myedu_spec_id",
+        "faculty__title",
+    )
+
+    list_editable = (
+        "short_name",
+        "code",
+        "visit",
+    )
+
+    autocomplete_fields = (
+        "faculty",
+    )
+
+    list_per_page = 50
+    ordering = ("title",)
+    save_on_top = True
+    show_full_result_count = True
 
 
 @admin.register(FacultyTranscript)
