@@ -88,7 +88,7 @@ class Speciality(models.Model):
         verbose_name_plural = 'Специальности'
 
     title = models.CharField(max_length=255, verbose_name="Название")
-    myedu_spec_id = models.PositiveIntegerField(unique=True, verbose_name="MyEDU Специальность ID")
+    myedu_spec_id = models.PositiveIntegerField(verbose_name="MyEDU Специальность ID", null=True, blank=True)
     short_name = models.CharField(max_length=150, verbose_name="Короткое название")
     visit = models.BooleanField(default=True, verbose_name="Показывать")
     code = models.CharField(verbose_name="Шифр", max_length=255, null=True, blank=True)
