@@ -4,6 +4,8 @@ import os
 import random
 import re
 import string
+from datetime import datetime, timedelta
+from urllib.parse import urlencode
 
 from PIL import Image, ImageDraw, ImageFont
 from django.conf import settings
@@ -11,11 +13,15 @@ from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse, FileResponse
 from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.timezone import localdate
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView
 
 from bsadmin.forms import FacultyTranscriptForm, FailFacultyTranscriptForm
-from bsadmin.models import RegistrationTranscript, RegHistoryTranscript
+from bsadmin.models import RegistrationTranscript, RegHistoryTranscript, Faculty, CategoryTranscript, \
+    FacultyTranscript, Speciality
 from bsadmin.services import UserService
 from utils.errors import handle_error
 from utils.filter_pagination import Pagination
@@ -72,21 +78,48 @@ def faculty_index(request):
     request.session['access'] = 'bsadmin'
     user_service = UserService()
     if request.method == "POST":
-        transcript_number = request.POST.get("transcript_number", "").replace(" ", "").strip()
-        academic_transcript = user_service.get_active_academic_transcript_by_number(transcript_number)
-        if academic_transcript:
-            messages.success(request, "Академическая справка зарегистрирована в системе. Факультет: " + str(
-                academic_transcript.faculty.title))
-        else:
-            messages.error(request, "Академическая справка не зарегистрирована в системе.")
+        # Старая форма проверки: ведём на полноценную страницу проверки справки.
+        number = request.POST.get("transcript_number", "").strip()
+        return redirect(reverse("bsadmin:at-search") + ("?" + urlencode({"q": number}) if number else ""))
 
-    faculties = user_service.active_faculties_transcripts()
+    faculties = list(user_service.active_faculties_transcripts())
+    for faculty in faculties:
+        total = faculty["total_documents"]
+        faculty["used_percent"] = round(faculty["used_documents"] * 100 / total) if total else 0
+        faculty["defective_percent"] = round(faculty["defective_documents"] * 100 / total) if total else 0
+    totals = {key: sum(f[key] for f in faculties)
+              for key in ("total_documents", "free_documents", "used_documents", "defective_documents")}
 
     context = {
         "navbar": "index",
-        "faculties": faculties
+        "faculties": faculties,
+        "totals": totals,
+        "without_free": sum(1 for f in faculties if f["total_documents"] and not f["free_documents"]),
     }
     return render(request, "teachers/transcripts/index.html", context)
+
+
+TRANSCRIPT_LEVELS = {
+    "ВПО": "Высшее профессиональное образование",
+    "СПО": "Среднее профессиональное образование",
+    "НПО": "Начальное профессиональное образование",
+}
+
+
+def _transcript_level(category):
+    """Расшифровка категории бланка по префиксу названия (ВПО*1 → высшее проф. образование)."""
+    title = (category.title or "").upper()
+    for prefix, label in TRANSCRIPT_LEVELS.items():
+        if title.startswith(prefix):
+            return label
+    return category.get_category_display() or ""
+
+
+TRANSCRIPT_STATUSES = {
+    "free": "Обычные",
+    "used": "Записанные",
+    "defective": "Повреждённые",
+}
 
 
 def faculty_transcript_category(request, faculty_id):
@@ -98,15 +131,40 @@ def faculty_transcript_category(request, faculty_id):
     sort_order = request.GET.get('sort', 'is_used')
     if sort_order not in ["is_used", "-is_used"]:
         sort_order = "is_used"
+    query = request.GET.get('q', '').replace(" ", "").strip()
+    status = request.GET.get('status', '')
+    if status not in TRANSCRIPT_STATUSES:
+        status = ''
+    faculty_categories = [category for category in categories if category.category == faculty_detail.category]
+    category_id = request.GET.get('category', '')
+    selected_category = next((c for c in faculty_categories if str(c.id) == category_id), None)
     page_number = request.GET.get('page', None)
-    transcripts = user_service.academic_transcripts_by_faculty_id(faculty_id, sort_order)
+    transcripts = user_service.academic_transcripts_by_faculty_id(
+        faculty_id, sort_order, query, status, selected_category.id if selected_category else None)
+
+    stats = user_service.academic_transcript_category_stats(faculty_id)
+    category_cards = [
+        {
+            "category": category,
+            "level": _transcript_level(category),
+            "stats": stats.get(category.id, {"total": 0, "free": 0, "used": 0, "defective": 0}),
+        }
+        for category in faculty_categories
+    ]
     pagination_util = Pagination(request, transcripts)
 
     context = {
         "navbar": "index",
         "faculty": faculty_detail,
-        "category_list": categories,
-        "transcripts": pagination_util.pagination(page_number)
+        "category_cards": category_cards,
+        "selected_category": selected_category,
+        "all_count": sum(card["stats"]["total"] for card in category_cards),
+        "transcripts": pagination_util.pagination(page_number),
+        "query": query,
+        "status": status,
+        "status_choices": TRANSCRIPT_STATUSES.items(),
+        "counts": user_service.academic_transcript_status_counts(
+            faculty_id, selected_category.id if selected_category else None),
     }
     return render(request, "teachers/transcripts/academictranscript_category.html", context)
 
@@ -117,35 +175,59 @@ def registration_academic_transcript_faculty(request, faculty_id, category_id):
     faculty_detail = user_service.get_faculty_by_id_or_404(faculty_id)
     category_detail = user_service.get_category_transcript_by_id_or_404(category_id)
 
-    page_number = request.GET.get('page', None)
-    academic_transcripts = user_service.reg_academic_transcript_faculty(faculty_id, category_id)
-    pagination_util = Pagination(request, academic_transcripts)
-
     if request.method == "POST":
         form = FacultyTranscriptForm(request.POST)
         if form.is_valid():
-            try:
-                transcript_number = str(form.cleaned_data.get('transcript_number', None)).replace(" ", "")
-                instance = form.save(commit=False)
-                instance.transcript_number = transcript_number
-                instance.faculty_id = faculty_id
-                instance.category_id = category_id
-                instance.save()
-            except Exception as _:
-                form.add_error('transcript_number', "Такой номер уже существует в данной категории.")
+            instance = form.save(commit=False)
+            instance.faculty_id = faculty_id
+            instance.category_id = category_id
+            instance.save()
+            messages.success(request, f"Бланк № {instance.transcript_number} зарегистрирован.")
+            # Post/Redirect/Get: обновление страницы не отправит форму повторно.
+            return redirect(f"{request.path}?added={instance.id}")
     else:
         form = FacultyTranscriptForm()
 
+    query = request.GET.get('q', '').replace(" ", "").strip()
+    status = request.GET.get('status', '')
+    if status not in TRANSCRIPT_STATUSES:
+        status = ''
+    # Тот же запрос, что и в журнале факультета: со статусом выдачи и данными студента.
+    academic_transcripts = user_service.academic_transcripts_by_faculty_id(
+        faculty_id, '-id', query, status, category_id)
+    pagination_util = Pagination(request, academic_transcripts)
+
+    added_id = _parse_int_param(request.GET.get('added'))
     context = {
         "navbar": "index",
-        "facultytranscript_list": pagination_util.pagination(page_number),
+        "facultytranscript_list": pagination_util.pagination(request.GET.get('page', None)),
         "faculty": faculty_detail,
         "form": form,
-        "category": category_detail
+        "category": category_detail,
+        "level": _transcript_level(category_detail),
+        "counts": user_service.academic_transcript_status_counts(faculty_id, category_id),
+        "query": query,
+        "status": status,
+        "status_choices": [("", "Все"), ("free", "Свободные"), ("used", "Выданные"), ("defective", "Повреждённые")],
+        "added_id": added_id,
+        "added": FacultyTranscript.objects.filter(id=added_id, faculty_id=faculty_id).first() if added_id else None,
     }
 
     template_name = "teachers/transcripts/academictranscript_faculty.html"
     return render(request, template_name, context)
+
+
+def _parse_int_param(value):
+    return int(value) if value and str(value).isdigit() else None
+
+
+def _transcript_locked_reason(transcript):
+    """Выданный или повреждённый бланк нельзя менять и удалять из журнала регистрации."""
+    if transcript.is_defective:
+        return "Бланк отмечен как повреждённый — изменить или удалить его нельзя."
+    if RegistrationTranscript.objects.filter(faculty_transcript=transcript).exists():
+        return "Бланк уже выдан студенту — изменить или удалить его нельзя."
+    return None
 
 
 def update_faculty_transcript(request, id):
@@ -161,13 +243,17 @@ def update_faculty_transcript(request, id):
         return JsonResponse({'status': 'success', 'data': data})
 
     if request.method == 'POST':
+        locked = _transcript_locked_reason(faculty_transcript)
+        if locked:
+            return JsonResponse({'status': 'error', 'message': locked})
         form = FacultyTranscriptForm(request.POST, instance=faculty_transcript)
         if form.is_valid():
             form.save()
             return JsonResponse(
-                {'status': 'success', 'message': 'Запись обновлена', 'data': form.instance.to_ft_dict()})
-        else:
-            return JsonResponse({'status': 'error', 'message': 'Ошибка при обновлении'})
+                {'status': 'success', 'message': f'Номер изменён на {form.instance.transcript_number}',
+                 'data': form.instance.to_ft_dict()})
+        errors = [e for field_errors in form.errors.values() for e in field_errors]
+        return JsonResponse({'status': 'error', 'message': " ".join(errors) or 'Ошибка при обновлении'})
 
     return JsonResponse({'status': 'error', 'message': 'Неверный метод'})
 
@@ -176,10 +262,14 @@ def update_faculty_transcript(request, id):
 def delete_faculty_transcript(request, id):
     user_service = UserService()
     faculty_transcript = user_service.get_academic_transcript_by_id_or_none(id)
-    if faculty_transcript:
-        faculty_transcript.delete()
-        return JsonResponse({'status': 'success', 'message': 'Запись удалена'})
-    return JsonResponse({'status': 'error', 'message': 'Запись не найдена'})
+    if not faculty_transcript:
+        return JsonResponse({'status': 'error', 'message': 'Запись не найдена'})
+    locked = _transcript_locked_reason(faculty_transcript)
+    if locked:
+        return JsonResponse({'status': 'error', 'message': locked})
+    number = faculty_transcript.transcript_number
+    faculty_transcript.delete()
+    return JsonResponse({'status': 'success', 'message': f'Бланк № {number} удалён'})
 
 
 @csrf_exempt
@@ -221,134 +311,148 @@ def delete_registry_faculty_transcript(request, id):
 def registration_academic_transcript_student(request):
     user_service = UserService()
     faculties = user_service.active_faculties()
+    query = (request.GET.get("q") or "").strip()
 
-    students, custom_data, manual_entry_checked = None, {}, False
+    students, search_failed, custom_data = None, False, {}
+    mode = request.GET.get("mode") if request.GET.get("mode") in ("search", "manual") else "search"
 
-    if request.method == "POST":
-        if request.POST.get('manual_entry'):
-            students, custom_data, manual_entry_checked = handle_manual_entry(request, user_service)
+    if request.method == "POST" and request.POST.get("manual_entry"):
+        mode = "manual"
+        saved, custom_data = handle_manual_entry(request, user_service)
+        if saved:
+            return redirect(f"{request.path}?mode=manual")
+    elif query:
+        result = MyEduService.search_students(query)
+        if result is None:
+            search_failed = True
         else:
-            students = MyEduService.handle_student_search(request)
+            students = result if isinstance(result, list) else []
+            issued = user_service.issued_transcripts_by_students([s.get("student_id") for s in students])
+            for student in students:
+                student["issued"] = issued.get(str(student.get("student_id")), [])
+
     context = {
         "navbar": "at-register-student",
+        "query": query,
+        "mode": mode,
         "students": students,
+        "search_failed": search_failed,
         "faculties": faculties,
         "custom_data": custom_data,
-        "manual_entry_checked": manual_entry_checked
+        "back_url": request.get_full_path(),
     }
     return render(request, "teachers/transcripts/academictranscript_student.html", context)
 
 
+def _issue_transcript(request, transcript_number, **registration):
+    """Выдаёт бланк в транзакции с блокировкой строки, чтобы два сотрудника не выдали один бланк."""
+    user_service = UserService()
+    with transaction.atomic():
+        transcript, error = user_service.check_transcript_for_issue(transcript_number)
+        if transcript:
+            transcript = FacultyTranscript.objects.select_for_update().get(pk=transcript.pk)
+            transcript, error = user_service.check_transcript_for_issue(transcript.transcript_number)
+        if error:
+            messages.error(request, error)
+            return False
+        RegistrationTranscript.objects.create(faculty_transcript=transcript, **registration)
+    messages.success(request, f"Справка № {transcript.transcript_number} выдана: {registration['student_fio']}.")
+    return True
+
+
 def handle_manual_entry(request, user_service):
-    student_fio = request.POST.get('custom_student_fio', "")
+    """Ручная выдача, если студента нет в MyEDU. Возвращает (сохранено, данные формы)."""
     faculty_id = request.POST.get('custom_faculty_id', "")
-    faculty_title = request.POST.get('custom_faculty_title', "").strip()
-
     speciality_id = request.POST.get("custom_speciality_id", "")
-    speciality_title = request.POST.get("custom_speciality_title", "").strip()
-
-    transcript_number = request.POST.get('custom_transcript_number', "").replace(" ", "").strip()
-
-    specialities = None
-    if faculty_id:
-        specialities = user_service.active_specialities_by_faculty(faculty_id)
-
     custom_data = {
-        "custom_student_fio": student_fio,
+        "custom_student_fio": request.POST.get('custom_student_fio', "").strip(),
         "custom_faculty_id": faculty_id,
-        "custom_faculty_title": faculty_title,
-        "custom_transcript_number": transcript_number,
-        "custom_speciality_title": speciality_title,
         "custom_speciality_id": speciality_id,
-        "specialities": specialities
+        "custom_transcript_number": request.POST.get('custom_transcript_number', "").replace(" ", "").strip(),
+        "specialities": user_service.active_specialities_by_faculty(faculty_id) if faculty_id.isdigit() else None,
     }
 
-    if not student_fio or not faculty_id or not faculty_title or not speciality_id or not speciality_title:
-        messages.error(request, "Заполните обязательные поля.")
-        return None, custom_data, True
+    faculty = Faculty.objects.filter(id=faculty_id).first() if faculty_id.isdigit() else None
+    speciality = (Speciality.objects.filter(id=speciality_id, faculty=faculty).first()
+                  if faculty and speciality_id.isdigit() else None)
+    missing = [label for label, ok in (("факультет", faculty), ("специальность", speciality),
+                                       ("ФИО студента", custom_data["custom_student_fio"]),
+                                       ("номер справки", custom_data["custom_transcript_number"])) if not ok]
+    if missing:
+        messages.error(request, "Заполните: " + ", ".join(missing) + ".")
+        return False, custom_data
 
-    faculty_transcript = user_service.get_active_academic_transcript_by_number(transcript_number)
+    saved = _issue_transcript(
+        request, custom_data["custom_transcript_number"],
+        student_uuid=0,
+        student_fio=custom_data["custom_student_fio"],
+        faculty=faculty,
+        faculty_history=faculty.title,
+        speciality=speciality,
+        speciality_history=speciality.title,
+    )
+    return saved, custom_data
 
-    if not faculty_transcript:
-        messages.error(request, "Академическая справка не найдена.")
-        return None, custom_data, True
 
-    if user_service.is_reg_academic_transcript_for_student(faculty_transcript.id):
-        messages.error(request, "Этот номер уже зарегистрирован!")
-        return None, custom_data, True
-
-    try:
-        RegistrationTranscript.objects.create(
-            faculty_transcript=faculty_transcript,
-            student_uuid=0,
-            student_fio=student_fio,
-            faculty_id=faculty_id,
-            speciality_id=speciality_id,
-            faculty_history=faculty_title,
-            speciality_history=speciality_title
-        )
-        messages.success(request, "Данные успешно сохранены")
-        return None, {}, False
-    except Exception:
-        messages.error(request, "Ошибка сохранения. Повторите попытку.")
-        return None, custom_data, True
+def _safe_back_url(request, fallback):
+    url = request.POST.get("next") or ""
+    return url if url_has_allowed_host_and_scheme(url, allowed_hosts={request.get_host()}) else fallback
 
 
 def save_academic_transcript_student(request):
+    fallback = reverse("bsadmin:academic-transcript-student")
     if request.method != "POST":
         messages.error(request, "Этот метод не поддерживается")
-        return redirect("bsadmin:academic-transcript-student")
-
-    transcript_number = request.POST.get("transcript_number", "").replace(" ", "").strip()
+        return redirect(fallback)
+    back = _safe_back_url(request, fallback)
 
     student_id = request.POST.get("student_id")
-    student_fio = request.POST.get("student_fio")
-
+    student_fio = (request.POST.get("student_fio") or "").strip()
     faculty_id = request.POST.get("faculty_id")
     faculty_title = request.POST.get("faculty_title")
-
-    speciality_title = request.POST.get("speciality_title")
     speciality_id = request.POST.get("speciality_id")
+    speciality_title = request.POST.get("speciality_title")
 
-    if not student_id or not student_fio or not faculty_id or not faculty_title or not speciality_id or not speciality_title:
-        messages.error(request, "Заполните обязательные поля.")
-        return redirect("bsadmin:academic-transcript-student")
+    if not all([student_id, student_fio, faculty_id, faculty_title, speciality_id, speciality_title]):
+        messages.error(request, "Недостаточно данных о студенте из MyEDU. Повторите поиск.")
+        return redirect(back)
 
     user_service = UserService()
-    transcript = user_service.get_active_academic_transcript_by_number(transcript_number)
-
-    if not transcript:
-        messages.error(request, "Этот номер не найден!")
-        return redirect("bsadmin:academic-transcript-student")
-
     faculty_detail = user_service.get_faculty_by_myedu_faculty_id_or_none(faculty_id)
     if not faculty_detail:
-        messages.error(request, "Факультет не найден!")
-        return redirect("bsadmin:academic-transcript-student")
-
+        messages.error(request, f"Факультет «{faculty_title}» не найден в системе. Синхронизируйте факультеты.")
+        return redirect(back)
     speciality_detail = user_service.get_spec_by_myedu_spec_id_or_none(speciality_id)
     if not speciality_detail:
-        messages.error(request, "Специальность не найдена!")
-        return redirect("bsadmin:academic-transcript-student")
+        messages.error(request, f"Специальность «{speciality_title}» не найдена в системе. Синхронизируйте специальности.")
+        return redirect(back)
 
-    if user_service.is_reg_academic_transcript_for_student(transcript.id):
-        messages.error(request, "Этот номер уже зарегистрирован!")
-        return redirect("bsadmin:academic-transcript-student")
-    try:
-        RegistrationTranscript.objects.create(
-            faculty_transcript_id=transcript.id,
-            student_uuid=student_id,
-            student_fio=student_fio,
-            faculty=faculty_detail,
-            faculty_history=faculty_title,
-            speciality=speciality_detail,
-            speciality_history=speciality_title
-        )
-        messages.success(request, "Данные успешно сохранены")
-    except Exception as e:
-        messages.error(request, "Повторите попытку...")
+    _issue_transcript(
+        request, request.POST.get("transcript_number", ""),
+        student_uuid=student_id,
+        student_fio=student_fio,
+        faculty=faculty_detail,
+        faculty_history=faculty_title,
+        speciality=speciality_detail,
+        speciality_history=speciality_title,
+    )
+    return redirect(back)
 
-    return redirect("bsadmin:academic-transcript-student")
+
+def check_transcript_number(request):
+    """Проверка номера «на лету» перед выдачей."""
+    transcript, error = UserService().check_transcript_for_issue(request.GET.get("number", ""))
+    if error:
+        return JsonResponse({"ok": False, "message": error})
+    return JsonResponse({
+        "ok": True,
+        "message": f"Свободен · {transcript.category.title} · {transcript.faculty.short_name or transcript.faculty.title}",
+        "number": transcript.transcript_number,
+        "category": f"{transcript.category.title} · {transcript.category.page_count} л.",
+        "faculty_id": transcript.faculty_id,
+        "faculty_title": transcript.faculty.title,
+        "faculty_myedu_id": transcript.faculty.myedu_faculty_id,
+    })
 
 
 class ReportFacultyRegAcademicTranscript(ListView):
@@ -357,7 +461,8 @@ class ReportFacultyRegAcademicTranscript(ListView):
     template_name = "teachers/transcripts/academictranscript_faculty_report.html"
 
     def get_queryset(self):
-        return self.user_service.report_faculty_reg_academic_transcript(self.kwargs.get("faculty_id", None))
+        query = self.request.GET.get('q', '').strip()
+        return self.user_service.report_faculty_reg_academic_transcript(self.kwargs.get("faculty_id", None), query)
 
     def get_context_data(self, **kwargs):
         context = super(ReportFacultyRegAcademicTranscript, self).get_context_data(**kwargs)
@@ -367,8 +472,24 @@ class ReportFacultyRegAcademicTranscript(ListView):
         context['regtranscripts'] = pagination_util.pagination(page_number)
 
         context['navbar'] = 'index'
+        context['query'] = self.request.GET.get('q', '').strip()
         context['faculty'] = self.user_service.get_faculty_by_id_or_404(self.kwargs.get("faculty_id", None))
         return context
+
+
+REPORT_SORT_CHOICES = (
+    ("faculty", "По факультету"),
+    ("new", "Сначала новые"),
+    ("old", "Сначала старые"),
+    ("fio", "По ФИО"),
+)
+
+
+def _report_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date() if value else None
+    except ValueError:
+        return None
 
 
 class ReportAllFacultyRegAcademicTranscript(ListView):
@@ -376,37 +497,86 @@ class ReportAllFacultyRegAcademicTranscript(ListView):
     user_service = UserService()
     template_name = "teachers/transcripts/academictranscript_all_faculty_report.html"
 
+    def get_filters(self):
+        get = self.request.GET
+        sort = get.get("sort")
+        return {
+            "q": (get.get("q") or "").strip(),
+            "faculty": _parse_int_param(get.get("faculty")),
+            "category": _parse_int_param(get.get("category")),
+            "date_from": _report_date(get.get("date_from")),
+            "date_to": _report_date(get.get("date_to")),
+            "sort": sort if sort in dict(REPORT_SORT_CHOICES) else "faculty",
+        }
+
+    def get_queryset(self):
+        return self.user_service.report_all_faculty_reg_academic_transcript(self.get_filters())
+
     def get_context_data(self, **kwargs):
         context = super(ReportAllFacultyRegAcademicTranscript, self).get_context_data(**kwargs)
-        regtranscripts = self.user_service.report_all_faculty_reg_academic_transcript()
-        pagination_util = Pagination(self.request, regtranscripts)
-        page_number = self.request.GET.get('page', None)
-        context['regtranscripts'] = pagination_util.pagination(page_number)
+        filters = self.get_filters()
+        pagination_util = Pagination(self.request, self.object_list)
+        context['regtranscripts'] = pagination_util.pagination(self.request.GET.get('page', None))
         context['navbar'] = 'index'
 
+        def url(**changes):
+            params = {**filters, **changes}
+            query = {key: (value.isoformat() if hasattr(value, "isoformat") else value)
+                     for key, value in params.items()
+                     if value not in (None, "") and not (key == "sort" and value == "faculty")}
+            return self.request.path + ("?" + urlencode(query) if query else "")
+
+        faculties = list(Faculty.objects.filter(visit=True).order_by('title').values_list('id', 'title'))
+        categories = list(CategoryTranscript.objects.order_by('title').values_list('id', 'title'))
+        today = localdate()
+        presets = [
+            ("Сегодня", today, today),
+            ("7 дней", today - timedelta(days=6), today),
+            ("30 дней", today - timedelta(days=29), today),
+            ("Этот месяц", today.replace(day=1), today),
+            ("Этот год", today.replace(month=1, day=1), today),
+        ]
+        active = []
+        if filters["q"]:
+            active.append((f"Поиск: «{filters['q']}»", url(q="")))
+        if filters["faculty"]:
+            active.append((f"Факультет: {dict(faculties).get(filters['faculty'], filters['faculty'])}", url(faculty=None)))
+        if filters["category"]:
+            active.append((f"Категория: {dict(categories).get(filters['category'], filters['category'])}", url(category=None)))
+        if filters["date_from"] or filters["date_to"]:
+            period = " – ".join(d.strftime("%d.%m.%Y") for d in (filters["date_from"], filters["date_to"]) if d)
+            active.append((f"Выдана: {period}", url(date_from=None, date_to=None)))
+
+        context.update({
+            "filters": filters,
+            "faculties": faculties,
+            "categories": categories,
+            "sort_choices": REPORT_SORT_CHOICES,
+            "date_links": [{"label": label, "url": url(date_from=start, date_to=finish),
+                            "active": filters["date_from"] == start and filters["date_to"] == finish}
+                           for label, start, finish in presets],
+            "active_filters": active,
+            "reset_url": self.request.path,
+        })
         return context
+
+
+SEARCH_SIMILAR_LIMIT = 30
 
 
 def at_search(request):
     user_service = UserService()
-    if request.method == "POST":
-        transcript_number = request.POST.get("transcript_number", "").replace(" ", "").strip()
-        if not transcript_number:
-            messages.error(request, "Обязательно к заполнению")
-        else:
-            reg_transcript_number = user_service.search_academic_transcript_number(transcript_number)
-            if reg_transcript_number:
-                message = f"""Академическая справка подтверждена.
-                ФИО: {reg_transcript_number.student_fio}
-                Факультет: {reg_transcript_number.faculty_history}
-                Специальность: {reg_transcript_number.speciality_history}
-                """
-                messages.success(request, message)
-            else:
-                messages.error(request, "Академическая справка не выдана.")
+    query = request.GET.get("q", "").strip()
+    exact, similar = None, []
+    if query:
+        exact, similar = user_service.find_academic_transcript(query, SEARCH_SIMILAR_LIMIT)
 
     context = {
         "navbar": "at-search",
+        "query": query,
+        "exact": exact,
+        "similar": similar[:SEARCH_SIMILAR_LIMIT],
+        "similar_more": len(similar) > SEARCH_SIMILAR_LIMIT,
     }
     return render(request, "teachers/transcripts/academictranscript_search.html", context)
 
@@ -418,19 +588,19 @@ def fail_transcript(request):
         transcript = user_service.get_academic_transcript_by_number(transcript_number)
 
         if transcript:
-            old_transcript = user_service.is_reg_academic_transcript_for_student(transcript.id)
-            if old_transcript:
-                old_transcript.delete()
-                # return JsonResponse({"error": "Номер уже зарегистрирован"})
             form = FailFacultyTranscriptForm(request.POST, request.FILES, instance=transcript)
             if form.is_valid():
+                old_transcript = user_service.is_reg_academic_transcript_for_student(transcript.id)
+                if old_transcript:
+                    old_transcript.delete()
                 transcript_instance = form.save(commit=False)
                 transcript_instance.is_defective = True
                 transcript_instance.save()
                 messages.success(request, "Данные успешно сохранены в базу")
                 return JsonResponse({"success": True})
             else:
-                return JsonResponse({"error": "Ошибка в данных. Проверьте введённые данные (PDF)."})
+                errors = [e for field_errors in form.errors.values() for e in field_errors]
+                return JsonResponse({"error": " ".join(errors) or "Ошибка в данных. Проверьте введённые данные (PDF)."})
         else:
             return JsonResponse({"not_found": "Справка с таким номером не найдена."})
     return JsonResponse({"success": False, "error": "Некорректный запрос."})

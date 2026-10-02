@@ -1,0 +1,29 @@
+<td class="stepper-cs__col-progress">
+    {% if sheet.type_choices %}
+        <span class="stepper-cs__now stepper-cs__now--issued"><i class="fas fa-archive" aria-hidden="true"></i> Выдан</span>
+    {% elif sheet.completed_at %}
+        <span class="stepper-cs__now stepper-cs__now--done"><i class="fas fa-check-circle" aria-hidden="true"></i> Пройден · ждёт выдачи</span>
+    {% endif %}
+    {% if sheet.progress %}
+        <ol class="stepper-cs__progress" aria-label="Пройдено {{ sheet.progress_done }} из {{ sheet.progress_total }}">
+            {% for step in sheet.progress %}
+                <li class="stepper-cs__step{% if step.done %} is-done{% elif step.current %} is-current{% endif %}"
+                    title="{{ step.name }}: {% if step.done %}пройден {{ step.completed_at|date:'d.m.Y H:i' }}{% elif step.current %}сейчас здесь{% else %}впереди{% endif %}">
+                    {% if step.done %}<i class="fas fa-check" aria-hidden="true"></i>{% elif step.current %}<i class="fas fa-map-marker-alt" aria-hidden="true"></i>{% endif %}{{ step.name }}
+                </li>
+            {% endfor %}
+        </ol>
+        <span class="stepper-cs__progress-meta">
+            {% if sheet.stage_days is not None %}
+                <span class="stepper-cs__stage-days{% if sheet.stage_stuck %} is-stuck{% endif %}"
+                      title="На текущем этапе с {{ sheet.stage_since|date:'d.m.Y H:i' }}">
+                    <i class="far fa-clock" aria-hidden="true"></i>
+                    {% if sheet.stage_days == 0 %}сегодня{% else %}{{ sheet.stage_days }} дн. на этапе{% endif %}
+                </span> ·
+            {% endif %}
+            пройдено {{ sheet.progress_done }} из {{ sheet.progress_total }} · создан {{ sheet.issued_at|date:"d.m.Y" }}
+        </span>
+    {% else %}
+        <span class="stepper-cs__progress-meta">создан {{ sheet.issued_at|date:"d.m.Y" }}</span>
+    {% endif %}
+</td>

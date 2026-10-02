@@ -763,3 +763,218 @@ body.student-portal-scene-page .student-portal-cs-card__summary {
         font-size: 1.3rem;
     }
 }
+
+/* ── Личный кабинет: профиль и текущий статус ── */
+.student-home__profile {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem 1.15rem;
+    background: var(--sp-paper);
+    border: 1px solid var(--sp-line);
+    border-radius: var(--sp-radius);
+    box-shadow: 0 1px 4px rgba(30, 24, 20, 0.05);
+}
+
+.student-home__avatar {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--sp-red);
+    border-radius: 50%;
+}
+
+.student-home__who {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.student-home__name {
+    margin-bottom: 0.45rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--sp-ink);
+}
+
+.student-home__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.45rem 1.25rem;
+    margin: 0;
+}
+
+.student-home__facts dt {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--sp-muted);
+}
+
+.student-home__facts dd {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--sp-ink);
+    word-break: break-word;
+}
+
+.student-home__note {
+    margin: 0.6rem 0 0;
+    font-size: 0.78rem;
+    color: #8a5a00;
+}
+
+.student-home__note i {
+    margin-right: 0.3rem;
+}
+
+.student-home__now {
+    margin-bottom: 1.25rem;
+}
+
+.student-home__now-card {
+    --now: var(--sp-muted);
+    --now-soft: var(--sp-surface);
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.1rem 1.2rem;
+    background: var(--sp-paper);
+    border: 1px solid var(--sp-line);
+    border-left: 5px solid var(--now);
+    border-radius: var(--sp-radius);
+    box-shadow: 0 1px 4px rgba(30, 24, 20, 0.05);
+}
+
+.student-home__now-card.is-progress { --now: #1f6fb2; --now-soft: #e8f2fa; }
+.student-home__now-card.is-wait { --now: #b7791f; --now-soft: #fdf6e3; }
+.student-home__now-card.is-done { --now: #2e7d32; --now-soft: #e8f5ec; }
+.student-home__now-card.is-start { --now: var(--sp-red); --now-soft: var(--sp-red-soft); }
+
+.student-home__now-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+    color: var(--now);
+    background: var(--now-soft);
+    border-radius: 50%;
+}
+
+.student-home__now-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.student-home__now-label {
+    font-size: 0.75rem;
+    color: var(--sp-muted);
+}
+
+.student-home__now-title {
+    margin: 0.1rem 0 0.25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--now);
+}
+
+.student-home__now-card.is-muted .student-home__now-title {
+    color: var(--sp-ink);
+    font-size: 1.05rem;
+}
+
+.student-home__now-text {
+    font-size: 0.875rem;
+    color: var(--sp-text);
+}
+
+.student-home__now-bar {
+    height: 6px;
+    margin-top: 0.75rem;
+    overflow: hidden;
+    background: #ece4e1;
+    border-radius: 999px;
+}
+
+.student-home__now-bar span {
+    display: block;
+    height: 100%;
+    background: var(--now);
+    border-radius: 999px;
+}
+
+.student-home__now-meta {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--sp-muted);
+}
+
+.student-home__now-action {
+    align-self: center;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.student-portal-stages__item.is-current {
+    background: #f3f8fd;
+    box-shadow: inset 3px 0 0 #1f6fb2;
+}
+
+.student-portal-stages__badge--current {
+    font-weight: 600;
+    color: #fff;
+    background: #1f6fb2;
+}
+
+.student-portal-stages__item.is-wait .student-portal-stages__name {
+    color: var(--sp-muted);
+}
+
+.student-portal-stages__history b {
+    margin-right: 0.35rem;
+    font-weight: 600;
+    color: var(--sp-ink);
+}
+
+.student-home__confirm {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 0.25rem 0.75rem;
+    margin: 0 0 0.75rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.875rem;
+    background: var(--sp-surface);
+    border-radius: 6px;
+}
+
+.student-home__confirm dt {
+    font-weight: 400;
+    color: var(--sp-muted);
+}
+
+.student-home__confirm dd {
+    margin: 0;
+    font-weight: 500;
+    color: var(--sp-ink);
+}
+
+@media (max-width: 576px) {
+    .student-home__profile,
+    .student-home__now-card {
+        flex-wrap: wrap;
+    }
+
+    .student-home__now-action {
+        width: 100%;
+        justify-content: center;
+    }
+}

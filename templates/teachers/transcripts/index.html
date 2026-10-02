@@ -1,76 +1,135 @@
 {% extends 'admin_base.html' %}
-{% load static i18n crispy_forms_tags cms_tags %}
+{% load static i18n %}
 
 {% block body_class %}admin-module-page{% endblock %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/transcript_admin.css' %}"/>
 {% endblock %}
 
 {% block content %}
-    <div class="container admin-module">
+    <div class="container admin-module transcript-home">
         <header class="admin-module__header">
             <h1><i class="fas fa-file-alt" aria-hidden="true"></i>Академическая справка</h1>
-            <p>Регистрация, проверка и учёт академических справок по факультетам</p>
+            <p>Регистрация, выдача, проверка и учёт бланков академических справок по факультетам.</p>
         </header>
 
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
             {% include 'utils/_messages.html' %}
 
-            <div class="admin-module__panel">
-                <div class="admin-module__panel-head">
-                    <span><i class="fas fa-search" aria-hidden="true"></i>Проверка справки</span>
-                </div>
-                <div class="admin-module__panel-body">
-                    <form action="" method="post" class="admin-module__verify-row">
-                        {% csrf_token %}
-                        <div class="admin-module__verify-field">
-                            <label for="custom_transcript_number">№ академической справки</label>
-                            <input type="text" class="form-control form-control-sm" id="custom_transcript_number"
-                                   name="transcript_number" placeholder="12345678"/>
+            <div class="transcript-home__actions">
+                <form method="get" action="{% url 'bsadmin:at-search' %}" class="transcript-home__check" role="search">
+                    <label for="home-check">Проверить справку</label>
+                    <div class="transcript-home__check-row">
+                        <div class="transcript-search__field">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="search" class="form-control" id="home-check" name="q"
+                                   placeholder="№ бланка или ФИО студента" autocomplete="off" required>
                         </div>
-                        <div class="admin-module__verify-actions">
-                            <button type="submit" class="btn btn-sm admin-module__btn-primary">
-                                <i class="fas fa-search" aria-hidden="true"></i> Поиск
-                            </button>
-                            <a href="{% url 'bsadmin:all-faculty-academic-transcript-reports' %}"
-                               class="btn btn-sm admin-module__btn-report">
-                                <i class="fas fa-chart-bar" aria-hidden="true"></i> Общий отчёт
-                            </a>
-                        </div>
-                    </form>
-                </div>
+                        <button type="submit" class="transcript__btn transcript__btn--primary">Проверить</button>
+                    </div>
+                </form>
+                <a href="{% url 'bsadmin:academic-transcript-student' %}" class="transcript-home__tile">
+                    <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                    <span><strong>Выдать справку</strong><small>студенту по номеру бланка</small></span>
+                </a>
+                <a href="{% url 'bsadmin:all-faculty-academic-transcript-reports' %}" class="transcript-home__tile">
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                    <span><strong>Общий отчёт</strong><small>выданные справки по всем факультетам</small></span>
+                </a>
+            </div>
+
+            <div class="transcript-home__totals" aria-label="Сводка по всем факультетам">
+                <div><span>Всего бланков</span><strong>{{ totals.total_documents }}</strong></div>
+                <div class="is-free"><span>Свободно</span><strong>{{ totals.free_documents }}</strong></div>
+                <div class="is-used"><span>Выдано</span><strong>{{ totals.used_documents }}</strong></div>
+                <div class="is-defective"><span>Повреждено</span><strong>{{ totals.defective_documents }}</strong></div>
             </div>
 
             <div class="admin-module__panel">
-                <div class="admin-module__panel-head">
-                    <span><i class="fas fa-university" aria-hidden="true"></i>{% trans 'Список факультетов' %}</span>
+                <div class="admin-module__panel-head admin-module__panel-head--split">
+                    <span><i class="fas fa-university" aria-hidden="true"></i>{% trans 'Факультеты' %}</span>
+                    <span class="transcript-journal__found" id="faculty-count">{{ faculties|length }}</span>
+                </div>
+                <div class="admin-module__panel-body transcript-home__toolbar">
+                    <div class="transcript-search__field transcript-home__filter">
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                        <input type="search" class="form-control" id="faculty-filter"
+                               placeholder="Найти факультет по названию" autocomplete="off" aria-label="Найти факультет">
+                    </div>
+                    <div class="transcript-home__segments" role="group" aria-label="Показать">
+                        <button type="button" class="is-active" data-show="all">Все</button>
+                        <button type="button" data-show="active">С бланками</button>
+                        <button type="button" data-show="empty">
+                            Нет свободных{% if without_free %} <span>{{ without_free }}</span>{% endif %}
+                        </button>
+                    </div>
+                    <select class="form-control transcript-home__sort" id="faculty-sort" aria-label="Сортировка">
+                        <option value="title">По названию (А–Я)</option>
+                        <optgroup label="Выдано">
+                            <option value="used-desc">Больше выдано</option>
+                            <option value="used-asc">Меньше выдано</option>
+                        </optgroup>
+                        <optgroup label="Свободные бланки">
+                            <option value="free-asc">Меньше свободных</option>
+                            <option value="free-desc">Больше свободных</option>
+                        </optgroup>
+                        <optgroup label="Всего бланков">
+                            <option value="total-desc">Больше бланков</option>
+                            <option value="total-asc">Меньше бланков</option>
+                        </optgroup>
+                        <optgroup label="Последняя выдача">
+                            <option value="recent-desc">Сначала недавние</option>
+                            <option value="recent-asc">Давно не выдавали</option>
+                        </optgroup>
+                    </select>
                 </div>
                 <div class="admin-module__panel-body admin-module__panel-body--grid">
-                    <div class="admin-module__grid">
+                    <div class="transcript-home__grid" id="faculty-grid">
                         {% for faculty in faculties %}
                             <a href="{% url 'bsadmin:faculty-transcript-category' faculty_id=faculty.id %}"
-                               class="admin-module__faculty-card">
-                                <span class="admin-module__faculty-card__title">
-                                    {{ faculty.title }} ({{ faculty.short_name }})
-                                </span>
-                                <ul class="admin-module__faculty-card__stats">
-                                    <li>
-                                        <span>{% trans 'Зарегистр. справки' %}</span>
-                                        <strong>{{ faculty.total_documents }}</strong>
-                                    </li>
-                                    <li>
-                                        <span>{% trans 'Использованные справки' %}</span>
-                                        <strong>{{ faculty.used_documents }}</strong>
-                                    </li>
-                                    <li>
-                                        <span>{% trans 'Бракованные справки' %}</span>
-                                        <strong>{{ faculty.defective_documents }}</strong>
-                                    </li>
-                                </ul>
+                               class="transcript-fac{% if not faculty.total_documents %} is-empty{% elif not faculty.free_documents %} is-out{% endif %}"
+                               data-name="{{ faculty.title|lower }} {{ faculty.short_name|lower }}"
+                               data-title="{{ faculty.title }}"
+                               data-total="{{ faculty.total_documents }}"
+                               data-free="{{ faculty.free_documents }}"
+                               data-used="{{ faculty.used_documents }}"
+                               data-recent="{{ faculty.last_issued|date:'U'|default:'0' }}">
+                                <div class="transcript-fac__head">
+                                    <span class="transcript-fac__title">{{ faculty.title }}</span>
+                                    {% if faculty.short_name and faculty.short_name != faculty.title %}<span class="transcript-fac__short">{{ faculty.short_name }}</span>{% endif %}
+                                </div>
+
+                                {% if faculty.total_documents %}
+                                    <dl class="transcript-fac__stats">
+                                        <div><dt>Всего</dt><dd>{{ faculty.total_documents }}</dd></div>
+                                        <div class="is-free"><dt>Свободно</dt><dd>{{ faculty.free_documents }}</dd></div>
+                                        <div class="is-used"><dt>Выдано</dt><dd>{{ faculty.used_documents }}</dd></div>
+                                        <div class="is-defective"><dt>Брак</dt><dd>{{ faculty.defective_documents }}</dd></div>
+                                    </dl>
+                                    <div class="transcript-fac__bar" title="Выдано {{ faculty.used_percent }}%, повреждено {{ faculty.defective_percent }}%">
+                                        <span class="is-used" style="width: {{ faculty.used_percent }}%"></span>
+                                        <span class="is-defective" style="width: {{ faculty.defective_percent }}%"></span>
+                                    </div>
+                                {% else %}
+                                    <p class="transcript-fac__none">Бланки ещё не зарегистрированы</p>
+                                {% endif %}
+
+                                <div class="transcript-fac__foot">
+                                    {% if faculty.total_documents and not faculty.free_documents %}
+                                        <span class="transcript-fac__warn"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Нет свободных бланков</span>
+                                    {% elif faculty.last_issued %}
+                                        <span>Последняя выдача: {{ faculty.last_issued|date:"d.m.Y" }}</span>
+                                    {% else %}
+                                        <span>Выдач ещё не было</span>
+                                    {% endif %}
+                                    <span class="transcript-fac__open">Журнал <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                                </div>
                             </a>
                         {% endfor %}
                     </div>
+                    <p class="transcript-home__nothing" id="faculty-nothing" hidden>Ничего не найдено. Измените условия фильтра.</p>
                 </div>
             </div>
         {% else %}
@@ -80,9 +139,65 @@
 {% endblock %}
 
 {% block scripts %}
-    <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded", function () {
-            $('#custom_transcript_number').focus().val('');
-        });
+    <script>
+        (function () {
+            var grid = document.getElementById('faculty-grid');
+            if (!grid) return;
+            var cards = Array.prototype.slice.call(grid.children);
+            var filter = document.getElementById('faculty-filter');
+            var sort = document.getElementById('faculty-sort');
+            var count = document.getElementById('faculty-count');
+            var nothing = document.getElementById('faculty-nothing');
+            var segments = document.querySelectorAll('.transcript-home__segments button');
+            var STORE = 'bsheet-faculty-view';
+            var state = {show: 'all', sort: 'title'};
+            try { Object.assign(state, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+            if (!sort.querySelector('option[value="' + state.sort + '"]')) state.sort = 'title';
+
+            function num(card, key) { return Number(card.dataset[key]) || 0; }
+
+            function apply() {
+                var q = filter.value.trim().toLowerCase();
+                var visible = 0;
+                cards.forEach(function (card) {
+                    var ok = !q || card.dataset.name.indexOf(q) !== -1;
+                    if (state.show === 'active') ok = ok && num(card, 'total') > 0;
+                    if (state.show === 'empty') ok = ok && num(card, 'total') > 0 && num(card, 'free') === 0;
+                    card.hidden = !ok;
+                    if (ok) visible++;
+                });
+                // Ключ сортировки + направление; факультеты без бланков всегда в конце, при равенстве — по названию.
+                // «Давно не выдавали»: факультеты, где выдач ещё не было, идут первыми.
+                var parts = state.sort.split('-'), key = parts[0], dir = parts[1] === 'asc' ? 1 : -1;
+                var sorted = cards.slice().sort(function (a, b) {
+                    var byTitle = a.dataset.title.localeCompare(b.dataset.title, 'ru');
+                    if (key === 'title') return byTitle;
+                    var emptyA = num(a, 'total') === 0, emptyB = num(b, 'total') === 0;
+                    if (emptyA !== emptyB) return emptyA ? 1 : -1;
+                    var diff = (num(a, key) - num(b, key)) * dir;
+                    return diff || byTitle;
+                });
+                sorted.forEach(function (card) { grid.appendChild(card); });
+                count.textContent = visible === cards.length ? cards.length : visible + ' из ' + cards.length;
+                nothing.hidden = visible > 0;
+                segments.forEach(function (b) { b.classList.toggle('is-active', b.dataset.show === state.show); });
+                sort.value = state.sort;
+                try { localStorage.setItem(STORE, JSON.stringify({show: state.show, sort: state.sort})); } catch (e) {}
+            }
+
+            filter.addEventListener('input', apply);
+            sort.addEventListener('change', function () { state.sort = sort.value; apply(); });
+            segments.forEach(function (b) {
+                b.addEventListener('click', function () { state.show = b.dataset.show; apply(); });
+            });
+            // «/» — быстрый переход к проверке справки.
+            document.addEventListener('keydown', function (e) {
+                if (e.key === '/' && !/input|textarea|select/i.test(document.activeElement.tagName)) {
+                    e.preventDefault();
+                    document.getElementById('home-check').focus();
+                }
+            });
+            apply();
+        })();
     </script>
 {% endblock %}

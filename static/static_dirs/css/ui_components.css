@@ -1,0 +1,245 @@
+/* Общие UI-компоненты: пагинация и уведомления. Подключается на всех страницах. */
+
+/* ── Пагинация ── */
+.pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin: 0;
+    font-family: var(--am-font-body, 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+}
+
+.pager__info {
+    font-size: 0.78rem;
+    color: var(--am-muted, #6b6b6b);
+    white-space: nowrap;
+}
+
+.pager__info strong {
+    color: var(--am-ink, #1c1c1c);
+    font-weight: 600;
+}
+
+.pager__list {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pager__link,
+.pager__gap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 0.55rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    border-radius: 6px;
+}
+
+.pager__link {
+    color: var(--am-text, #333) !important;
+    background: #fff;
+    border: 1px solid var(--am-line, #ddd9d4);
+    text-decoration: none !important;
+    transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.pager__link:hover {
+    color: var(--am-red, #A00E07) !important;
+    border-color: var(--am-red-line, #e8d4d4);
+    background: var(--am-red-soft, #faf5f4);
+}
+
+.pager__link:focus-visible {
+    outline: 2px solid var(--am-red, #A00E07);
+    outline-offset: 1px;
+}
+
+.pager__link.is-current {
+    color: #fff !important;
+    background: var(--am-red, #A00E07);
+    border-color: var(--am-red, #A00E07);
+    cursor: default;
+}
+
+.pager__link.is-disabled {
+    color: #b9b4ae !important;
+    background: var(--am-surface, #f7f5f2);
+    border-color: var(--am-line-soft, #eceae6);
+    pointer-events: none;
+}
+
+.pager__gap {
+    min-width: 20px;
+    padding: 0;
+    color: #a39e98;
+}
+
+.pager__nav-text {
+    font-size: 0.78rem;
+}
+
+@media (max-width: 576px) {
+    .pager {
+        justify-content: center;
+    }
+
+    .pager__nav-text {
+        display: none;
+    }
+
+    .pager__item--far {
+        display: none;
+    }
+}
+
+/* ── Уведомления ── */
+.ui-toasts {
+    position: fixed;
+    top: 72px;
+    right: 16px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: min(380px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.ui-toast {
+    --toast-accent: #6b6b6b;
+    --toast-soft: #f4f2f0;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.7rem 0.75rem 0.8rem 0.85rem;
+    overflow: hidden;
+    font-family: var(--am-font-body, 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+    color: var(--am-text, #333);
+    background: #fff;
+    border: 1px solid var(--am-line, #ddd9d4);
+    border-left: 4px solid var(--toast-accent);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(20, 16, 14, 0.14), 0 2px 6px rgba(20, 16, 14, 0.06);
+    pointer-events: auto;
+    animation: ui-toast-in 0.22s ease-out;
+}
+
+.ui-toast.is-leaving {
+    animation: ui-toast-out 0.2s ease-in forwards;
+}
+
+.ui-toast--success { --toast-accent: #2e7d32; --toast-soft: #e8f5ec; }
+.ui-toast--error { --toast-accent: #c62828; --toast-soft: #fdecec; }
+.ui-toast--warning { --toast-accent: #b7791f; --toast-soft: #fdf6e3; }
+.ui-toast--info { --toast-accent: #1f6fb2; --toast-soft: #e8f2fa; }
+
+.ui-toast__icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 0.95rem;
+    color: var(--toast-accent);
+    background: var(--toast-soft);
+    border-radius: 50%;
+}
+
+.ui-toast__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-top: 0.1rem;
+}
+
+.ui-toast__title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--am-ink, #1c1c1c);
+}
+
+.ui-toast__text {
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--am-text, #333);
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+.ui-toast__close {
+    flex: 0 0 auto;
+    margin: -0.2rem -0.15rem 0 0;
+    padding: 0 0.3rem;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: #a39e98;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.ui-toast__close:hover {
+    color: var(--am-ink, #1c1c1c);
+}
+
+.ui-toast__progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 100%;
+    background: var(--toast-accent);
+    opacity: 0.35;
+    transform-origin: left;
+    animation: ui-toast-progress linear forwards;
+}
+
+.ui-toast.is-paused .ui-toast__progress {
+    animation-play-state: paused;
+}
+
+@keyframes ui-toast-in {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes ui-toast-out {
+    to { opacity: 0; transform: translateX(24px); }
+}
+
+@keyframes ui-toast-progress {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-toast,
+    .ui-toast.is-leaving {
+        animation: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .ui-toasts {
+        top: auto;
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        width: auto;
+    }
+}

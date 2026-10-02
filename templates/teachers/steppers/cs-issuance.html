@@ -18,51 +18,78 @@
                     <p class="stepper-issuance__header-desc">
                         Справки о выдаче диплома после обходного листа — спецчасть и архив.
                     </p>
-                    {% if issuance.paginator.count or type_filter or request.GET.search %}
-                        <div class="stepper-issuance__header-meta">
-                            {% if issuance.paginator.count %}
-                                <span>Записей: <strong>{{ issuance.paginator.count }}</strong></span>
-                            {% endif %}
-                            {% if type_filter == 'speciality' %}
-                                <span class="stepper-issuance__header-badge">Спец. часть</span>
-                            {% elif type_filter == 'other' %}
-                                <span class="stepper-issuance__header-badge">Архив</span>
-                            {% endif %}
-                            {% if request.GET.search %}
-                                <span class="stepper-issuance__header-badge">Поиск: {{ request.GET.search }}</span>
-                            {% endif %}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="stepper-issuance__toolbar">
-                    <form action="" method="get" class="stepper-issuance__search-form">
-                        <input type="number"
-                               name="search"
-                               class="form-control form-control-sm"
-                               value="{{ request.GET.search|default:'' }}"
-                               placeholder="№ справки или обходного"
-                               min="1"
-                               step="1"
-                               inputmode="numeric"
-                               aria-label="Поиск по номеру"/>
-                        {% if type_filter %}
-                            <input type="hidden" name="type" value="{{ type_filter }}">
-                        {% endif %}
-                        <button type="submit" class="btn btn-sm btn-danger">
-                            <i class="fas fa-search" aria-hidden="true"></i> Найти
-                        </button>
-                    </form>
-                    <div class="stepper-issuance__filters">
-                        <span class="stepper-issuance__filters-label">Раздел</span>
-                        <a href="{% url 'stepper:cs-issuance' %}{% if request.GET.search %}?search={{ request.GET.search|urlencode }}{% endif %}"
-                           class="stepper-issuance__chip{% if not type_filter %} is-active{% endif %}">Все</a>
-                        <a href="{% url 'stepper:cs-issuance' %}?type=speciality{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}"
-                           class="stepper-issuance__chip{% if type_filter == 'speciality' %} is-active{% endif %}">Спец. часть</a>
-                        <a href="{% url 'stepper:cs-issuance' %}?type=other{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}"
-                           class="stepper-issuance__chip{% if type_filter == 'other' %} is-active{% endif %}">Архив</a>
+                    <div class="stepper-issuance__header-meta">
+                        <span>Найдено: <strong>{{ issuance.paginator.count }}</strong></span>
                     </div>
                 </div>
+
+                <form method="get" class="stepper-cs__toolbar stepper-cs__filters stepper-issuance__filters-form" id="issuance-filters">
+                    {% if filters.type %}<input type="hidden" name="type" value="{{ filters.type }}">{% endif %}
+                    {% if filters.status %}<input type="hidden" name="status" value="{{ filters.status }}">{% endif %}
+                    <div class="stepper-cs__filters-search">
+                        <div class="stepper-cs__search-field">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="search" name="q" class="form-control form-control-sm" value="{{ filters.q }}"
+                                   placeholder="ФИО, MyEDU ID, № справки, обходного или диплома" autocomplete="off"
+                                   aria-label="Поиск">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-danger stepper-cs__apply">Найти</button>
+                    </div>
+                    <div class="stepper-cs__filter-row">
+                        <select name="faculty" class="form-control form-control-sm stepper-cs__select stepper-cs__select--wide{% if filters.faculty %} is-set{% endif %}"
+                                data-autosubmit aria-label="Факультет" title="Факультет">
+                            <option value="">Все факультеты</option>
+                            {% for id, title in faculties %}
+                                <option value="{{ id }}" {% if filters.faculty == id %}selected{% endif %}>{{ title }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="stepper-cs__dates{% if filters.date_from or filters.date_to %} is-set{% endif %}">
+                            <span class="stepper-issuance__dates-label">Записано</span>
+                            <input type="date" name="date_from" class="form-control form-control-sm" aria-label="С"
+                                   value="{{ filters.date_from|date:'Y-m-d' }}">
+                            <span class="stepper-cs__dates-sep">—</span>
+                            <input type="date" name="date_to" class="form-control form-control-sm" aria-label="По"
+                                   value="{{ filters.date_to|date:'Y-m-d' }}">
+                        </div>
+                        <select name="sort" class="form-control form-control-sm stepper-cs__select stepper-cs__select--sort"
+                                data-autosubmit aria-label="Сортировка" title="Сортировка">
+                            {% for value, label in sort_choices %}
+                                <option value="{{ value }}" {% if filters.sort == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="stepper-cs__presets">
+                        <span class="stepper-cs__presets-label">Период:</span>
+                        {% for link in date_links %}
+                            <a href="{{ link.url }}" class="stepper-cs__preset{% if link.active %} is-active{% endif %}">{{ link.label }}</a>
+                        {% endfor %}
+                    </div>
+                    {% if active_filters %}
+                        <div class="stepper-cs__active-filters">
+                            {% for label, link in active_filters %}
+                                <a href="{{ link }}" class="stepper-cs__active-filter" title="Убрать фильтр">{{ label }} <i class="fas fa-times" aria-hidden="true"></i></a>
+                            {% endfor %}
+                            <a href="{{ reset_url }}" class="stepper-cs__reset">Сбросить</a>
+                        </div>
+                    {% endif %}
+                </form>
+
+                <nav class="stepper-cs__pipeline stepper-issuance__sections" aria-label="Раздел">
+                    <div class="stepper-cs__pipeline-steps">
+                        {% for item in section_links %}
+                            <a href="{{ item.url }}" class="stepper-cs__pipe{% if item.active %} is-active{% endif %}{% if not item.count %} is-empty{% endif %}">
+                                <span class="stepper-cs__pipe-count">{{ item.count }}</span>
+                                <span class="stepper-cs__pipe-label">{% if item.icon %}<i class="fas {{ item.icon }}" aria-hidden="true"></i> {% endif %}{{ item.label }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <a href="{{ double_link.url }}" class="stepper-cs__pipe stepper-issuance__double{% if double_link.active %} is-active{% endif %}{% if not double_link.count %} is-empty{% endif %}"
+                       title="{% if double_link.active %}Показать все{% else %}Только дубликаты{% endif %}">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                        <span class="stepper-cs__pipe-label">Дубликаты</span>
+                        <span class="stepper-cs__pipe-count">{{ double_link.count }}</span>
+                    </a>
+                </nav>
 
                 <div class="stepper-issuance__messages">
                     {% include 'utils/_messages.html' %}
@@ -115,6 +142,11 @@
                                     {% if doc.date_issue %}
                                         <span class="stepper-issuance__doc-sub">Выдан {{ doc.date_issue|date:"d.m.Y" }}</span>
                                     {% endif %}
+                                    {% if doc.files %}
+                                        <a href="{{ doc.files.url }}" target="_blank" rel="noopener" class="stepper-issuance__file">
+                                            <i class="fas fa-file-pdf" aria-hidden="true"></i> Скан диплома
+                                        </a>
+                                    {% endif %}
                                 </td>
                                 <td class="stepper-issuance__col-cs" data-label="Обходной">
                                     {% if doc.cs_id %}
@@ -144,6 +176,11 @@
                                 <td class="stepper-issuance__col-date" data-label="Записано">
                                     <span class="stepper-issuance__date-main">{{ doc.created_at|date:"d.m.Y" }}</span>
                                     <span class="stepper-issuance__date-sub">{{ doc.created_at|date:"H:i" }}</span>
+                                    {% if doc.employee %}
+                                        <span class="stepper-issuance__date-sub" title="Кто записал выдачу">
+                                            <i class="fas fa-user-check" aria-hidden="true"></i> {{ doc.employee.last_name }} {{ doc.employee.first_name|slice:":1" }}.
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td class="stepper-issuance__col-actions" data-label="">
                                     <button type="button"
@@ -163,8 +200,8 @@
                         {% empty %}
                             <tr>
                                 <td colspan="7" class="stepper-issuance__empty">
-                                    {% if request.GET.search or type_filter %}
-                                        По вашему запросу записей не найдено
+                                    {% if active_filters or type_filter %}
+                                        Ничего не найдено. <a href="{{ reset_url }}">Сбросить фильтры</a>
                                     {% else %}
                                         Записей о выдаче документов пока нет
                                     {% endif %}
@@ -223,6 +260,17 @@
 
 {% block scripts %}
     <script type="text/javascript">
+        (function () {
+            var form = document.getElementById('issuance-filters');
+            if (!form) return;
+            form.querySelectorAll('[data-autosubmit], input[type="date"]').forEach(function (field) {
+                field.addEventListener('change', function () { form.requestSubmit ? form.requestSubmit() : form.submit(); });
+            });
+            form.addEventListener('submit', function () {
+                form.querySelectorAll('input, select').forEach(function (field) { if (!field.value) field.disabled = true; });
+            });
+        })();
+
         let deleteDocId = null;
 
         $(document).on('click', '.btn-issuance-delete', function () {

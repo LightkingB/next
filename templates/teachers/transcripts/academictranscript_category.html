@@ -9,62 +9,133 @@
 {% endblock %}
 
 {% block content %}
-    <div class="transcript">
-        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <div class="transcript__shell">
-                <div class="transcript__header">
-                    <h1><i class="fas fa-university" aria-hidden="true"></i>{{ faculty.title }} <span class="text-muted font-weight-normal">({{ faculty.short_name }})</span></h1>
-                    <p class="transcript__header-desc">Выберите категорию справки или просмотрите журнал выданных номеров.</p>
-                </div>
+    <div class="container admin-module transcript-journal">
+        <header class="admin-module__header">
+            <h1><i class="fas fa-university" aria-hidden="true"></i>{{ faculty.title }} <span class="transcript-journal__short">({{ faculty.short_name }})</span></h1>
+            <p>Регистрация бланков академических справок и журнал их учёта.</p>
+        </header>
 
-                <div class="transcript__toolbar">
-                    <div class="transcript__toolbar-group">
-                        <a class="transcript__btn transcript__btn--ghost"
-                           href="{% url 'bsadmin:index' %}">
+        {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
+            {% include 'utils/_messages.html' %}
+
+            <div class="admin-module__panel" id="register">
+                <div class="admin-module__panel-head admin-module__panel-head--split">
+                    <span><i class="fas fa-layer-group" aria-hidden="true"></i>Категории бланков</span>
+                    <span class="transcript-journal__head-actions">
+                        <a href="{% url 'bsadmin:index' %}" class="admin-module__panel-head-action">
                             <i class="fa fa-arrow-left" aria-hidden="true"></i> Список факультетов
                         </a>
-                        <a class="transcript__btn transcript__btn--soft"
-                           href="{% url 'bsadmin:faculty-academic-transcript-reports' faculty_id=faculty.id %}">
-                            <i class="fas fa-chart-bar" aria-hidden="true"></i> Отчёт
+                        <a href="{% url 'bsadmin:faculty-academic-transcript-reports' faculty_id=faculty.id %}" class="admin-module__panel-head-action">
+                            <i class="fas fa-chart-bar" aria-hidden="true"></i> Отчёт о выдаче
                         </a>
-                    </div>
-                    <button type="button" class="transcript__btn transcript__btn--primary" data-toggle="modal" data-target="#uploadModal">
-                        <i class="fas fa-file-upload" aria-hidden="true"></i> Повреждённая справка
-                    </button>
+                    </span>
                 </div>
-
-                <div class="transcript__section">
-                    <h2 class="transcript__section-title">Категории справок</h2>
-                    <div class="transcript__categories">
-                        {% for category in category_list %}
-                            {% if category.category == faculty.category %}
-                                <a href="{% url 'bsadmin:academic-transcript-faculty-registration' faculty_id=faculty.id category_id=category.id %}"
-                                   class="transcript__category-card">
-                                    <span class="transcript__category-card__title">{{ category.title }}</span>
-                                    <span class="transcript__category-card__meta">Листов в справке: {{ category.page_count }}</span>
-                                </a>
-                            {% endif %}
+                <div class="admin-module__panel-body admin-module__panel-body--grid">
+                    <div class="transcript-cats">
+                        {% for card in category_cards %}
+                                <div class="transcript-cat{% if selected_category and selected_category.id == card.category.id %} is-selected{% endif %}">
+                                    <div class="transcript-cat__head">
+                                        <span class="transcript-cat__title">{{ card.category.title }}</span>
+                                        <span class="transcript-cat__pages">{{ card.category.page_count }} л.</span>
+                                    </div>
+                                    {% if card.level %}<div class="transcript-cat__level">{{ card.level }}</div>{% endif %}
+                                    <dl class="transcript-cat__stats">
+                                        <div><dt>Всего</dt><dd>{{ card.stats.total }}</dd></div>
+                                        <div class="is-free"><dt>Свободно</dt><dd>{{ card.stats.free }}</dd></div>
+                                        <div class="is-used"><dt>Выдано</dt><dd>{{ card.stats.used }}</dd></div>
+                                        <div class="is-defective"><dt>Повреждено</dt><dd>{{ card.stats.defective }}</dd></div>
+                                    </dl>
+                                    <a href="{% url 'bsadmin:academic-transcript-faculty-registration' faculty_id=faculty.id category_id=card.category.id %}"
+                                       class="transcript__btn transcript__btn--primary transcript-cat__link">
+                                        <i class="fas fa-plus" aria-hidden="true"></i> Добавить бланки
+                                    </a>
+                                </div>
+                        {% empty %}
+                            <p class="transcript-cats__empty">Для этого факультета нет категорий бланков.</p>
                         {% endfor %}
                     </div>
                 </div>
+            </div>
 
-                <div class="transcript__section transcript__section--journal">
-                    <h2 class="transcript__section-title">Журнал академических справок</h2>
+            <div class="admin-module__panel" id="journal">
+                <div class="admin-module__panel-head admin-module__panel-head--split">
+                    <span><i class="fas fa-list" aria-hidden="true"></i>Журнал академических справок{% if selected_category %} — {{ selected_category.title }}{% endif %}</span>
+                    {% if query or status or selected_category %}
+                        <span class="transcript-journal__found">найдено: {{ transcripts.paginator.count }}</span>
+                    {% endif %}
                 </div>
-
-                <div class="transcript__messages">
-                    {% include 'utils/_messages.html' %}
+                {% if category_cards|length > 1 %}
+                    <div class="transcript-journal__cats" role="tablist" aria-label="Категория">
+                        <a href="?{% if query %}q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}#journal"
+                           class="transcript-journal__cat{% if not selected_category %} is-active{% endif %}">
+                            Все категории <span>{{ all_count }}</span>
+                        </a>
+                        {% for card in category_cards %}
+                            <a href="?category={{ card.category.id }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}#journal"
+                               class="transcript-journal__cat{% if selected_category and selected_category.id == card.category.id %} is-active{% endif %}">
+                                {{ card.category.title }} <span>{{ card.stats.total }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="admin-module__panel-body transcript-journal__toolbar">
+                <form class="transcript__filter" method="get" role="search">
+                    {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
+                    {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category.id }}">{% endif %}
+                    <div class="transcript__filter-search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" class="form-control" name="q" value="{{ query }}"
+                               placeholder="№ справки" aria-label="Поиск по номеру справки">
+                    </div>
+                    <select class="form-control transcript__filter-select" name="status" aria-label="Статус">
+                        <option value="">Все статусы</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="transcript__btn transcript__btn--primary">
+                        <i class="fas fa-search" aria-hidden="true"></i> Найти
+                    </button>
+                    {% if query or status %}
+                        <a class="transcript__btn transcript__btn--ghost" title="Сбросить фильтр"
+                           href="{% url 'bsadmin:faculty-transcript-category' faculty_id=faculty.id %}{% if request.GET.sort %}?sort={{ request.GET.sort }}{% endif %}">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                </form>
+                <div class="transcript__stats">
+                    <a class="transcript__stat{% if not status %} is-active{% endif %}"
+                       href="?{% if query %}q={{ query|urlencode }}{% endif %}{% if selected_category %}&category={{ selected_category.id }}{% endif %}">
+                        <span class="transcript__stat-value">{{ counts.total }}</span>
+                        <span class="transcript__stat-label">Всего</span>
+                    </a>
+                    <a class="transcript__stat transcript__stat--free{% if status == 'free' %} is-active{% endif %}"
+                       href="?status=free{% if query %}&q={{ query|urlencode }}{% endif %}{% if selected_category %}&category={{ selected_category.id }}{% endif %}">
+                        <span class="transcript__stat-value">{{ counts.free }}</span>
+                        <span class="transcript__stat-label">Обычные</span>
+                    </a>
+                    <a class="transcript__stat transcript__stat--used{% if status == 'used' %} is-active{% endif %}"
+                       href="?status=used{% if query %}&q={{ query|urlencode }}{% endif %}{% if selected_category %}&category={{ selected_category.id }}{% endif %}">
+                        <span class="transcript__stat-value">{{ counts.used }}</span>
+                        <span class="transcript__stat-label">Выданы</span>
+                    </a>
+                    <a class="transcript__stat transcript__stat--defective{% if status == 'defective' %} is-active{% endif %}"
+                       href="?status=defective{% if query %}&q={{ query|urlencode }}{% endif %}{% if selected_category %}&category={{ selected_category.id }}{% endif %}">
+                        <span class="transcript__stat-value">{{ counts.defective }}</span>
+                        <span class="transcript__stat-label">Повреждены</span>
+                    </a>
                 </div>
-
+                </div>
                 <div class="transcript__table-wrap">
-                    <table class="transcript__table">
+                    <table class="transcript__table transcript__table--journal">
                         <thead>
                         <tr>
                             <th class="transcript__col-num">№</th>
-                            <th>Категория</th>
+                            <th>Справка</th>
                             <th>
-                                <a href="?sort={% if request.GET.sort == 'is_used' %}-is_used{% else %}is_used{% endif %}&page={{ request.GET.page|default:"1" }}">
-                                    Номер справки
+                                <a href="?sort={% if request.GET.sort == 'is_used' %}-is_used{% else %}is_used{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if selected_category %}&category={{ selected_category.id }}{% endif %}"
+                                   title="Сортировать по статусу">
+                                    Статус
                                     {% if request.GET.sort == 'is_used' %}
                                         <i class="fa fa-sort-up" aria-hidden="true"></i>
                                     {% elif request.GET.sort == '-is_used' %}
@@ -74,55 +145,118 @@
                                     {% endif %}
                                 </a>
                             </th>
-                            <th>Повреждена</th>
+                            <th>Кому выдана</th>
+                            <th class="transcript__col-doc">Скан</th>
+                            <th class="transcript__col-actions">Действия</th>
                         </tr>
                         </thead>
                         <tbody class="order">
                         {% for transcript in transcripts %}
-                            <tr class="{% if transcript.is_defective %}error-block{% endif %} {% if transcript.is_used %}success-block{% endif %}"
-                                data-id="{{ transcript.id }}">
+                            <tr class="{% if transcript.is_defective %}is-defective{% elif transcript.is_used %}is-used{% endif %}"
+                                data-id="{{ transcript.id }}" data-number="{{ transcript.transcript_number }}">
                                 <td class="transcript__col-num">{{ forloop.counter0|add:transcripts.start_index }}</td>
                                 <td>
-                                    {% if transcript.is_used %}
-                                        <button class="btn btn-outline-danger btn-sm delete-ft-button"
-                                                data-id="{{ transcript.id }}"
-                                                title="Удалить запись">
-                                            <i class="fas fa-trash-alt" aria-hidden="true"></i>
-                                        </button>
-                                    {% endif %}
-                                    {{ transcript.category.title }}
-                                    <span class="text-muted">(лист: {{ transcript.category.page_count }})</span>
-                                </td>
-                                <td>
                                     <span class="transcript__num">{{ transcript.transcript_number }}</span>
-                                    {% if transcript.is_used %}
-                                        <i class="fas fa-check-square transcript__status-icon--ok" aria-hidden="true" title="Использована"></i>
-                                    {% endif %}
-                                    {% if transcript.is_defective %}
-                                        <i class="fas fa-times transcript__status-icon--bad" aria-hidden="true" title="Повреждена"></i>
-                                    {% endif %}
+                                    <span class="transcript__cell-meta">{{ transcript.category.title }} · {{ transcript.category.page_count }} л.</span>
                                 </td>
                                 <td>
+                                    <div class="transcript__badges">
+                                        {% if transcript.is_used %}
+                                            <span class="transcript__badge transcript__badge--used">
+                                                <i class="fas fa-check" aria-hidden="true"></i> Выдана
+                                            </span>
+                                        {% endif %}
+                                        {% if transcript.is_defective %}
+                                            <span class="transcript__badge transcript__badge--defective">
+                                                <i class="fas fa-times" aria-hidden="true"></i> Повреждена
+                                            </span>
+                                        {% endif %}
+                                        {% if not transcript.is_used and not transcript.is_defective %}
+                                            <span class="transcript__badge transcript__badge--free">Обычная</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if transcript.is_used %}
+                                        <span class="transcript__student">{{ transcript.student_fio }}</span>
+                                        <span class="transcript__cell-meta">{{ transcript.issue_date|date:"d.m.Y" }}</span>
+                                        <div class="transcript__issued-by">
+                                            {% if transcript.student_uuid and transcript.student_uuid != "0" %}
+                                                <span class="transcript__myedu" title="ID студента в MyEDU">
+                                                    <i class="fas fa-id-card" aria-hidden="true"></i> MyEDU {{ transcript.student_uuid }}
+                                                </span>
+                                            {% else %}
+                                                <span class="transcript__manual" title="Студента нет в MyEDU — данные внесены вручную">
+                                                    <i class="fas fa-user-edit" aria-hidden="true"></i> выдан вручную
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <span class="transcript__muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="transcript__col-doc">
                                     {% if transcript.is_defective and transcript.files %}
-                                        <a href="{{ transcript.files.url }}" target="_blank" rel="noopener" title="PDF">
-                                            <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                                        <a class="transcript__file-link" href="{{ transcript.files.url }}"
+                                           target="_blank" rel="noopener" title="Открыть скан повреждённой справки">
+                                            <i class="fas fa-file-pdf" aria-hidden="true"></i> PDF
                                         </a>
                                     {% else %}
-                                        —
+                                        <span class="transcript__muted">—</span>
                                     {% endif %}
+                                </td>
+                                <td class="transcript__col-actions">
+                                    <div class="transcript__actions">
+                                        {% if transcript.is_used %}
+                                            <button type="button" class="transcript__btn transcript__btn--ghost transcript__btn--sm transcript-info-link"
+                                                    data-number="{{ transcript.transcript_number }}"
+                                                    data-category="{{ transcript.category.title }}"
+                                                    data-pages="{{ transcript.category.page_count }}"
+                                                    data-fio="{{ transcript.student_fio }}"
+                                                    data-myedu="{% if transcript.student_uuid and transcript.student_uuid != '0' %}{{ transcript.student_uuid }}{% endif %}"
+                                                    data-faculty="{{ transcript.student_faculty|default_if_none:'—' }}"
+                                                    data-speciality="{{ transcript.student_speciality|default_if_none:'—' }}"
+                                                    data-date="{{ transcript.issue_date|date:'d.m.Y, H:i' }}"
+                                                    data-defective="{{ transcript.is_defective|yesno:'1,' }}"
+                                                    title="Подробнее о выдаче">
+                                                <i class="fas fa-eye" aria-hidden="true"></i> Подробнее
+                                            </button>
+                                        {% endif %}
+                                        {% if not transcript.is_defective %}
+                                            <button type="button" class="transcript__btn transcript__btn--soft transcript__btn--sm fail-upload-button"
+                                                    data-number="{{ transcript.transcript_number }}"
+                                                    title="Отметить как повреждённую">
+                                                <i class="fas fa-file-upload" aria-hidden="true"></i> Повреждена
+                                            </button>
+                                        {% endif %}
+                                        {% if transcript.is_used %}
+                                            <button type="button" class="transcript__btn transcript__btn--ghost transcript__btn--sm transcript__btn--icon delete-ft-button"
+                                                    data-id="{{ transcript.id }}"
+                                                    title="Удалить запись о выдаче" aria-label="Удалить запись о выдаче">
+                                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                         {% empty %}
                             <tr class="transcript__empty-row">
-                                <td colspan="4" class="transcript__empty">
+                                <td colspan="6" class="transcript__empty">
                                     <div class="transcript__empty-state">
                                         <span class="transcript__empty-state__icon" aria-hidden="true">
                                             <i class="fas fa-inbox"></i>
                                         </span>
-                                        <p class="transcript__empty-state__title">Записей нет</p>
-                                        <p class="transcript__empty-state__text">
-                                            В журнале пока нет зарегистрированных академических справок.
-                                        </p>
+                                        {% if query or status %}
+                                            <p class="transcript__empty-state__title">Ничего не найдено</p>
+                                            <p class="transcript__empty-state__text">
+                                                Измените номер или статус в фильтре.
+                                            </p>
+                                        {% else %}
+                                            <p class="transcript__empty-state__title">Записей нет</p>
+                                            <p class="transcript__empty-state__text">
+                                                В журнале пока нет зарегистрированных академических справок.
+                                            </p>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -130,7 +264,6 @@
                         </tbody>
                     </table>
                 </div>
-
                 <div class="transcript__footer">
                     <span></span>
                     {% include "utils/_pagination.html" with page_obj=transcripts %}
@@ -156,17 +289,9 @@
                     {% csrf_token %}
                     <div class="modal-body">
                         <p class="transcript-modal__intro">
-                            Укажите номер справки и приложите скан или фото повреждённого бланка.
+                            Приложите скан повреждённой справки №<strong id="fail-transcript-number"></strong>.
                         </p>
-                        <div class="transcript-modal__field">
-                            <label for="transcript_number">№ академической справки</label>
-                            <input type="text"
-                                   class="form-control"
-                                   id="transcript_number"
-                                   name="transcript_number"
-                                   placeholder="Введите полный номер"
-                                   required>
-                        </div>
+                        <input type="hidden" id="transcript_number" name="transcript_number">
                         <div class="transcript-modal__field">
                             <label for="files">Файл повреждённой справки</label>
                             <div class="transcript-modal__file-zone">
@@ -174,12 +299,12 @@
                                        class="transcript-modal__file-input"
                                        id="files"
                                        name="files"
-                                       accept=".pdf,.jpg,.jpeg,.png"
+                                       accept=".pdf,application/pdf"
                                        required>
                                 <label for="files" class="transcript-modal__file-zone-label">
                                     <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
                                     <span class="transcript-modal__file-zone-title">Выберите файл</span>
-                                    <span class="transcript-modal__file-zone-hint">PDF, JPG или PNG</span>
+                                    <span class="transcript-modal__file-zone-hint">Только PDF, не более 3 МБ — файл будет сжат автоматически</span>
                                 </label>
                                 <span class="transcript-modal__file-name" id="files-name">Файл не выбран</span>
                             </div>
@@ -190,14 +315,73 @@
                         <div id="not-found-message" class="alert alert-warning d-none">
                             <span id="not-found-text"></span>
                         </div>
+                        <div id="upload-loader" class="text-center text-muted d-none">
+                            <i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+                            <div class="mt-2">Загрузка и сжатие файла...</div>
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="button" class="btn btn-secondary" id="uploadClose" data-dismiss="modal">Закрыть</button>
+                        <button type="submit" class="btn btn-primary" id="uploadSubmit">
                             <i class="fas fa-save" aria-hidden="true"></i> Сохранить
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade transcript-modal" id="transcriptInfoModal" tabindex="-1" role="dialog"
+         aria-labelledby="transcriptInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <div class="transcript-modal__eyebrow">Академическая справка</div>
+                        <h5 class="modal-title" id="transcriptInfoModalLabel">№ <span id="info-number"></span></h5>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="transcript-modal__status transcript-modal__status--ok">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        <div>
+                            <strong>Справка подтверждена</strong>
+                            <span>Выдана <span id="info-date"></span></span>
+                        </div>
+                    </div>
+                    <div class="transcript-modal__status transcript-modal__status--bad d-none" id="info-defective">
+                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                        <div>
+                            <strong>Бланк отмечен как повреждённый</strong>
+                        </div>
+                    </div>
+
+                    <h6 class="transcript-modal__group-title">Студент</h6>
+                    <dl class="transcript-info">
+                        <dt>ФИО</dt>
+                        <dd class="transcript-info__primary" id="info-fio"></dd>
+                        <dt>ID MyEDU</dt>
+                        <dd id="info-myedu"></dd>
+                        <dt>Факультет</dt>
+                        <dd id="info-faculty"></dd>
+                        <dt>Специальность</dt>
+                        <dd id="info-speciality"></dd>
+                    </dl>
+
+                    <h6 class="transcript-modal__group-title">Бланк</h6>
+                    <dl class="transcript-info">
+                        <dt>Категория</dt>
+                        <dd id="info-category"></dd>
+                        <dt>Листов</dt>
+                        <dd id="info-pages"></dd>
+                    </dl>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                </div>
             </div>
         </div>
     </div>
@@ -234,18 +418,69 @@
         $(document).ready(function () {
             $('#myedu_id').focus().val('');
 
+            var MAX_FILE_SIZE = 3 * 1024 * 1024;
+
+            function showUploadError(text) {
+                $("#error-text").text(text);
+                $("#error-message").removeClass("d-none");
+            }
+
+            var isUploading = false;
+            var submitHtml = $("#uploadSubmit").html();
+
+            function setUploading(state) {
+                isUploading = state;
+                $("#upload-loader").toggleClass("d-none", !state);
+                $("#uploadSubmit, #uploadClose, #uploadModal .close, #files").prop("disabled", state);
+                $("#uploadSubmit").html(state
+                    ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Загрузка...'
+                    : submitHtml);
+            }
+
+            $('#uploadModal').on('hide.bs.modal', function (event) {
+                if (isUploading) event.preventDefault();
+            });
+
+            function validateFile(file) {
+                if (!file) return "Выберите PDF файл.";
+                if (!/\.pdf$/i.test(file.name)) return "Допускается только PDF файл.";
+                if (file.size > MAX_FILE_SIZE) return "Размер файла не должен превышать 3 МБ.";
+                return null;
+            }
+
+            $('.fail-upload-button').on('click', function () {
+                var number = $(this).data('number');
+                $('#uploadForm')[0].reset();
+                $('#transcript_number').val(number);
+                $('#fail-transcript-number').text(number);
+                $('#files-name').text('Файл не выбран');
+                $("#error-message, #not-found-message").addClass("d-none");
+                setUploading(false);
+                $('#uploadModal').modal('show');
+            });
+
             $('#files').on('change', function () {
-                var name = this.files && this.files[0] ? this.files[0].name : 'Файл не выбран';
-                $('#files-name').text(name);
+                var file = this.files && this.files[0];
+                $('#files-name').text(file ? file.name : 'Файл не выбран');
+                $("#error-message").addClass("d-none");
+                var error = file ? validateFile(file) : null;
+                if (error) showUploadError(error);
             });
 
             $("#uploadForm").submit(function (event) {
                 event.preventDefault();
-                var formData = new FormData(this);
+                if (isUploading) return;
                 $("#error-message").addClass("d-none");
                 $("#not-found-message").addClass("d-none");
                 $("#error-text").text("");
                 $("#not-found-text").text("");
+                var error = validateFile($('#files')[0].files[0]);
+                if (error) {
+                    showUploadError(error);
+                    return;
+                }
+                var formData = new FormData(this);
+                setUploading(true);
                 $.ajax({
                     url: "{% url 'bsadmin:fail_transcript' %}",
                     type: "POST",
@@ -254,9 +489,11 @@
                     contentType: false,
                     success: function (response) {
                         if (response.success) {
-                            toastr["success"]("Данные успешно занесены в базу");
                             location.reload();
-                        } else if (response.error) {
+                            return;
+                        }
+                        setUploading(false);
+                        if (response.error) {
                             $("#error-text").text(response.error);
                             $("#error-message").removeClass("d-none");
                         } else if (response.not_found) {
@@ -265,16 +502,31 @@
                         }
                     },
                     error: function () {
-                        $("#error-text").text("Произошла ошибка. Попробуйте снова.");
-                        $("#error-message").removeClass("d-none");
+                        setUploading(false);
+                        showUploadError("Произошла ошибка. Попробуйте снова.");
                     }
                 });
+            });
+
+            $('.transcript-info-link').on('click', function (event) {
+                event.preventDefault();
+                var data = $(this).data();
+                $('#info-number').text(data.number);
+                $('#info-fio').text(data.fio);
+                $('#info-myedu').text(data.myedu ? String(data.myedu) : 'нет — справка выдана вручную');
+                $('#info-faculty').text(data.faculty);
+                $('#info-speciality').text(data.speciality);
+                $('#info-category').text(data.category);
+                $('#info-pages').text(data.pages);
+                $('#info-date').text(data.date || '—');
+                $('#info-defective').toggleClass('d-none', !data.defective);
+                $('#transcriptInfoModal').modal('show');
             });
 
             var rowToDelete = null;
             $('.delete-ft-button').on('click', function () {
                 rowToDelete = $(this).closest('tr');
-                var transcriptNumber = rowToDelete.find('td').eq(2).text();
+                var transcriptNumber = rowToDelete.data('number');
                 $('#deleteTranscriptNumber').text(transcriptNumber);
                 $('#deleteFacultyTranscriptModal').modal('show');
             });

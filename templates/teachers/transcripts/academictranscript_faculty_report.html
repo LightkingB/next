@@ -27,6 +27,22 @@
                        href="{% url 'bsadmin:faculty-transcript-category' faculty_id=faculty.id %}">
                         <i class="fa fa-arrow-left" aria-hidden="true"></i> {% trans 'Назад' %}
                     </a>
+                    <form class="transcript__filter" method="get" role="search">
+                        <div class="transcript__filter-search">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="search" class="form-control" name="q" value="{{ query }}"
+                                   placeholder="№ справки или ФИО" aria-label="Поиск по номеру справки или ФИО">
+                        </div>
+                        <button type="submit" class="transcript__btn transcript__btn--primary">
+                            <i class="fas fa-search" aria-hidden="true"></i> Найти
+                        </button>
+                        {% if query %}
+                            <a class="transcript__btn transcript__btn--ghost" title="Сбросить поиск"
+                               href="{% url 'bsadmin:faculty-academic-transcript-reports' faculty_id=faculty.id %}">
+                                <i class="fas fa-times" aria-hidden="true"></i>
+                            </a>
+                        {% endif %}
+                    </form>
                 </div>
 
                 <div class="transcript__table-wrap">
@@ -58,10 +74,17 @@
                                         <span class="transcript__empty-state__icon" aria-hidden="true">
                                             <i class="fas fa-inbox"></i>
                                         </span>
-                                        <p class="transcript__empty-state__title">{% trans 'Пусто' %}</p>
-                                        <p class="transcript__empty-state__text">
-                                            По этому факультету пока нет выданных академических справок.
-                                        </p>
+                                        {% if query %}
+                                            <p class="transcript__empty-state__title">Ничего не найдено</p>
+                                            <p class="transcript__empty-state__text">
+                                                По запросу «{{ query }}» записей нет.
+                                            </p>
+                                        {% else %}
+                                            <p class="transcript__empty-state__title">{% trans 'Пусто' %}</p>
+                                            <p class="transcript__empty-state__text">
+                                                По этому факультету пока нет выданных академических справок.
+                                            </p>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

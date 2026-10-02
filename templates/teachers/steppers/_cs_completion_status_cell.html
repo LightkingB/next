@@ -1,11 +1,17 @@
 <td class="stepper-cs__col-status">
     <div class="stepper-cs__status-block">
-        {% if completed_at %}
+        {% if issued %}
+            <span class="stepper-cs__badge stepper-cs__badge--issued">
+                <i class="fas fa-archive" aria-hidden="true"></i>
+                Выдан
+            </span>
+            {% if completed_at %}<span class="stepper-cs__badge-meta">завершён {{ completed_at|date:"d.m.Y H:i" }}</span>{% endif %}
+        {% elif completed_at %}
             <span class="stepper-cs__badge stepper-cs__badge--done">
                 <i class="fas fa-check-circle" aria-hidden="true"></i>
-                Завершён
+                Пройден
             </span>
-            <span class="stepper-cs__badge-meta">{{ completed_at|date:"d.m.Y H:i" }}</span>
+            <span class="stepper-cs__badge-meta">{{ completed_at|date:"d.m.Y H:i" }} · ждёт выдачи</span>
         {% else %}
             <span class="stepper-cs__badge stepper-cs__badge--progress">
                 <i class="fas fa-hourglass-half" aria-hidden="true"></i>

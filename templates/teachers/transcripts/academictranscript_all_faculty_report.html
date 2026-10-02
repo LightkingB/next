@@ -1,5 +1,5 @@
 {% extends 'admin_base.html' %}
-{% load static i18n crispy_forms_tags cms_tags %}
+{% load static i18n %}
 
 {% block body_class %}admin-module-page{% endblock %}
 
@@ -9,46 +9,110 @@
 {% endblock %}
 
 {% block content %}
-    <div class="transcript">
+    <div class="container admin-module transcript-journal">
+        <header class="admin-module__header">
+            <h1><i class="fas fa-chart-bar" aria-hidden="true"></i>{% trans 'Общий отчёт по справкам' %}</h1>
+            <p>Выданные академические справки по всем факультетам.</p>
+        </header>
+
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <div class="transcript__shell">
-                <div class="transcript__header">
-                    <h1><i class="fas fa-chart-bar" aria-hidden="true"></i>{% trans 'Общий отчёт по справкам' %}</h1>
-                    <p class="transcript__header-desc">
-                        Академические справки по всем факультетам.
-                        {% if regtranscripts.paginator.count %}
-                            Всего записей: <strong>{{ regtranscripts.paginator.count }}</strong>
-                        {% endif %}
-                    </p>
+            <div class="admin-module__panel">
+                <div class="admin-module__panel-head admin-module__panel-head--split">
+                    <span><i class="fas fa-list" aria-hidden="true"></i>Выданные справки</span>
+                    <span class="transcript-journal__head-actions">
+                        <a href="{% url 'bsadmin:index' %}" class="admin-module__panel-head-action">
+                            <i class="fa fa-arrow-left" aria-hidden="true"></i> Список факультетов
+                        </a>
+                    </span>
                 </div>
 
-                <div class="transcript__toolbar">
-                    <a class="transcript__btn transcript__btn--ghost" href="{% url 'bsadmin:index' %}">
-                        <i class="fa fa-arrow-left" aria-hidden="true"></i> {% trans 'Назад' %}
-                    </a>
-                </div>
+                <form method="get" class="admin-module__panel-body transcript-report__filters" id="report-filters">
+                    <div class="transcript-report__search">
+                        <div class="transcript-search__field">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="search" class="form-control" name="q" value="{{ filters.q }}"
+                                   placeholder="№ справки или ФИО студента" aria-label="№ справки или ФИО студента"
+                                   autocomplete="off">
+                        </div>
+                        <button type="submit" class="transcript__btn transcript__btn--primary">
+                            <i class="fas fa-search" aria-hidden="true"></i> Найти
+                        </button>
+                    </div>
+
+                    <div class="transcript-report__row">
+                        <select name="faculty" class="form-control transcript-report__select transcript-report__select--wide{% if filters.faculty %} is-set{% endif %}"
+                                data-autosubmit aria-label="Факультет" title="Факультет">
+                            <option value="">Все факультеты</option>
+                            {% for id, title in faculties %}
+                                <option value="{{ id }}" {% if filters.faculty == id %}selected{% endif %}>{{ title }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="category" class="form-control transcript-report__select{% if filters.category %} is-set{% endif %}"
+                                data-autosubmit aria-label="Категория бланка" title="Категория бланка">
+                            <option value="">Все категории</option>
+                            {% for id, title in categories %}
+                                <option value="{{ id }}" {% if filters.category == id %}selected{% endif %}>{{ title }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="transcript-report__dates{% if filters.date_from or filters.date_to %} is-set{% endif %}">
+                            <span>Выдана</span>
+                            <input type="date" name="date_from" class="form-control" aria-label="С" title="С"
+                                   value="{{ filters.date_from|date:'Y-m-d' }}">
+                            <span>—</span>
+                            <input type="date" name="date_to" class="form-control" aria-label="По" title="По"
+                                   value="{{ filters.date_to|date:'Y-m-d' }}">
+                        </div>
+                        <select name="sort" class="form-control transcript-report__select transcript-report__sort"
+                                data-autosubmit aria-label="Сортировка" title="Сортировка">
+                            {% for value, label in sort_choices %}
+                                <option value="{{ value }}" {% if filters.sort == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="transcript-report__presets">
+                        <span>Период:</span>
+                        {% for link in date_links %}
+                            <a href="{{ link.url }}" class="transcript-report__preset{% if link.active %} is-active{% endif %}">{{ link.label }}</a>
+                        {% endfor %}
+                    </div>
+
+                    {% if active_filters %}
+                        <div class="transcript-report__active">
+                            {% for label, url in active_filters %}
+                                <a href="{{ url }}" class="transcript-report__chip" title="Убрать фильтр">
+                                    {{ label }} <i class="fas fa-times" aria-hidden="true"></i>
+                                </a>
+                            {% endfor %}
+                            <a href="{{ reset_url }}" class="transcript-report__reset">Сбросить</a>
+                        </div>
+                    {% endif %}
+                </form>
 
                 <div class="transcript__table-wrap">
-                    <table class="transcript__table">
+                    <table class="transcript__table transcript__table--journal">
                         <thead>
                         <tr>
                             <th class="transcript__col-num">№</th>
-                            <th>{% trans '№ академической справки' %}</th>
-                            <th>{% trans 'ФИО студента' %}</th>
-                            <th>{% trans 'Факультет' %}</th>
-                            <th>{% trans 'Специальность' %}</th>
-                            <th>{% trans 'Дата получения' %}</th>
+                            <th>Справка</th>
+                            <th>ФИО студента</th>
+                            <th>Факультет</th>
+                            <th>Специальность</th>
+                            <th>Выдана</th>
                         </tr>
                         </thead>
-                        <tbody class="order">
+                        <tbody>
                         {% for report in regtranscripts %}
                             <tr data-id="{{ report.id }}">
                                 <td class="transcript__col-num">{{ forloop.counter0|add:regtranscripts.start_index }}</td>
-                                <td class="transcript__num-cell">{{ report.faculty_transcript.transcript_number }}</td>
-                                <td class="transcript__student-cell">{{ report.student_fio }}</td>
+                                <td>
+                                    <span class="transcript__num">{{ report.faculty_transcript.transcript_number }}</span>
+                                    <span class="transcript__cell-meta">{{ report.faculty_transcript.category.title }}</span>
+                                </td>
+                                <td><span class="transcript__student">{{ report.student_fio }}</span></td>
                                 <td>{{ report.faculty_history|default_if_none:"—" }}</td>
                                 <td>{{ report.speciality_history|default_if_none:"—" }}</td>
-                                <td>{{ report.create_date|date:"d.m.Y" }}</td>
+                                <td class="text-nowrap">{{ report.create_date|date:"d.m.Y" }}</td>
                             </tr>
                         {% empty %}
                             <tr class="transcript__empty-row">
@@ -57,10 +121,17 @@
                                         <span class="transcript__empty-state__icon" aria-hidden="true">
                                             <i class="fas fa-inbox"></i>
                                         </span>
-                                        <p class="transcript__empty-state__title">{% trans 'Пусто' %}</p>
-                                        <p class="transcript__empty-state__text">
-                                            По всем факультетам пока нет выданных академических справок.
-                                        </p>
+                                        {% if active_filters %}
+                                            <p class="transcript__empty-state__title">Ничего не найдено</p>
+                                            <p class="transcript__empty-state__text">
+                                                Измените условия поиска или <a href="{{ reset_url }}">сбросьте фильтры</a>.
+                                            </p>
+                                        {% else %}
+                                            <p class="transcript__empty-state__title">{% trans 'Пусто' %}</p>
+                                            <p class="transcript__empty-state__text">
+                                                По всем факультетам пока нет выданных академических справок.
+                                            </p>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -85,4 +156,23 @@
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        (function () {
+            var form = document.getElementById('report-filters');
+            if (!form) return;
+            form.querySelectorAll('[data-autosubmit], input[type="date"]').forEach(function (field) {
+                field.addEventListener('change', function () {
+                    form.requestSubmit ? form.requestSubmit() : form.submit();
+                });
+            });
+            form.addEventListener('submit', function () {
+                form.querySelectorAll('input, select').forEach(function (field) {
+                    if (!field.value) field.disabled = true;
+                });
+            });
+        })();
+    </script>
 {% endblock %}

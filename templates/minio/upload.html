@@ -1,0 +1,154 @@
+{% extends 'admin_base.html' %}
+{% load static i18n %}
+
+{% block css %}
+    <link href="https://releases.transloadit.com/uppy/v3.21.0/uppy.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+        }
+
+        body {
+            background-color: #f9fafb;
+            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .upload-card {
+            width: 100%;
+            max-width: 850px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+
+        .status-info {
+            margin-top: 15px;
+            padding: 10px;
+            font-size: 13px;
+            color: #6b7280;
+            border-left: 4px solid var(--primary-color);
+            background: #eff6ff;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="upload-card">
+            <h2 style="margin-top:0; color:#111827;">Загрузка медиа-архива</h2>
+            <p style="color:#4b5563; font-size: 14px;">Система автоматически нарежет файл на чанки и передаст напрямую в
+                хранилище.</p>
+
+            <div id="drag-drop-area"></div>
+
+            <div class="status-info">
+                <strong>Режим работы:</strong> Прямая передача (S3 Multipart).
+                Ваш браузер не будет зависать даже при файлах более 10 ГБ.
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://releases.transloadit.com/uppy/v3.21.0/uppy.min.js"></script>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const uppy = new Uppy.Uppy({
+            id: 'file-uploader',
+            autoProceed: false,
+            debug: false,
+            restrictions: {
+                maxFileSize: 10737418240,
+                allowedFileTypes: null,
+            }
+        })
+            .use(Uppy.Dashboard, {
+                target: '#drag-drop-area',
+                inline: true,
+                width: '100%',
+                height: 450,
+                showProgressDetails: true,
+                proudlyDisplayPoweredByUppy: false,
+                metaFields: [{id: 'name', name: 'Name', placeholder: 'file name'}],
+                note: 'Параллельная загрузка активна'
+            })
+            .use(Uppy.GoldenRetriever, {
+                indexedDB: {maxFileSize: 10737418240, maxTotalSize: 53687091200}
+            })
+            .use(Uppy.AwsS3Multipart, {
+                limit: 5,
+                retryDelays: [0, 1000, 3000, 5000],
+                partSize: 10 * 1024 * 1024,
+
+                async listParts(file, {uploadId, key}) {
+                    const response = await fetch(`/minio/s3/parts/?uploadId=${uploadId}&key=${key}`);
+                    if (!response.ok) throw new Error('Failed to list already uploaded parts');
+                    return response.json();
+                },
+
+                async createMultipartUpload(file) {
+                    if (file.meta.uploadId && file.meta.key) {
+                        return {uploadId: file.meta.uploadId, key: file.meta.key};
+                    }
+                    const response = await fetch(`/minio/s3/start/?filename=${encodeURIComponent(file.name)}&size=${file.size}`);
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Server error');
+                    }
+                    const data = await response.json();
+                    uppy.setFileMeta(file.id, {
+                        uploadId: data.uploadId,
+                        key: data.key,
+                        db_id: data.db_id
+                    });
+                    return data;
+                },
+
+                async signPart(file, {uploadId, key, partNumber}) {
+                    const response = await fetch(`/minio/s3/sign/?uploadId=${uploadId}&key=${key}&partNumber=${partNumber}`);
+                    if (!response.ok) throw new Error('Failed to sign part');
+                    return response.json();
+                },
+
+                async completeMultipartUpload(file, {uploadId, key, parts}) {
+                    const response = await fetch('/minio/s3/complete/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({uploadId, key, parts})
+                    });
+                    if (!response.ok) throw new Error('Completion failed');
+                    return response.json();
+                }
+            });
+
+        uppy.on('upload-success', (file, response) => {
+            console.log('Файл успешно загружен:', file.name);
+        });
+
+        uppy.on('error', (error) => {
+            console.error('Критическая ошибка:', error);
+        });
+    </script>
+{% endblock %}

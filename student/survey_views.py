@@ -1,25 +1,18 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
-from stepper.consts import STUDENT_STEPPER_URL
 from stepper.decorators import with_stepper
 from student.forms import StudentPhoneForm, build_survey_form
 from student.models import StudentProfile
 from student.services import SurveyService
-from utils.caches import EntityCache
-from utils.myedu import MyEduService
+from student.dashboard import dashboard_context
+from student.myedu_student import get_student
 
 
 def _get_student_api_data(request):
-    return EntityCache.get_or_set(
-        entity_id=request.user.myedu_id,
-        fetch_func=MyEduService.get_stepper_data_from_api,
-        fetch_kwargs={
-            "url": STUDENT_STEPPER_URL,
-            "search": request.user.myedu_id,
-        },
-    )
+    return get_student(request)[0]
 
 
 def _student_group(student_data):
@@ -42,7 +35,11 @@ def _phone_redirect(request, next_url):
 @with_stepper
 def survey_phone(request):
     profile = StudentProfile.objects.filter(user_id=request.user.pk).first()
-    next_url = request.GET.get("next") or request.POST.get("next") or reverse("students:survey")
+    next_url = request.GET.get("next") or request.POST.get("next") or ""
+    # Возврат только на страницы этого сайта (защита от перенаправления на чужой домен).
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()},
+                                           require_https=request.is_secure()):
+        next_url = reverse("students:survey")
 
     if request.method == "POST":
         form = StudentPhoneForm(request.POST, instance=profile)
@@ -61,7 +58,13 @@ def survey_phone(request):
 @with_stepper
 def survey_index(request):
     edu_year, history, active_items = SurveyService.dashboard_for_user(request.user)
+    # Сначала то, что нужно пройти, затем пройденные, затем анкеты без вопросов.
+    active_items.sort(key=lambda item: (0 if item["can_take"] else 1 if item["is_completed"] else 2))
+    for item in active_items:
+        item["minutes"] = max(1, round(item["survey"].question_count * 0.5))
 
+    takeable = [item for item in active_items if item["can_take"] or item["is_completed"]]
+    done = sum(1 for item in takeable if item["is_completed"])
     return render(
         request,
         "students/survey/index.html",
@@ -69,6 +72,12 @@ def survey_index(request):
             "edu_year": edu_year,
             "active_items": active_items,
             "history": history,
+            "total_count": len(takeable),
+            "done_count": done,
+            "left_count": len(takeable) - done,
+            "done_percent": round(done * 100 / len(takeable)) if takeable else 0,
+            "has_profile": SurveyService.user_has_profile(request.user),
+            **dashboard_context(request, tab="survey", with_surveys=False),
         },
     )
 

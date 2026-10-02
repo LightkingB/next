@@ -5,97 +5,244 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stage_employee.css' %}"/>
 {% endblock %}
 
 {% block content %}
-    <div class="container admin-module">
+    <div class="container admin-module stage-emp">
         <header class="admin-module__header">
             <h1><i class="fas fa-user-tag" aria-hidden="true"></i>{{ title }}</h1>
-            <p>Назначение сотрудников на этапы обходного листа</p>
+            <p>Кто отвечает за каждый этап студенческого обходного листа. Сотрудник видит и подписывает только свой этап.</p>
         </header>
 
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
             {% include 'utils/_messages.html' %}
 
+            {% if uncovered %}
+                <div class="stage-emp__alert" role="alert">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                    <div>
+                        <strong>{{ uncovered|length }} {% if uncovered|length == 1 %}этап остался{% elif uncovered|length < 5 %}этапа остались{% else %}этапов остались{% endif %} без сотрудника — обходные листы не двигаются</strong>
+                        <span>
+                            {% for item in uncovered %}{{ item.step.stage.name }} (ждут {{ item.queue }}){% if not forloop.last %}, {% endif %}{% endfor %}.
+                            Назначьте ответственных.
+                        </span>
+                    </div>
+                </div>
+            {% endif %}
+
             <div class="admin-module__panel">
                 <div class="admin-module__panel-head admin-module__panel-head--split">
-                    <span><i class="fas fa-search" aria-hidden="true"></i>Поиск сотрудников</span>
+                    <span><i class="fas fa-route" aria-hidden="true"></i>Этапы и ответственные</span>
                     <a href="{% url 'stepper:stage-employee-create' %}" class="admin-module__panel-head-action">
-                        <i class="fas fa-plus" aria-hidden="true"></i> Добавить
+                        <i class="fas fa-plus" aria-hidden="true"></i> Назначить сотрудника
                     </a>
                 </div>
-                <div class="admin-module__panel-body">
-                    <form action="" method="get" class="admin-module__filter-grid admin-module__filter-grid--stage">
-                        <div class="admin-module__filter-field">
-                            <label for="id_fio">ФИО</label>
-                            {{ form.fio }}
-                        </div>
-                        <div class="admin-module__filter-field">
-                            <label for="id_template_stage">Шаг</label>
-                            {{ form.template_stage }}
-                        </div>
-                        <div class="admin-module__filter-actions">
-                            <button type="submit" class="btn btn-sm admin-module__btn-primary">
-                                <i class="fas fa-search" aria-hidden="true"></i> Поиск
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                <div class="admin-module__table-zone">
-                    <div class="table-responsive">
-                        <table class="table table-sm admin-module__table mb-0">
-                            <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">{% trans 'ФИО' %}</th>
-                                <th scope="col">{% trans 'Роль' %}</th>
-                                <th scope="col" class="text-center">{% trans 'Операции' %}</th>
-                                <th scope="col">{% trans 'Активный' %}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for obj in employees %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>
-                                        {{ obj.employee.full_name }} ({{ obj.employee.email }})
-                                    </td>
-                                    <td>{{ obj.template_stage.stage.name }}</td>
-                                    <td class="text-center">
-                                        <a href="{% url 'stepper:stage-employee-update' pk=obj.id %}"
-                                           class="admin-module__table-action">
-                                            <i class="fas fa-user-edit" aria-hidden="true"></i>
-                                            {% trans 'Редактировать' %}
-                                        </a>
-                                    </td>
-                                    <td class="text-center">
-                                        {% if obj.is_active %}
-                                            <span class="admin-module__status admin-module__status--yes" title="{% trans 'Активный' %}">
-                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
-                                            </span>
-                                        {% else %}
-                                            <span class="admin-module__status admin-module__status--no" title="{% trans 'Неактивный' %}">
-                                                <i class="fas fa-minus-circle" aria-hidden="true"></i>
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr class="admin-module__empty">
-                                    <td colspan="100%" class="text-center">
-                                        <small>{% trans 'Пусто' %}</small>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="admin-module__panel-body admin-module__panel-body--grid">
+                    <div class="stage-emp__stages">
+                        {% for item in overview %}
+                            <div class="stage-emp__stage{% if not item.active %}{% if item.queue %} is-uncovered{% else %} is-empty{% endif %}{% endif %}{% if stage_id == item.step.id|stringformat:'s' %} is-selected{% endif %}">
+                                <div class="stage-emp__stage-head">
+                                    <span class="stage-emp__order">{% if item.step.order %}{{ item.step.order }}{% else %}<i class="fas fa-flag-checkered" aria-hidden="true"></i>{% endif %}</span>
+                                    <div>
+                                        <div class="stage-emp__stage-name">{{ item.step.stage.name }}</div>
+                                        <div class="stage-emp__stage-meta">
+                                            {% if item.step.order %}Этап {{ item.step.order }}{% else %}Выдача справки{% endif %}
+                                            {% if item.step.stage.is_mandatory %} · обязательный{% endif %}
+                                        </div>
+                                    </div>
+                                    {% if item.queue is not None %}
+                                        <span class="stage-emp__queue{% if item.queue %} has-queue{% endif %}" title="Обходных листов сейчас на этом этапе">
+                                            {{ item.queue }} <small>ждут</small>
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                {% if item.active %}
+                                    <ul class="stage-emp__people">
+                                        {% for link in item.active|slice:":3" %}
+                                            <li><i class="fas fa-user-check" aria-hidden="true"></i>{{ link.employee.last_name }} {{ link.employee.first_name }}</li>
+                                        {% endfor %}
+                                        {% if item.active|length > 3 %}<li class="is-more">и ещё {{ item.active|length|add:"-3" }}</li>{% endif %}
+                                    </ul>
+                                {% else %}
+                                    <p class="stage-emp__nobody">
+                                        <i class="fas fa-user-slash" aria-hidden="true"></i>
+                                        {% if item.queue %}Нет сотрудника — листы ждут{% else %}Сотрудник не назначен{% endif %}
+                                    </p>
+                                {% endif %}
+
+                                <div class="stage-emp__stage-foot">
+                                    <a href="?stage={{ item.step.id }}#assignments" class="stage-emp__link">
+                                        Все назначения{% if item.inactive_count %} · отключено {{ item.inactive_count }}{% endif %}
+                                    </a>
+                                    <a href="{% url 'stepper:stage-employee-create' %}?stage={{ item.step.id }}" class="stage-emp__add">
+                                        <i class="fas fa-plus" aria-hidden="true"></i> Назначить
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
 
-            {% include "utils/_pagination.html" with page_obj=employees %}
+            <div class="admin-module__panel" id="assignments">
+                <div class="admin-module__panel-head admin-module__panel-head--split">
+                    <span><i class="fas fa-users" aria-hidden="true"></i>Назначения</span>
+                    <span class="stage-emp__found">{% if has_filters %}найдено: {% endif %}{{ employees.paginator.count }}</span>
+                </div>
+                <form method="get" class="admin-module__panel-body stage-emp__filters">
+                    <div class="stage-emp__search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" name="q" value="{{ query }}" class="form-control"
+                               placeholder="ФИО или почта сотрудника" autocomplete="off" aria-label="ФИО или почта сотрудника">
+                    </div>
+                    <select name="stage" class="form-control stage-emp__select{% if stage_id %} is-set{% endif %}" data-autosubmit aria-label="Этап">
+                        <option value="">Все этапы</option>
+                        {% for step in stages %}
+                            <option value="{{ step.id }}" {% if stage_id == step.id|stringformat:'s' %}selected{% endif %}>{{ step.stage.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="stage-emp__segments" role="group" aria-label="Статус">
+                        {% for value, label in statuses %}
+                            <label class="{% if status == value %}is-active{% endif %}">
+                                <input type="radio" name="status" value="{{ value }}" {% if status == value %}checked{% endif %} data-autosubmit>
+                                {{ label }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-sm admin-module__btn-primary">Найти</button>
+                    {% if has_filters %}
+                        <a href="{% url 'stepper:stage-employee' %}#assignments" class="stage-emp__reset">Сбросить</a>
+                    {% endif %}
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table admin-module__table stage-emp__table mb-0">
+                        <thead>
+                        <tr>
+                            <th class="stage-emp__col-num">№</th>
+                            <th>Сотрудник</th>
+                            <th>Этап</th>
+                            <th>Назначен</th>
+                            <th>Статус</th>
+                            <th class="text-right">Действия</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for obj in employees %}
+                            <tr class="{% if not obj.is_active %}is-inactive{% endif %}">
+                                <td class="stage-emp__col-num">{{ employees.start_index|add:forloop.counter0 }}</td>
+                                <td>
+                                    <div class="stage-emp__name">{{ obj.employee.last_name }} {{ obj.employee.first_name }} {{ obj.employee.fathers_name|default:"" }}</div>
+                                    <div class="stage-emp__email">{{ obj.employee.email }}</div>
+                                </td>
+                                <td>
+                                    <span class="stage-emp__stage-tag">
+                                        {% if obj.template_stage.order %}<b>{{ obj.template_stage.order }}</b>{% endif %}
+                                        {{ obj.template_stage.stage.name }}
+                                    </span>
+                                </td>
+                                <td class="text-nowrap">{{ obj.assigned_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    {% if obj.is_active %}
+                                        <span class="stage-emp__status is-on"><i class="fas fa-circle" aria-hidden="true"></i> Активен</span>
+                                    {% else %}
+                                        <span class="stage-emp__status is-off"><i class="far fa-circle" aria-hidden="true"></i> Отключён</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right text-nowrap">
+                                    <form method="post" action="{% url 'stepper:stage-employee-toggle' pk=obj.id %}" class="d-inline js-toggle"
+                                          data-name="{{ obj.employee.last_name }} {{ obj.employee.first_name }}"
+                                          data-stage="{{ obj.template_stage.stage.name }}"
+                                          data-active="{% if obj.is_active %}1{% endif %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="stage-emp__btn{% if obj.is_active %} is-danger{% else %} is-success{% endif %}">
+                                            {% if obj.is_active %}<i class="fas fa-user-slash" aria-hidden="true"></i> Отключить
+                                            {% else %}<i class="fas fa-user-check" aria-hidden="true"></i> Включить{% endif %}
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'stepper:stage-employee-update' pk=obj.id %}" class="stage-emp__btn">
+                                        <i class="fas fa-pen" aria-hidden="true"></i> Изменить
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="stage-emp__empty">
+                                    {% if has_filters %}
+                                        По выбранным условиям никого нет. <a href="{% url 'stepper:stage-employee' %}#assignments">Сбросить фильтры</a>
+                                    {% else %}
+                                        Назначений пока нет. <a href="{% url 'stepper:stage-employee-create' %}">Назначьте первого сотрудника</a>.
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if employees.paginator.num_pages > 1 %}
+                    <div class="stage-emp__footer">
+                        {% include "utils/_pagination.html" with page_obj=employees %}
+                    </div>
+                {% endif %}
+            </div>
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}
     </div>
+
+    <div class="modal fade stage-emp-modal" id="toggleModal" tabindex="-1" role="dialog" aria-labelledby="toggleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="toggleModalLabel"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0" id="toggleModalText"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-light" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-sm" id="toggleModalConfirm"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        (function () {
+            document.querySelectorAll('[data-autosubmit]').forEach(function (field) {
+                field.addEventListener('change', function () { field.form.submit(); });
+            });
+            var pending = null;
+            var confirmBtn = document.getElementById('toggleModalConfirm');
+            document.querySelectorAll('.js-toggle').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    if (form._confirmed) return;
+                    e.preventDefault();
+                    pending = form;
+                    var d = form.dataset, off = !!d.active;
+                    document.getElementById('toggleModalLabel').textContent = off ? 'Отключить сотрудника?' : 'Включить сотрудника?';
+                    document.getElementById('toggleModalText').textContent = off
+                        ? d.name + ' будет отключён(а) от этапа «' + d.stage + '» и потеряет доступ к нему.'
+                        : d.name + ' снова получит доступ к этапу «' + d.stage + '».';
+                    confirmBtn.className = 'btn btn-sm ' + (off ? 'btn-danger' : 'btn-success');
+                    confirmBtn.textContent = off ? 'Отключить' : 'Включить';
+                    confirmBtn.disabled = false;
+                    $('#toggleModal').modal('show');
+                });
+            });
+            confirmBtn.addEventListener('click', function () {
+                if (!pending) return;
+                confirmBtn.disabled = true;
+                pending._confirmed = true;
+                pending.querySelector('button').disabled = true;
+                pending.submit();
+            });
+        })();
+    </script>
 {% endblock %}

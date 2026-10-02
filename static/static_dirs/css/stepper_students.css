@@ -1,0 +1,325 @@
+/* Студенты по данным MyEDU (/stepper/students/) */
+
+.students-page .stepper-cs__filters {
+    margin-bottom: 0.9rem;
+}
+
+.students-search {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) minmax(180px, 1fr) auto;
+    gap: 0.6rem;
+    align-items: end;
+}
+
+.students-search__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+    min-width: 0;
+}
+
+.students-search__field > span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--am-muted, #6b6b6b);
+}
+
+.students-search .form-control {
+    height: 36px;
+    font-size: 0.875rem;
+}
+
+.students-search__btn {
+    min-height: 36px;
+    padding: 0 1.1rem;
+}
+
+.students-search__hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--am-muted, #6b6b6b);
+}
+
+.students-empty {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.4rem 1.2rem;
+}
+
+.students-empty > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+    color: var(--am-red, #A00E07);
+    background: var(--am-red-soft, #faf5f4);
+    border-radius: 50%;
+}
+
+.students-empty--bad > i {
+    color: #b42318;
+    background: #fdecec;
+}
+
+.students-empty b {
+    display: block;
+    color: var(--am-ink, #1c1c1c);
+}
+
+.students-empty span {
+    font-size: 0.875rem;
+    color: var(--am-muted, #6b6b6b);
+}
+
+.students-sort {
+    width: auto;
+    min-width: 170px;
+}
+
+.students-pipe--debt .stepper-cs__pipe-count { color: #a61d1d; background: #fbe9e9; }
+.students-pipe--clean .stepper-cs__pipe-count { color: #23692a; background: #e7f4e9; }
+.students-pipe--nocs .stepper-cs__pipe-count { color: #5c5853; background: #efedea; }
+.students-pipe--done .stepper-cs__pipe-count { color: #23692a; background: #e7f4e9; }
+
+.students-table td {
+    vertical-align: top;
+}
+
+.students-name {
+    display: block;
+    font-weight: 600;
+    color: var(--am-ink, #1c1c1c) !important;
+}
+
+.students-name:hover {
+    color: var(--am-red, #A00E07) !important;
+}
+
+.students-status {
+    display: inline-block;
+    margin-top: 0.2rem;
+    padding: 0.05rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6b4fa0;
+    background: #f0ebf8;
+    border-radius: 999px;
+}
+
+.students-debts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.students-debt {
+    padding: 0.05rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #a61d1d;
+    background: #fbe9e9;
+    border: 1px solid #f1d0d0;
+    border-radius: 4px;
+}
+
+.students-clean {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #2e7d32;
+}
+
+.students-sheet {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.1rem 0.55rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+.students-sheet i { font-size: 0.7rem; }
+.students-sheet--none { color: #7a756f; background: #f1eeec; }
+.students-sheet--process { color: #1a4f78; background: #e8f2fa; }
+.students-sheet--done { color: #1a5c32; background: #e8f5ec; }
+.students-sheet--issued { color: #5a4a1e; background: #f5efdf; }
+
+.students-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--am-red, #A00E07) !important;
+    background: #fff;
+    border: 1px solid var(--am-red-line, #e8d4d4);
+    border-radius: 6px;
+    white-space: nowrap;
+    text-decoration: none !important;
+}
+
+.students-open:hover {
+    background: var(--am-red-soft, #faf5f4);
+}
+
+.students-open i { font-size: 0.65rem; }
+
+@media (max-width: 992px) {
+    .students-search {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .students-search__btn {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 576px) {
+    .students-search {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Заявка и анкета рядом с именем ── */
+.students-table thead th {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.students-table thead th.stepper-cs__col-num {
+    text-align: center;
+}
+
+.students-table tbody td {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.students-col-state {
+    width: 1%;
+    min-width: 190px;
+    white-space: nowrap;
+}
+
+.students-table tbody td.students-col-state {
+    background-clip: padding-box;
+}
+
+.students-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border: 1px solid transparent;
+    border-radius: 6px;
+}
+
+.students-state--ok {
+    color: #1e6b24;
+    background: #e8f5ea;
+    border-color: #c9e4cd;
+}
+
+.students-state--no {
+    color: #a61d1d;
+    background: #fdf0f0;
+    border-color: #f1d0d0;
+}
+
+.students-state--none {
+    color: #7a756f;
+    background: #f3f1ee;
+    border-color: #e4e0dc;
+}
+
+.students-state--btn {
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.students-state--btn:hover {
+    background: #d9eedc;
+    border-color: #a9d3b0;
+}
+
+.students-state__meta {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.72rem;
+    color: var(--am-muted, #6b6b6b);
+}
+
+.students-state__step {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.students-state__step i { font-size: 0.7rem; }
+.students-state__step--process { color: #1a5c94; }
+.students-state__step--done { color: #23692a; }
+.students-state__step--issued { color: #6b5a1e; }
+
+.students-table tbody tr.has-sheet td:first-child {
+    box-shadow: inset 3px 0 0 #2e7d32;
+}
+
+.students-clean {
+    font-size: 0.8125rem;
+}
+
+/* Компактный столбец «Студент», за ним «Приказ» */
+.students-col-student {
+    width: 428px;
+    max-width: 428px;
+}
+
+.students-table td.students-col-student .students-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.students-sub {
+    display: block;
+    overflow: hidden;
+    max-width: 395px;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--am-muted, #6b6b6b);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.students-col-order {
+    width: 1%;
+    min-width: 130px;
+    white-space: nowrap;
+}
+
+.students-col-order .students-status {
+    display: inline-block;
+    max-width: 160px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+}
+
+.students-col-order .stepper-cs__order-num,
+.students-col-order .stepper-cs__order-sub {
+    display: block;
+}

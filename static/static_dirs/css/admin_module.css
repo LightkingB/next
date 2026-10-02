@@ -110,6 +110,10 @@ body.admin-module-page .main {
     opacity: 1;
 }
 
+.admin-module__panel-head > span > i:first-child {
+    margin-right: 0.45rem;
+}
+
 .admin-module__panel-head--split {
     justify-content: space-between;
 }

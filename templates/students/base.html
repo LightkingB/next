@@ -1,227 +1,120 @@
 {% load static i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    {% block title %}<title>Обходной лист | ОшГУ</title>{% endblock %}
+    {% block title %}<title>Личный кабинет | ОшГУ</title>{% endblock %}
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="Oshsu project">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Личный кабинет ОшГУ: обходной лист и анкетирование">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"/>
-
-    <link rel="stylesheet" type="text/css" href="{% static 'css/main_styles.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/responsive.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/student_nav.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/student_portal.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@600;700&display=swap">
+    <link rel="stylesheet" href="{% static 'css/student_portal.css' %}">
+    <link rel="stylesheet" href="{% static 'css/ui_components.css' %}">
+    <link rel="icon" type="image/svg+xml" href="https://oshsu.kg/main/images/logo/white-logo.svg">
+    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}">
+    <link rel="stylesheet" href="{% static 'css/portal_base.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
-{% block portal_scene %}{% endblock %}
+<body class="portal {% block body_class %}{% endblock %}">
+{% include 'component/portal_scene.html' with soft=True %}
 
-<div class="super_container">
-
-    <!-- Header -->
-    <header class="header">
-
-        <!-- Top Bar -->
-        <div class="top_bar">
-            <div class="top_bar_container">
-                <div class="container">
-                    <div class="row">
-                        <div class="col">
-                            <div class="top_bar_content d-flex flex-row align-items-center justify-content-between flex-wrap">
-                                <ul class="top_bar_contact_list">
-                                    <li>
-                                        <div class="question">Если есть вопросы?</div>
-                                    </li>
-                                    <li>
-                                        <i class="fa fa-phone" aria-hidden="true"></i>
-                                        <div>+996 3222 7-07-12</div>
-                                    </li>
-                                    <li>
-                                        <i class="fa fa-envelope-o" aria-hidden="true"></i>
-                                        <div>edu@oshsu.kg</div>
-                                    </li>
-                                </ul>
-                                {% if request.user.is_authenticated %}
-                                    <div class="student-header-user student-header-user--topbar">
-                                        <div class="student-header-user__avatar" aria-hidden="true">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                        <div class="student-header-user__text">
-                                            <span class="student-header-user__name">{{ portal_user_fio|default:request.user.full_name }}</span>
-                                            <span class="student-header-user__email">{{ portal_user_email|default:request.user.email }}</span>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Header Content -->
-        <div class="header_container">
-            <div class="container">
-                <div class="row">
-                    <div class="col">
-                        <div class="header_content d-flex flex-row align-items-center justify-content-start">
-                            <div class="logo_container">
-                                <a href="{% url 'students:index' %}">
-                                    <div class="logo_text">Ош<span>ГУ</span></div>
-                                </a>
-                            </div>
-                            {% if request.user.is_authenticated %}
-                                <div class="student-header-user student-header-user--main">
-                                    <div class="student-header-user__avatar" aria-hidden="true">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="student-header-user__text">
-                                        <span class="student-header-user__name">{{ portal_user_fio|default:request.user.full_name }}</span>
-                                        <span class="student-header-user__email">{{ portal_user_email|default:request.user.email }}</span>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            <nav class="main_nav_contaner ml-auto">
-                                <ul class="main_nav">
-                                    {% if request.user.is_authenticated %}
-                                        <li class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">
-                                            <a href="{% url 'students:index' %}">
-                                                <i class="fas fa-home"></i> Главная
-                                            </a>
-                                        </li>
-                                        <li class="{% if 'survey' in request.resolver_match.url_name %}active{% endif %}">
-                                            <a href="{% url 'students:survey' %}">
-                                                <i class="fas fa-poll"></i> Анкетирование
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{% url 'integrator:index' %}">
-                                                <i class="fas fa-project-diagram"></i> Модули
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{% url 'students:next-student-logout' %}">
-                                                <i class="fas fa-sign-out-alt"></i> Выйти
-                                            </a>
-                                        </li>
-                                    {% else %}
-                                        <li class="active">
-                                            <a href="{% url 'students:next-student-login' %}">Войти</a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-
-                                <!-- Hamburger -->
-                                <button type="button" class="hamburger student-hamburger menu_mm" aria-label="Открыть меню">
-                                    <i class="fa fa-bars menu_mm" aria-hidden="true"></i>
-                                </button>
-                            </nav>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Header Search Panel -->
-        <div class="header_search_container">
-            <div class="container">
-                <div class="row">
-                    <div class="col">
-                        <div class="header_search_content d-flex flex-row align-items-center justify-content-end">
-                            <form action="#" class="header_search_form">
-                                <input type="search" class="search_input" placeholder="Search" required="required">
-                                <button class="header_search_button d-flex flex-column align-items-center justify-content-center">
-                                    <i class="fa fa-search" aria-hidden="true"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Menu backdrop -->
-    <div class="menu_backdrop" aria-hidden="true"></div>
-
-    <!-- Menu -->
-    <div class="menu student-mobile-menu d-flex flex-column menu_mm trans_400">
-        <div class="student-mobile-menu__header">
-            <div class="student-mobile-menu__header-top">
-                <a href="{% url 'students:index' %}" class="student-mobile-menu__brand">
-                    Ош<span class="student-mobile-menu__brand-accent">ГУ</span>
-                </a>
-                <button type="button" class="student-mobile-menu__close menu_close_container" aria-label="Закрыть меню">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            {% if request.user.is_authenticated %}
-                <div class="student-mobile-menu__profile">
-                    <div class="student-mobile-menu__avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="student-mobile-menu__profile-text">
-                        <span class="student-mobile-menu__name">{{ portal_user_fio|default:request.user.full_name }}</span>
-                        <span class="student-mobile-menu__email">{{ portal_user_email|default:request.user.email }}</span>
-                    </div>
-                </div>
-            {% endif %}
-        </div>
+<header class="pt-header">
+    <div class="container pt-header__bar">
+        <a href="{% url 'students:index' %}" class="pt-brand" aria-label="ОшГУ — личный кабинет, на главную">
+            <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" alt="ОшГУ" class="pt-brand__img" width="150" height="40">
+            <span class="pt-brand__sub">
+                <i class="fas fa-user-circle" aria-hidden="true"></i>
+                <span>Личный<br>кабинет</span>
+            </span>
+        </a>
 
         {% if request.user.is_authenticated %}
-            <nav class="menu_nav student-mobile-menu__nav">
-                <a href="{% url 'students:index' %}"
-                   class="student-mobile-menu__item menu_mm {% if request.resolver_match.url_name == 'index' %}is-active{% endif %}">
-                    <span class="student-mobile-menu__icon"><i class="fas fa-home"></i></span>
-                    <span>Главная</span>
-                </a>
-                <a href="{% url 'students:survey' %}"
-                   class="student-mobile-menu__item menu_mm {% if 'survey' in request.resolver_match.url_name %}is-active{% endif %}">
-                    <span class="student-mobile-menu__icon"><i class="fas fa-poll"></i></span>
-                    <span>Анкетирование</span>
-                </a>
-                <a href="{% url 'integrator:index' %}" class="student-mobile-menu__item menu_mm">
-                    <span class="student-mobile-menu__icon"><i class="fas fa-project-diagram"></i></span>
-                    <span>Модули</span>
-                </a>
-            </nav>
+            <button class="pt-burger" type="button" data-toggle="collapse" data-target="#pt-nav"
+                    aria-controls="pt-nav" aria-expanded="false" aria-label="Меню">
+                <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
 
-            <div class="student-mobile-menu__footer">
-                <a href="{% url 'students:next-student-logout' %}" class="student-mobile-menu__logout menu_mm">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Выйти из аккаунта</span>
-                </a>
+            <div class="collapse pt-collapse" id="pt-nav">
+                <nav class="pt-nav" aria-label="Основное меню">
+                    <a href="{% url 'students:index' %}"
+                       class="pt-nav__link{% if request.resolver_match.url_name == 'index' %} is-active{% endif %}">
+                        <i class="fas fa-home" aria-hidden="true"></i> Главная
+                    </a>
+                    <a href="{% url 'students:survey' %}"
+                       class="pt-nav__link{% if 'survey' in request.resolver_match.url_name %} is-active{% endif %}">
+                        <i class="fas fa-poll" aria-hidden="true"></i> Анкетирование
+                    </a>
+                    <a href="{% url 'integrator:index' %}" class="pt-nav__link">
+                        <i class="fas fa-th-large" aria-hidden="true"></i> Модули
+                    </a>
+                </nav>
+
+                <div class="dropdown pt-user">
+                    <button class="pt-user__btn" type="button" id="pt-user-menu" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        <span class="pt-user__avatar" aria-hidden="true">{{ portal_user_initials|default:"?" }}</span>
+                        <span class="pt-user__name">{{ portal_user_fio|default:request.user.full_name }}</span>
+                        <i class="fas fa-chevron-down pt-user__chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right pt-user__menu" aria-labelledby="pt-user-menu">
+                        <div class="pt-user__head">
+                            <strong>{{ portal_user_fio|default:request.user.full_name }}</strong>
+                            <span>{{ portal_user_email|default:request.user.email }}</span>
+                        </div>
+                        <button type="button" class="dropdown-item pt-user__logout" data-toggle="modal" data-target="#logoutModal">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Выйти
+                        </button>
+                    </div>
+                </div>
             </div>
         {% else %}
-            <nav class="menu_nav student-mobile-menu__nav">
-                <a href="{% url 'students:next-student-login' %}" class="student-mobile-menu__login menu_mm">
-                    Войти
-                </a>
-            </nav>
+            <a href="{% url 'students:next-student-login' %}" class="pt-login">Войти</a>
         {% endif %}
     </div>
+</header>
 
-    <!-- Home -->
-    <div class="home">
-        <div class="container">
-            {% include 'utils/_messages.html' %}
-            {% block content %}
+<main class="pt-main home">
+    <div class="container">
+        {% include 'utils/_messages.html' %}
+        {% block content %}{% endblock %}
+    </div>
+</main>
 
-            {% endblock %}
+<footer class="pt-footer">
+    <div class="container pt-footer__bar">
+        <span>© ОшГУ</span>
+        <span class="pt-footer__contacts">
+            Вопросы:
+            <a href="tel:+996322270712"><i class="fas fa-phone-alt" aria-hidden="true"></i> +996 3222 7-07-12</a>
+            <a href="mailto:edu@oshsu.kg"><i class="fas fa-envelope" aria-hidden="true"></i> edu@oshsu.kg</a>
+        </span>
+    </div>
+</footer>
+
+{% if request.user.is_authenticated %}
+    <div class="modal fade pt-modal" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-body pt-modal__body">
+                    <span class="pt-modal__icon" aria-hidden="true"><i class="fas fa-sign-out-alt"></i></span>
+                    <h5 class="pt-modal__title" id="logoutModalLabel">Выйти из аккаунта?</h5>
+                    <p class="pt-modal__text">Чтобы снова открыть портал, нужно будет войти заново.</p>
+                </div>
+                <div class="modal-footer pt-modal__footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Отмена</button>
+                    <a href="{% url 'students:next-student-logout' %}" class="btn pt-modal__danger">Выйти</a>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+{% endif %}
 
 {% block modals %}{% endblock %}
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script src="{% static 'js/custom.js' %}"></script>
-{% block scripts %}
-{% endblock %}
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/ui_toast.js' %}"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

@@ -9,53 +9,193 @@
 {% endblock %}
 
 {% block content %}
-    <div class="transcript transcript--search">
+    <div class="container admin-module transcript-search transcript-check">
         {% if CUSTOM_ROLES.SPEC in DB_ROLES %}
-            <div class="transcript__search-page">
-                <div class="transcript__shell transcript__shell--search">
-                    <div class="transcript__search-hero">
-                        <div class="transcript__search-brand">
-                            <img src="https://oshsu.kg/main/images/logo/logo-ru.svg"
-                                 class="transcript__search-logo"
-                                 alt="ОшГУ">
-                        </div>
-                        <h1>Поиск академической справки</h1>
-                        <p class="transcript__search-lead">
-                            Проверка выданной справки по полному номеру, указанному на бланке.
-                        </p>
+            <section class="transcript-check__hero">
+                <span class="transcript-check__hero-icon" aria-hidden="true"><i class="fas fa-shield-alt"></i></span>
+                <h1>Проверка академической справки</h1>
+                <p>Введите номер с бланка или ФИО студента — система покажет, действительна ли справка и кому она выдана.</p>
+                <form method="get" class="transcript-check__form" role="search">
+                    <div class="transcript-search__field">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" class="form-control" name="q" id="transcript-search-q" value="{{ query }}"
+                               placeholder="Например, 230042709 или Асанов" aria-label="Номер справки или ФИО студента"
+                               autocomplete="off" {% if not query %}autofocus{% endif %} required>
                     </div>
+                    <button type="submit" class="transcript__btn transcript__btn--primary">Проверить</button>
+                </form>
+                <p class="transcript-check__hint">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    Подтверждение — только при полном совпадении номера. Пробелы игнорируются.
+                </p>
+            </section>
 
-                    <div class="transcript__search-body">
-                        <form action="" method="post" class="transcript__search-form">
-                            {% csrf_token %}
-                            <label for="custom_transcript_number">Номер академической справки</label>
-                            <div class="transcript__search-row">
-                                <input type="text"
-                                       class="form-control"
-                                       name="transcript_number"
-                                       id="custom_transcript_number"
-                                       placeholder="Введите номер целиком"
-                                       required
-                                       autofocus
-                                       inputmode="numeric"
-                                       autocomplete="off"/>
-                                <button type="submit" id="teacher_login" class="transcript__search-submit">
-                                    <i class="fas fa-search" aria-hidden="true"></i>
-                                    <span>{% trans 'Поиск' %}</span>
-                                </button>
+            {% if query %}
+                {% if exact %}
+                    {% if exact.is_defective %}
+                        {% firstof "bad" as verdict %}
+                    {% elif exact.is_used %}
+                        {% firstof "ok" as verdict %}
+                    {% else %}
+                        {% firstof "warn" as verdict %}
+                    {% endif %}
+                    <article class="transcript-check__result transcript-check__result--{{ verdict }}">
+                        <header class="transcript-check__verdict">
+                            <span class="transcript-check__verdict-icon" aria-hidden="true">
+                                {% if verdict == "ok" %}<i class="fas fa-check"></i>{% elif verdict == "bad" %}<i class="fas fa-times"></i>{% else %}<i class="fas fa-clock"></i>{% endif %}
+                            </span>
+                            <div>
+                                <div class="transcript-check__verdict-title">
+                                    {% if verdict == "ok" %}Справка подтверждена
+                                    {% elif verdict == "bad" %}Бланк повреждён — справка недействительна
+                                    {% else %}Справка не выдана{% endif %}
+                                </div>
+                                <div class="transcript-check__verdict-text">
+                                    {% if verdict == "ok" %}Выдана {{ exact.issue_date|date:"d.m.Y" }} в {{ exact.issue_date|date:"H:i" }} студенту {{ exact.student_fio }}.
+                                    {% elif verdict == "bad" %}Бланк списан как повреждённый{% if exact.is_used %}, хотя ранее был выдан студенту{% endif %}.
+                                    {% else %}Бланк зарегистрирован за факультетом, но студенту ещё не выдавался.{% endif %}
+                                </div>
                             </div>
-                            <p class="transcript__search-hint">
-                                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                                Номер указывается полностью, без пробелов и дополнительных символов.
-                            </p>
-                        </form>
+                        </header>
 
-                        <div class="transcript__search-messages">
-                            {% include 'utils/_messages.html' %}
+                        <div class="transcript-check__number">
+                            <span>№</span> {{ exact.transcript_number }}
+                            <span class="transcript-check__category">{{ exact.category.title }} · {{ exact.category.page_count }} л.</span>
+                        </div>
+
+                        <div class="transcript-check__sections">
+                            <section>
+                                <h2>Кому выдана</h2>
+                                {% if exact.is_used %}
+                                    <dl class="transcript-info">
+                                        <dt>ФИО</dt><dd class="transcript-info__primary">{{ exact.student_fio }}</dd>
+                                        {% if exact.student_uuid and exact.student_uuid != "0" %}<dt>ID MyEDU</dt><dd>{{ exact.student_uuid }}</dd>{% endif %}
+                                        <dt>Факультет</dt><dd>{{ exact.student_faculty|default_if_none:"—" }}</dd>
+                                        <dt>Специальность</dt><dd>{{ exact.student_speciality|default_if_none:"—" }}</dd>
+                                    </dl>
+                                {% else %}
+                                    <p class="transcript-check__empty">Студенту не выдавалась.</p>
+                                {% endif %}
+                            </section>
+                            <section>
+                                <h2>Бланк</h2>
+                                <dl class="transcript-info">
+                                    <dt>Категория</dt><dd>{{ exact.category.title }} · {{ exact.category.page_count }} л.</dd>
+                                    <dt>Факультет</dt><dd>{{ exact.faculty.title }} ({{ exact.faculty.short_name }})</dd>
+                                    <dt>Состояние</dt>
+                                    <dd>
+                                        {% if exact.is_defective %}<span class="transcript__badge transcript__badge--defective">Повреждён</span>
+                                        {% elif exact.is_used %}<span class="transcript__badge transcript__badge--used">Выдан</span>
+                                        {% else %}<span class="transcript__badge transcript__badge--free">Свободен</span>{% endif %}
+                                    </dd>
+                                </dl>
+                            </section>
+                        </div>
+
+                        <section class="transcript-check__history">
+                            <h2>История бланка</h2>
+                            <ol class="transcript-check__timeline">
+                                <li class="is-done">
+                                    <strong>Зарегистрирован</strong>
+                                    <span>{{ exact.faculty.short_name|default:exact.faculty.title }}, категория {{ exact.category.title }}</span>
+                                </li>
+                                <li class="{% if exact.is_used %}is-done{% else %}is-pending{% endif %}">
+                                    <strong>{% if exact.is_used %}Выдан студенту{% else %}Не выдан{% endif %}</strong>
+                                    <span>{% if exact.is_used %}{{ exact.student_fio }} · {{ exact.issue_date|date:"d.m.Y H:i" }}{% else %}ожидает выдачи{% endif %}</span>
+                                </li>
+                                {% if exact.is_defective %}
+                                    <li class="is-bad">
+                                        <strong>Отмечен повреждённым</strong>
+                                        <span>справка недействительна</span>
+                                    </li>
+                                {% endif %}
+                            </ol>
+                        </section>
+
+                        <footer class="transcript-check__actions">
+                            <a href="{% url 'bsadmin:faculty-transcript-category' faculty_id=exact.faculty_id %}?q={{ exact.transcript_number|urlencode }}"
+                               class="transcript__btn transcript__btn--ghost">
+                                <i class="fas fa-list" aria-hidden="true"></i> Открыть в журнале факультета
+                            </a>
+                            {% if exact.is_defective and exact.files %}
+                                <a href="{{ exact.files.url }}" target="_blank" rel="noopener" class="transcript__btn transcript__btn--soft">
+                                    <i class="fas fa-file-pdf" aria-hidden="true"></i> Скан повреждённого бланка
+                                </a>
+                            {% endif %}
+                        </footer>
+                    </article>
+                {% else %}
+                    <article class="transcript-check__result transcript-check__result--bad">
+                        <header class="transcript-check__verdict">
+                            <span class="transcript-check__verdict-icon" aria-hidden="true"><i class="fas fa-question"></i></span>
+                            <div>
+                                <div class="transcript-check__verdict-title">Справка «{{ query }}» не найдена</div>
+                                <div class="transcript-check__verdict-text">
+                                    Бланка с таким номером нет в системе.
+                                    {% if similar %}Ниже — похожие записи; они <b>не являются</b> подтверждением.{% else %}Проверьте номер на бланке.{% endif %}
+                                </div>
+                            </div>
+                        </header>
+                    </article>
+                {% endif %}
+
+                {% if similar %}
+                    <div class="admin-module__panel">
+                        <div class="admin-module__panel-head admin-module__panel-head--split">
+                            <span><i class="fas fa-list" aria-hidden="true"></i>{% if exact %}Другие совпадения{% else %}Похожие записи{% endif %}</span>
+                            <span class="transcript-journal__found">
+                                {% if similar_more %}показаны первые {{ similar|length }} — уточните запрос{% else %}найдено: {{ similar|length }}{% endif %}
+                            </span>
+                        </div>
+                        <div class="transcript__table-wrap">
+                            <table class="transcript__table transcript__table--journal">
+                                <thead>
+                                <tr>
+                                    <th class="transcript__col-num">№</th>
+                                    <th>Справка</th>
+                                    <th>Статус</th>
+                                    <th>Кому выдана</th>
+                                    <th>Факультет бланка</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for item in similar %}
+                                    <tr class="{% if item.is_defective %}is-defective{% elif item.is_used %}is-used{% endif %}">
+                                        <td class="transcript__col-num">{{ forloop.counter }}</td>
+                                        <td>
+                                            <a class="transcript__num" href="?q={{ item.transcript_number|urlencode }}">{{ item.transcript_number }}</a>
+                                            <span class="transcript__cell-meta">{{ item.category.title }} · {{ item.category.page_count }} л.</span>
+                                        </td>
+                                        <td>
+                                            <div class="transcript__badges">
+                                                {% if item.is_used %}
+                                                    <span class="transcript__badge transcript__badge--used"><i class="fas fa-check" aria-hidden="true"></i> Выдана</span>
+                                                {% endif %}
+                                                {% if item.is_defective %}
+                                                    <span class="transcript__badge transcript__badge--defective"><i class="fas fa-times" aria-hidden="true"></i> Повреждена</span>
+                                                {% endif %}
+                                                {% if not item.is_used and not item.is_defective %}
+                                                    <span class="transcript__badge transcript__badge--free">Не выдана</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if item.is_used %}
+                                                <span class="transcript__student">{{ item.student_fio }}</span>
+                                                <span class="transcript__cell-meta">{{ item.issue_date|date:"d.m.Y" }}</span>
+                                            {% else %}
+                                                <span class="transcript__muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.faculty.short_name|default:item.faculty.title }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
-            </div>
+                {% endif %}
+            {% endif %}
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}

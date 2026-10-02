@@ -2,9 +2,10 @@ from datetime import datetime
 
 from django.db import transaction, IntegrityError
 from django.db.models import Q, Window, F, Prefetch, OuterRef, Exists, Subquery, Value, CharField, Count, Max
-from django.db.models.functions import RowNumber, Concat
+from django.db.models.functions import RowNumber, Concat, Coalesce
 from django.http import Http404
-from django.utils.timezone import make_aware
+from django.utils.timezone import make_aware, now as tz_now
+from datetime import timedelta
 
 from bsadmin.models import CustomUser, Faculty, Speciality
 from stepper.consts import STUDENT_CS, TEACHER_CS, CS_FINISHED
@@ -22,8 +23,30 @@ class StepperService:
             StageEmployee.objects.filter(employee__is_worker=True,
                                          template_stage__category=TemplateStep.STUDENT)
             .select_related('employee', 'template_stage', 'template_stage__stage')
-            .order_by('is_active')
+            .order_by('-is_active', 'template_stage__order', 'employee__last_name', 'employee__first_name')
         )
+
+    @staticmethod
+    def stage_employee_overview():
+        """Этапы студенческого обходного: кто назначен и сколько листов сейчас ждёт на этапе."""
+        _, _, queue = StepperService.filter_student_clearance_sheets({"status": "process"})
+        links = (StageEmployee.objects.filter(employee__is_worker=True, template_stage__category=TemplateStep.STUDENT)
+                 .select_related('employee').order_by('employee__last_name', 'employee__first_name'))
+        by_stage = {}
+        for link in links:
+            by_stage.setdefault(link.template_stage_id, []).append(link)
+        overview = []
+        for step in (TemplateStep.objects.filter(category=TemplateStep.STUDENT)
+                     .select_related('stage', 'role').order_by('order', 'id')):
+            stage_links = by_stage.get(step.id, [])
+            active = [link for link in stage_links if link.is_active]
+            overview.append({
+                "step": step,
+                "active": active,
+                "inactive_count": len(stage_links) - len(active),
+                "queue": queue.get(step.id, 0) if step.order > 0 else None,
+            })
+        return overview
 
     @staticmethod
     def students_from_issuance(myeduid, type_choices=None, fio=None):
@@ -183,6 +206,112 @@ class StepperService:
             category=ClearanceSheet.STUDENT
         )
         return sheet
+
+    CS_SORTS = {
+        "new": ("-issued_at", "-id"),
+        "old": ("issued_at", "id"),
+        "completed": (F("completed_at").desc(nulls_last=True), "-id"),
+        "fio": ("student_fio", "-id"),
+    }
+
+    @staticmethod
+    def student_clearance_sheets_base():
+        """Обходные листы студентов с текущим (первым незавершённым) этапом."""
+        current = (Trajectory.objects
+                   .filter(clearance_sheet=OuterRef("pk"), completed_at__isnull=True)
+                   .order_by("template_stage__order"))
+        last_done = (Trajectory.objects
+                     .filter(clearance_sheet=OuterRef("pk"), completed_at__isnull=False)
+                     .order_by("-completed_at"))
+        return ClearanceSheet.objects.filter(category=ClearanceSheet.STUDENT).annotate(
+            current_step_id=Subquery(current.values("template_stage_id")[:1]),
+            current_stage_name=Subquery(current.values("template_stage__stage__name")[:1]),
+            # С какого момента лист стоит на текущем этапе: прохождение предыдущего этапа или создание листа.
+            stage_since=Coalesce(Subquery(last_done.values("completed_at")[:1]), F("issued_at")),
+        )
+
+    @staticmethod
+    def filter_student_clearance_sheets(filters):
+        """
+        Единый фильтр перечня обходных листов.
+        filters: q, faculty, order_status, edu_year, date_field, date_from, date_to,
+                 stuck_days (на текущем этапе дольше N дней) — общие;
+                 status (active|process|ready|issued), stage, sort — применяются поверх.
+        Возвращает (queryset, счётчики по статусам, счётчики по этапам).
+        """
+        qs = StepperService.student_clearance_sheets_base()
+
+        q = filters.get("q")
+        if q:
+            condition = Q(student_fio__icontains=q) | Q(myedu_id__icontains=q)
+            if q.isdigit():
+                condition |= Q(id=int(q))
+            qs = qs.filter(condition)
+        if filters.get("faculty"):
+            qs = qs.filter(myedu_faculty_id=filters["faculty"])
+        if filters.get("order_status"):
+            qs = qs.filter(order_status=filters["order_status"])
+        if filters.get("edu_year"):
+            qs = qs.filter(edu_year_id=filters["edu_year"])
+        date_field = filters.get("date_field") or "issued_at"
+        if filters.get("date_from"):
+            qs = qs.filter(**{f"{date_field}__date__gte": filters["date_from"]})
+        if filters.get("date_to"):
+            qs = qs.filter(**{f"{date_field}__date__lte": filters["date_to"]})
+        if filters.get("stuck_days"):
+            qs = qs.filter(type_choices__isnull=True, completed_at__isnull=True,
+                           stage_since__lte=tz_now() - timedelta(days=filters["stuck_days"]))
+
+        active = Q(type_choices__isnull=True)
+        process = active & Q(completed_at__isnull=True)
+        ready = active & Q(completed_at__isnull=False)
+        issued = Q(type_choices__isnull=False)
+        status_counts = qs.aggregate(
+            active=Count("id", filter=active),
+            process=Count("id", filter=process),
+            ready=Count("id", filter=ready),
+            issued=Count("id", filter=issued),
+        )
+        stage_counts = {
+            row["current_step_id"]: row["total"]
+            for row in qs.filter(process).values("current_step_id").annotate(total=Count("id"))
+        }
+
+        status = filters.get("status") or "active"
+        qs = qs.filter({"active": active, "process": process, "ready": ready, "issued": issued}[status])
+        if filters.get("stage"):
+            qs = qs.filter(process, current_step_id=filters["stage"])
+
+        sort = StepperService.CS_SORTS.get(filters.get("sort") or "new", StepperService.CS_SORTS["new"])
+        return qs.order_by(*sort), status_counts, stage_counts
+
+    @staticmethod
+    def latest_sheets_by_myedu_ids(myedu_ids):
+        """{myedu_id: последний обходной лист с текущим этапом} — одним запросом."""
+        ids = [str(i) for i in myedu_ids if i]
+        if not ids:
+            return {}
+        latest = (ClearanceSheet.objects.filter(category=ClearanceSheet.STUDENT, myedu_id__in=ids)
+                  .values('myedu_id').annotate(last_id=Max('id')).values_list('last_id', flat=True))
+        return {sheet.myedu_id: sheet for sheet in
+                StepperService.student_clearance_sheets_base().filter(id__in=list(latest))}
+
+    @staticmethod
+    def student_clearance_faculties():
+        return (ClearanceSheet.objects
+                .filter(category=ClearanceSheet.STUDENT, myedu_faculty_id__isnull=False)
+                .values_list("myedu_faculty_id", "myedu_faculty")
+                .distinct()
+                .order_by("myedu_faculty"))
+
+    @staticmethod
+    def student_clearance_order_statuses():
+        return (ClearanceSheet.objects
+                .filter(category=ClearanceSheet.STUDENT)
+                .exclude(order_status__isnull=True).exclude(order_status="")
+                .values_list("order_status", flat=True)
+                .distinct()
+                .order_by("order_status"))
 
     @staticmethod
     def get_open_clearance_sheets_with_stage(search_query=None, type_param=None, faculty_id=0):

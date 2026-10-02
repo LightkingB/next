@@ -22,6 +22,7 @@ urlpatterns = [
     path('stage/employee/', stage_employee, name='stage-employee'),
     path('stage/employee/create/', stage_employee_create, name='stage-employee-create'),
     path('stage/employee/<int:pk>/update/', stage_employee_update, name='stage-employee-update'),
+    path('stage/employee/<int:pk>/toggle/', stage_employee_toggle, name='stage-employee-toggle'),
 
     path('cs/', cs, name='cs'),
     path('cs/status/', cs_status, name='cs-status'),

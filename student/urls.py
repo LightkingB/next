@@ -14,14 +14,15 @@ from student.survey_admin_views import (
     survey_admin_toggle_active,
 )
 from student.survey_views import survey_index, survey_phone, survey_take
-from student.views import sign_in_student_view, sign_out_student_view, student_cs_history_detail, student_index
+from integrator.auth import sign_in_view, sign_out_view
+from student.views import student_cs_history_detail, student_index
 
 app_name = "students"
 urlpatterns = [
     path("", student_index, name="index"),
     path("cs/<int:cs_id>/history/", student_cs_history_detail, name="cs-history"),
-    path("login/", sign_in_student_view, name="next-student-login"),
-    path("logout/", sign_out_student_view, name="next-student-logout"),
+    path("login/", sign_in_view, name="next-student-login"),
+    path("logout/", sign_out_view, name="next-student-logout"),
     path("survey/", survey_index, name="survey"),
     path("survey/phone/", survey_phone, name="survey-phone"),
     path("survey/<int:survey_id>/take/", survey_take, name="survey-take"),

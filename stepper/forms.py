@@ -54,7 +54,9 @@ class StageEmployeeForm(forms.ModelForm):
 
         role = instance.template_stage.role
         if role:
-            roles_to_remove = instance.employee.roles.filter(name__startswith='st')
+            # Снимаем только роли этапов (не stadmin, stsurve и т. п. — они к этапам не относятся).
+            stage_role_ids = TemplateStep.objects.exclude(role=None).values_list('role_id', flat=True)
+            roles_to_remove = instance.employee.roles.filter(id__in=stage_role_ids)
             instance.employee.roles.remove(*roles_to_remove)
             if instance.is_active:
                 instance.employee.roles.add(role)

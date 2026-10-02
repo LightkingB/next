@@ -20,6 +20,7 @@ urlpatterns = [
     path('faculty/<int:faculty_id>/specialities/', speciality, name='speciality'),
 
     path('transcript/save-student/', save_academic_transcript_student, name='save-student-academic-transcript'),
+    path('transcript/check-number/', check_transcript_number, name='check-transcript-number'),
 
     path('faculty/update/<int:id>/transcript/', update_faculty_transcript, name='update_faculty_transcript'),
     path('faculty/delete/<int:id>/transcript/', delete_faculty_transcript, name='delete_faculty_transcript'),

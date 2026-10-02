@@ -833,3 +833,265 @@ body.student-portal-scene-page .student-portal-page.survey-student--phone .surve
         width: 100%;
     }
 }
+
+/* ── Список анкет: сводка и состояние ── */
+.survey-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 0.9rem;
+    padding: 0.85rem 1rem;
+    background: var(--sv-surface, #faf6f4);
+    border: 1px solid var(--sv-line, #ddd9d4);
+    border-left: 4px solid var(--sv-red, #A00E07);
+    border-radius: 8px;
+}
+
+.survey-summary.is-complete {
+    border-left-color: #2e7d32;
+}
+
+.survey-summary__icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    color: var(--sv-red, #A00E07);
+    background: var(--sv-red-soft, #fce8e6);
+    border-radius: 50%;
+}
+
+.survey-summary.is-complete .survey-summary__icon {
+    color: #2e7d32;
+    background: #e8f5ec;
+}
+
+.survey-summary__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.survey-summary__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sv-ink, #1c1c1c);
+}
+
+.survey-summary__text {
+    font-size: 0.78rem;
+    color: var(--sv-muted, #6b6b6b);
+}
+
+.survey-summary__bar {
+    height: 6px;
+    margin-top: 0.45rem;
+    overflow: hidden;
+    background: #ece4e1;
+    border-radius: 999px;
+}
+
+.survey-summary__bar span {
+    display: block;
+    height: 100%;
+    background: #2e7d32;
+    border-radius: 999px;
+}
+
+.survey-student-entry.is-todo {
+    background: #fff;
+    box-shadow: inset 4px 0 0 var(--sv-red, #A00E07);
+}
+
+.survey-student-entry.is-done {
+    background: var(--sv-surface, #faf6f4);
+}
+
+.survey-student-entry.is-done .survey-student-entry__title {
+    color: var(--sv-muted, #6b6b6b);
+}
+
+.survey-student-entry__btn i {
+    margin-left: 0.3rem;
+}
+
+/* ── Прохождение анкеты ── */
+.survey-take__progress {
+    margin-top: 0.6rem;
+}
+
+.survey-take__progress-text {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    font-size: 0.78rem;
+    color: var(--sv-muted, #6b6b6b);
+}
+
+.survey-take__progress-text b {
+    color: var(--sv-ink, #1c1c1c);
+}
+
+.survey-take__saved {
+    font-size: 0.72rem;
+    color: #2e7d32;
+}
+
+.survey-take__progress-bar {
+    height: 5px;
+    margin-top: 0.35rem;
+    overflow: hidden;
+    background: rgba(160, 14, 7, 0.1);
+    border-radius: 999px;
+}
+
+.survey-take__progress-bar span {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--sv-red, #A00E07);
+    border-radius: 999px;
+    transition: width 0.25s;
+}
+
+.survey-student-question.js-question {
+    padding: 0.75rem 0.85rem;
+    background: #fff;
+    border: 1px solid var(--sv-line, #ddd9d4);
+    border-left: 3px solid #d6d2cd;
+    border-radius: 8px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.survey-student-question.js-question:last-child {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--sv-line, #ddd9d4);
+}
+
+.survey-student-question.js-question.is-answered {
+    border-left-color: #2e7d32;
+}
+
+.survey-student-question.js-question.has-error {
+    border-color: #f1c6c6;
+    border-left-color: #c62828;
+    background: #fffafa;
+}
+
+.survey-student-question.js-question.is-highlight {
+    box-shadow: 0 0 0 3px rgba(160, 14, 7, 0.18);
+}
+
+.survey-take__qhead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem 0.6rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.72rem;
+}
+
+.survey-take__qnum {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--sv-red, #A00E07);
+}
+
+.survey-take__qhint {
+    color: var(--sv-muted, #6b6b6b);
+}
+
+.survey-take__qok {
+    display: none;
+    margin-left: auto;
+    color: #2e7d32;
+    font-size: 0.85rem;
+}
+
+.survey-student-question.is-answered .survey-take__qok {
+    display: inline;
+}
+
+.survey-take__error {
+    margin-bottom: 0.5rem;
+    font-size: 0.78rem;
+    color: #b42318;
+}
+
+.survey-take__counter {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.7rem;
+    text-align: right;
+    color: var(--sv-muted, #6b6b6b);
+}
+
+.survey-take__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    text-align: left;
+}
+
+.survey-take__left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--sv-ink, #1c1c1c);
+}
+
+.survey-take__jump {
+    padding: 0;
+    font-size: 0.78rem;
+    color: var(--sv-red, #A00E07);
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.survey-take__footer .survey-student-btn {
+    width: auto;
+    max-width: none;
+}
+
+.survey-take__footer .survey-student-btn:disabled {
+    background: #cdb9b7;
+    border-color: #cdb9b7;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+@media (max-width: 576px) {
+    .survey-take__footer .survey-student-btn {
+        width: 100%;
+    }
+}
+
+/* Прогресс в красной шапке анкеты */
+.survey-student-card-head .survey-take__progress-text {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.survey-student-card-head .survey-take__progress-text b {
+    color: #fff;
+}
+
+.survey-student-card-head .survey-take__saved {
+    color: #c8f0cc;
+}
+
+.survey-student-card-head .survey-take__progress-bar {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.survey-student-card-head .survey-take__progress-bar span {
+    background: #fff;
+}

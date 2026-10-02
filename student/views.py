@@ -1,16 +1,11 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import render, redirect, get_object_or_404
 
-from bsadmin.forms import LoginForm
-from bsadmin.services import UserService
-from stepper.consts import STUDENT_STEPPER_URL
 from stepper.decorators import with_stepper
 from stepper.models import ClearanceSheet, Trajectory, StageStatus
-from utils.caches import EntityCache
-from utils.errors import handle_error
-from utils.myedu import MyEduService
+from student.dashboard import dashboard_context
+from student.myedu_student import get_student
 
 
 @with_stepper
@@ -19,16 +14,7 @@ def student_index(request):
     #     return redirect("students:next-student-login")
 
     myedu_id = request.user.myedu_id
-
-    student = EntityCache.get_or_set(
-        entity_id=myedu_id,
-        fetch_func=MyEduService.get_stepper_data_from_api,
-        fetch_kwargs={
-            "url": STUDENT_STEPPER_URL,
-            "search": myedu_id,
-        },
-    )
-    # print(student.is_worker)
+    student, _ = get_student(request)
 
     active_cs_qs = ClearanceSheet.objects.filter(myedu_id=myedu_id, completed_at__isnull=True)
     has_cs = active_cs_qs.exists()
@@ -46,8 +32,9 @@ def student_index(request):
             order_date=student.get('date_movement', ''),
             edu_year=request.stepper.active_edu_year()
         )
-        messages.success(request, "Заявка успешно отправлена")
-        has_cs = True
+        messages.success(request, "Заявка на обходной лист отправлена. Этапы появятся ниже.")
+        # Post/Redirect/Get: обновление страницы не отправит заявку повторно.
+        return redirect("students:index")
 
     trajectory_prefetch = Prefetch(
         'trajectory_set',
@@ -77,11 +64,20 @@ def student_index(request):
         .order_by('-issued_at')
     )
 
-    return render(request, "students/index.html", {
+    cs_list = list(cs_list)
+    for cs in cs_list:
+        steps = list(cs.trajectory_set.all())
+        cs.current_step = next((t for t in steps if t.completed_at is None), None)
+        cs.current_index = steps.index(cs.current_step) + 1 if cs.current_step else None
+    active_cs = next((cs for cs in cs_list if not cs.completed_at), None)
+
+    context = {
         "cs_list": cs_list,
         "has_cs": has_cs,
-        "student": student
-    })
+        "active_cs": active_cs,
+        **dashboard_context(request, cs_list[0] if cs_list else None, tab="overview"),
+    }
+    return render(request, "students/index.html", context)
 
 
 def student_cs_history_detail(request, cs_id):
@@ -100,43 +96,3 @@ def student_cs_history_detail(request, cs_id):
     return render(request, "students/cs-history.html", context)
 
 
-@with_stepper
-def sign_in_student_view(request):
-    # if request.user.is_authenticated:
-    #     return redirect("students:index")
-
-    if request.method == "POST":
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data.get('email', None)
-            password = form.cleaned_data.get('password', None)
-            user = authenticate(email=email, password=password)
-
-            if user is None:
-                myedu_data, success = MyEduService.get_user_auth(email, password)
-                if success:
-                    user = request.bs.update_or_create_user(email, password, myedu_data)
-                else:
-                    return handle_error(
-                        request,
-                        {"form": form},
-                        template_name="students/login.html",
-                        message="Проверьте правильность данных и повторите попытку."
-                    )
-
-            login(request, user)
-            return redirect("students:index")
-    context = {
-        "navbar": "student-next-login",
-        "form": LoginForm()
-    }
-    return render(request, "students/login.html", context)
-
-
-def sign_out_student_view(request):
-    if request.session.get('user_data', None):
-        del request.session['user_data']
-    if request.session.get('access', None):
-        del request.session['access']
-    logout(request)
-    return redirect("students:next-student-login")

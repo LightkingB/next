@@ -641,3 +641,456 @@
         width: 100%;
     }
 }
+
+/* ── Компактная панель поиска и фильтров ── */
+.stepper-cs__filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    padding: 0.6rem 0.75rem;
+}
+
+.stepper-cs__filters-search {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.stepper-cs__search-field {
+    position: relative;
+    flex: 1 1 auto;
+}
+
+.stepper-cs__search-field i {
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    transform: translateY(-50%);
+    color: var(--am-muted, #6b6b6b);
+    pointer-events: none;
+}
+
+.stepper-cs__search-field .form-control {
+    height: 34px;
+    padding-left: 2rem;
+}
+
+.stepper-cs__apply {
+    min-height: 34px;
+    padding: 0 1rem;
+}
+
+.stepper-cs__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 34px;
+    padding: 0 0.8rem;
+    font-size: 0.8125rem;
+    color: var(--am-text, #333);
+    background: #fff;
+    border: 1px solid var(--am-line, #ddd9d4);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.stepper-cs__more:hover,
+.stepper-cs__more[aria-expanded="true"] {
+    border-color: #bdb7b0;
+    background: var(--am-surface, #f7f5f2);
+}
+
+.stepper-cs__more.has-value {
+    color: var(--am-red, #A00E07);
+    border-color: var(--am-red-line, #e8d4d4);
+}
+
+.stepper-cs__advanced {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.6rem 0.7rem;
+    background: var(--am-surface, #f7f5f2);
+    border: 1px solid var(--am-line-soft, #eceae6);
+    border-radius: 6px;
+}
+
+.stepper-cs__advanced[hidden] {
+    display: none;
+}
+
+.stepper-cs__filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem 0.75rem;
+}
+
+.stepper-cs__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin: 0;
+    min-width: 0;
+}
+
+.stepper-cs__field > span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--am-muted, #6b6b6b);
+}
+
+.stepper-cs__dates {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.stepper-cs__dates select {
+    width: auto;
+}
+
+.stepper-cs__dates input {
+    width: 150px;
+}
+
+.stepper-cs__dates-sep {
+    color: var(--am-muted, #6b6b6b);
+}
+
+.stepper-cs__presets {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-left: 0.4rem;
+}
+
+.stepper-cs__preset {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--am-text, #333) !important;
+    background: #fff;
+    border: 1px solid var(--am-line, #ddd9d4);
+    border-radius: 999px;
+    text-decoration: none !important;
+}
+
+.stepper-cs__preset:hover {
+    border-color: #bdb7b0;
+}
+
+.stepper-cs__preset.is-active {
+    color: #fff !important;
+    background: var(--am-red, #A00E07);
+    border-color: var(--am-red, #A00E07);
+}
+
+.stepper-cs__chip-count {
+    padding: 0 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--am-muted, #6b6b6b);
+    background: var(--am-surface, #f7f5f2);
+    border-radius: 999px;
+}
+
+.stepper-cs__more.has-value .stepper-cs__chip-count {
+    color: #fff;
+    background: var(--am-red, #A00E07);
+}
+
+.stepper-cs__active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.stepper-cs__active-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.75rem;
+    color: var(--am-red, #A00E07) !important;
+    background: var(--am-red-soft, #faf5f4);
+    border: 1px solid var(--am-red-line, #e8d4d4);
+    border-radius: 999px;
+    text-decoration: none !important;
+}
+
+.stepper-cs__active-filter:hover {
+    background: #fff;
+}
+
+.stepper-cs__reset {
+    margin-left: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--am-muted, #6b6b6b) !important;
+    text-decoration: underline !important;
+}
+
+/* ── Полоса этапов ── */
+.stepper-cs__pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.stepper-cs__pipeline-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.stepper-cs__pipe {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.75rem 0.35rem 0.4rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--am-text, #333) !important;
+    background: var(--am-paper, #fcfbfa);
+    border: 1px solid var(--am-line, #ddd9d4);
+    border-radius: 999px;
+    text-decoration: none !important;
+    transition: border-color 0.12s, background 0.12s;
+}
+
+.stepper-cs__pipe:hover {
+    border-color: #bdb7b0;
+}
+
+.stepper-cs__pipe-count {
+    min-width: 1.6rem;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    color: #1a4f78;
+    background: #e8f2fa;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+}
+
+.stepper-cs__pipe--all .stepper-cs__pipe-count { color: var(--am-ink, #1c1c1c); background: #ebe8e4; }
+.stepper-cs__pipe--ready .stepper-cs__pipe-count { color: #1a5c32; background: #e8f5ec; }
+.stepper-cs__pipe--history { padding-left: 0.75rem; color: var(--am-muted, #6b6b6b) !important; }
+.stepper-cs__pipe--history .stepper-cs__pipe-count { color: #5a4a1e; background: #f5efdf; }
+
+.stepper-cs__pipe.is-empty {
+    color: #a39e98 !important;
+}
+
+.stepper-cs__pipe.is-empty .stepper-cs__pipe-count {
+    color: #a39e98;
+    background: #f1efec;
+}
+
+.stepper-cs__pipe.is-active {
+    color: #fff !important;
+    background: var(--am-red, #A00E07);
+    border-color: var(--am-red, #A00E07);
+}
+
+.stepper-cs__pipe.is-active .stepper-cs__pipe-count {
+    color: var(--am-red, #A00E07);
+    background: #fff;
+}
+
+.stepper-cs__pipe-arrow {
+    font-size: 0.65rem;
+    color: #b9b4ae;
+}
+
+.stepper-cs__pipe-sep {
+    width: 1px;
+    height: 1.4rem;
+    margin: 0 0.25rem;
+    background: var(--am-line, #ddd9d4);
+}
+
+/* ── Прогресс в строке ── */
+.stepper-cs__col-progress {
+    min-width: 15rem;
+}
+
+.stepper-cs__now {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.3rem;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+.stepper-cs__now--current { color: #fff; background: #1f6fb2; }
+.stepper-cs__now--done { color: #1a5c32; background: #e8f5ec; }
+.stepper-cs__now--issued { color: #5a4a1e; background: #f5efdf; }
+
+.stepper-cs__progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.stepper-cs__step {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.05rem 0.45rem;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: #9a958f;
+    background: #f4f2f0;
+    border: 1px solid #e6e3df;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.stepper-cs__step i {
+    font-size: 0.6rem;
+}
+
+.stepper-cs__step.is-done {
+    color: #2f6b3a;
+    background: #edf6ef;
+    border-color: #d3e8d8;
+}
+
+.stepper-cs__step.is-current {
+    padding: 0.15rem 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #fff;
+    background: #1f6fb2;
+    border-color: #1f6fb2;
+}
+
+.stepper-cs__progress {
+    align-items: center;
+}
+
+.stepper-cs__progress-meta {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    color: var(--am-muted, #6b6b6b);
+}
+
+@media (max-width: 768px) {
+    .stepper-cs__filters-search {
+        flex-wrap: wrap;
+    }
+
+    .stepper-cs__search-field {
+        flex-basis: 100%;
+    }
+
+    .stepper-cs__dates input {
+        width: auto;
+        flex: 1 1 120px;
+    }
+}
+
+.stepper-cs__stage-days {
+    white-space: nowrap;
+}
+
+.stepper-cs__stage-days i {
+    margin-right: 0.15rem;
+}
+
+.stepper-cs__stage-days.is-stuck {
+    font-weight: 600;
+    color: #b42318;
+}
+
+/* ── Фильтры всегда видны: одна компактная строка ── */
+.stepper-cs__filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.stepper-cs__filter-row .form-control {
+    height: 32px;
+    font-size: 0.8125rem;
+    border-color: var(--am-line, #ddd9d4);
+    border-radius: 6px;
+}
+
+.stepper-cs__select {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: 210px;
+}
+
+.stepper-cs__select--wide {
+    max-width: 280px;
+}
+
+.stepper-cs__select--sort {
+    margin-left: auto;
+}
+
+.stepper-cs__select.is-set,
+.stepper-cs__dates.is-set .form-control {
+    color: var(--am-red, #A00E07);
+    border-color: var(--am-red-line, #e8d4d4);
+    background-color: var(--am-red-soft, #faf5f4);
+    font-weight: 500;
+}
+
+.stepper-cs__filter-row .stepper-cs__dates {
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+}
+
+.stepper-cs__filter-row .stepper-cs__dates select {
+    width: auto;
+}
+
+.stepper-cs__filter-row .stepper-cs__dates input {
+    width: 140px;
+}
+
+.stepper-cs__presets {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0;
+}
+
+.stepper-cs__presets-label {
+    margin-right: 0.15rem;
+    font-size: 0.75rem;
+    color: var(--am-muted, #6b6b6b);
+}
+
+@media (max-width: 992px) {
+    .stepper-cs__select,
+    .stepper-cs__select--wide {
+        max-width: none;
+        flex: 1 1 180px;
+    }
+
+    .stepper-cs__select--sort {
+        margin-left: 0;
+    }
+}

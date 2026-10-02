@@ -685,3 +685,44 @@
         justify-content: center;
     }
 }
+
+/* ── Единый фильтр выданных документов ── */
+.stepper-issuance__filters-form {
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.stepper-issuance__dates-label {
+    font-size: 0.75rem;
+    color: var(--am-muted, #6b6b6b);
+    white-space: nowrap;
+}
+
+.stepper-issuance__sections {
+    margin: 0;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--am-line-soft, #eceae6);
+}
+
+.stepper-issuance__sections .stepper-cs__pipe-label i {
+    margin-right: 0.15rem;
+    font-size: 0.75rem;
+}
+
+.stepper-issuance__double .stepper-cs__pipe-count {
+    color: #8a5a00;
+    background: #fdf6e3;
+}
+
+.stepper-issuance__file {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.2rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--am-red, #A00E07) !important;
+}

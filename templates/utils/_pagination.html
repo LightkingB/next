@@ -1,50 +1,44 @@
-<nav aria-label="Page navigation example">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1" aria-disabled="true"><i class="fas fa-arrow-left"></i></a>
-            </li>
-        {% endif %}
-
-        {% if page_obj.number|add:'-5' > 1 %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.number|add:'-5' }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&hellip;</a></li>
-        {% endif %}
-
-        {% for i in page_obj.paginator.page_range %}
-            {% if page_obj.number == i %}
-                <li class="page-item active" aria-current="page">
-                    <span class="page-link">
-                        {{ i }}
-                        <span class="sr-only">(current)</span>
+{% load pagination_tags %}
+{% if page_obj.paginator.num_pages > 1 %}
+    <nav class="pager" aria-label="Страницы">
+        <span class="pager__info">
+            Стр. <strong>{{ page_obj.number }}</strong> из <strong>{{ page_obj.paginator.num_pages }}</strong>
+        </span>
+        <ul class="pager__list">
+            <li>
+                {% if page_obj.has_previous %}
+                    <a class="pager__link" href="{% page_url page_obj.previous_page_number %}" rel="prev" aria-label="Предыдущая страница">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i><span class="pager__nav-text">Назад</span>
+                    </a>
+                {% else %}
+                    <span class="pager__link is-disabled" aria-hidden="true">
+                        <i class="fas fa-chevron-left"></i><span class="pager__nav-text">Назад</span>
                     </span>
-                </li>
-            {% elif i > page_obj.number|add:'-5' and i < page_obj.number|add:'5' %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
-                </li>
-            {% endif %}
-        {% endfor %}
-
-        {% if page_obj.paginator.num_pages > page_obj.number|add:'5' %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.number|add:'5' }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&hellip;</a></li>
-        {% endif %}
-
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                    <i class="fas fa-arrow-right"></i>
-                </a>
+                {% endif %}
             </li>
-        {% else %}
-            <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1" aria-disabled="true"><i class="fas fa-arrow-right"></i></a>
+            {% page_window page_obj as pages %}
+            {% for number in pages %}
+                {% if number is None %}
+                    <li><span class="pager__gap" aria-hidden="true">…</span></li>
+                {% elif number == page_obj.number %}
+                    <li><span class="pager__link is-current" aria-current="page">{{ number }}</span></li>
+                {% else %}
+                    <li class="pager__item{% if number|add:'-2' > page_obj.number or number|add:'2' < page_obj.number %} pager__item--far{% endif %}">
+                        <a class="pager__link" href="{% page_url number %}" aria-label="Страница {{ number }}">{{ number }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            <li>
+                {% if page_obj.has_next %}
+                    <a class="pager__link" href="{% page_url page_obj.next_page_number %}" rel="next" aria-label="Следующая страница">
+                        <span class="pager__nav-text">Вперёд</span><i class="fas fa-chevron-right" aria-hidden="true"></i>
+                    </a>
+                {% else %}
+                    <span class="pager__link is-disabled" aria-hidden="true">
+                        <span class="pager__nav-text">Вперёд</span><i class="fas fa-chevron-right"></i>
+                    </span>
+                {% endif %}
             </li>
-        {% endif %}
-    </ul>
-</nav>
+        </ul>
+    </nav>
+{% endif %}

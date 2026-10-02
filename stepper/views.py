@@ -1,30 +1,34 @@
 import base64
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
+from urllib.parse import urlencode
 
 import qrcode
 from django.contrib import messages
+from django.core.cache import cache
 from django.db import transaction, DatabaseError
-from django.db.models import Q
+from django.db.models import Q, Count, F
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.utils.timezone import make_aware
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.timezone import make_aware, localdate, now
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from bsadmin.consts import STADMIN
+from bsadmin.role_utils import user_role_names
 from bsadmin.models import Faculty, Speciality
 from stepper.choices import TypeChoices
 from stepper.consts import STUDENT_STEPPER_URL, TEACHER_STEPPER_URL, STUDENT_CS, TEACHER_CS, CS_PROCESS, CS_FINISHED, VC_URL
 from stepper.decorators import with_stepper
 from stepper.entity import StudentInfo
 from stepper.exceptions import ClearanceCreationError, IssuanceRemovalError
-from stepper.filters import StageEmployeeStudentFilter, CSFilter, CsHistoryFilter, VCFilter
+from stepper.filters import CSFilter, CsHistoryFilter, VCFilter
 from stepper.forms import StudentTrajectoryForm, StageStatusForm, IssuanceForm, StageEmployeeForm, DiplomaForm
 from stepper.models import ClearanceSheet, Trajectory, StageStatus, TemplateStep, StageEmployee, Issuance, \
-    IssuanceHistory, Diploma, VacationCertificate
+    IssuanceHistory, Diploma, VacationCertificate, EduYear
 from stepper.services import StepperService
 from utils.caches import EntityCache
 from utils.filter_pagination import Pagination
@@ -42,45 +46,114 @@ def route(request):
     return HttpResponse("403 - Forbidden")
 
 
+STUDENT_SORTS = {
+    "fio": lambda st: (st.get("student_fio") or "").lower(),
+    "debts": lambda st: -len(st.get("debt") or []),
+    "faculty": lambda st: ((st.get("faculty_name") or "").lower(), (st.get("student_fio") or "").lower()),
+}
+STUDENT_SORT_CHOICES = (("fio", "По ФИО"), ("debts", "Больше долгов"), ("faculty", "По факультету"))
+STUDENT_VIEWS = (
+    ("", "Все"),
+    ("debt", "С долгами"),
+    ("clean", "Без долгов"),
+    ("nocs", "Без обходного"),
+    ("process", "Обходной в процессе"),
+    ("done", "Обходной завершён"),
+)
+
+
+def _sheet_state(sheet):
+    if not sheet:
+        return "nocs"
+    if sheet.type_choices:
+        return "issued"
+    return "done" if sheet.completed_at else "process"
+
+
 @with_stepper
 def cs_index(request):
     request.session['access'] = 'stepper'
     request.session['cs-nav'] = 'stepper'
 
-    # if not request.user.is_authenticated:
-    #     return redirect("integrator:next-teacher-login")
-    students_qs = []
-    if request.method == "POST":
-        search = request.POST.get("search", "")
-        faculty_id = request.POST.get("faculty_id", 0)
-        specialty_id = request.POST.get("specialty_id", 0)
+    get = request.GET
+    query = (get.get("q") or "").strip()
+    faculty_id = _parse_int(get.get("faculty"))
+    speciality_id = _parse_int(get.get("speciality"))
+    view = get.get("view") if get.get("view") in dict(STUDENT_VIEWS) else ""
+    sort = get.get("sort") if get.get("sort") in STUDENT_SORTS else "fio"
+    searched = bool(query or faculty_id)
 
-        students_qs = MyEduService.get_stepper_data_from_api(STUDENT_STEPPER_URL, search, faculty_id, specialty_id)
+    students, api_failed = [], False
+    if searched:
+        # Результат MyEDU кэшируется на 5 минут: страницы и фильтры не ждут MyEDU заново.
+        cache_key = f"stepper-students:{query.lower()}:{faculty_id or 0}:{speciality_id or 0}"
+        students = cache.get(cache_key)
+        if students is None:
+            students = MyEduService.search_debt_students(STUDENT_STEPPER_URL, query, faculty_id, speciality_id)
+            if students is None:
+                api_failed, students = True, []
+            else:
+                cache.set(cache_key, students, 5 * 60)
 
-    student_ids = [str(student["student_id"]) for student in students_qs]
+    sheets = request.stepper.latest_sheets_by_myedu_ids([st.get("student_id") for st in students])
+    for st in students:
+        sheet = sheets.get(str(st.get("student_id")))
+        st["sheet"] = sheet
+        st["sheet_state"] = _sheet_state(sheet)
+        st["debt_list"] = [d.get("type", "") for d in (st.get("debt") or []) if d.get("type")]
 
-    existing_ids = set(
-        ClearanceSheet.objects.filter(myedu_id__in=student_ids)
-        .values_list('myedu_id', flat=True)
-    )
-    for student in students_qs:
-        student["exist"] = str(student["student_id"]) in existing_ids
+    counts = {
+        "": len(students),
+        "debt": sum(1 for st in students if st["debt_list"]),
+        "clean": sum(1 for st in students if not st["debt_list"]),
+        "nocs": sum(1 for st in students if st["sheet_state"] == "nocs"),
+        "process": sum(1 for st in students if st["sheet_state"] == "process"),
+        "done": sum(1 for st in students if st["sheet_state"] in ("done", "issued")),
+    }
+    matches = {
+        "": lambda st: True,
+        "debt": lambda st: bool(st["debt_list"]),
+        "clean": lambda st: not st["debt_list"],
+        "nocs": lambda st: st["sheet_state"] == "nocs",
+        "process": lambda st: st["sheet_state"] == "process",
+        "done": lambda st: st["sheet_state"] in ("done", "issued"),
+    }
+    visible = sorted((st for st in students if matches[view](st)), key=STUDENT_SORTS[sort])
 
-    paginator = Pagination(request, students_qs or [])
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination(page_number)
-    enrich_students_with_survey_status(students, id_key="student_id")
+    paginator = Pagination(request, visible)
+    page = paginator.pagination(get.get('page', 1))
+    enrich_students_with_survey_status(page, id_key="student_id")
+
+    params = {"q": query, "faculty": faculty_id, "speciality": speciality_id, "sort": sort}
+
+    def url(**changes):
+        merged = {**params, "view": view, **changes}
+        clean = {k: v for k, v in merged.items() if v not in (None, "") and not (k == "sort" and v == "fio")}
+        return reverse("stepper:index") + ("?" + urlencode(clean) if clean else "")
 
     faculties = request.bs.active_faculties()
+    selected_faculty = next((f for f in faculties if f.myedu_faculty_id == faculty_id), None)
+    specialities = (request.bs.faculty_specialities_with_values(selected_faculty.id)
+                    if selected_faculty else [])
 
     context = {
-        "title": "Студенты с задолженностями по данным MyEDU",
+        "title": "Студенты по данным MyEDU",
         "navbar": "stepper",
-        "objects": students,
+        "objects": page,
         "faculties": faculties,
-        "success": True
+        "specialities": specialities,
+        "query": query,
+        "faculty_id": faculty_id,
+        "speciality_id": speciality_id,
+        "searched": searched,
+        "api_failed": api_failed,
+        "view": view,
+        "sort": sort,
+        "sort_choices": STUDENT_SORT_CHOICES,
+        "view_links": [{"label": label, "count": counts[value], "active": view == value,
+                        "url": url(view=value), "value": value or "all"} for value, label in STUDENT_VIEWS],
+        "success": True,
     }
-
     return render(request, "teachers/steppers/index.html", context)
 
 
@@ -516,34 +589,74 @@ def load_specialities(request):
     return JsonResponse(list(specialities), safe=False)
 
 
+def _is_stadmin(request):
+    return STADMIN in user_role_names(request)
+
+
+def _deny(request):
+    return render(request, "utils/_access.html", status=403) if request.method == "GET" \
+        else HttpResponse("Недостаточно прав", status=403)
+
+
+def _form_errors(form):
+    return " ".join(e for errors in form.errors.values() for e in errors) or "Проверьте заполнение формы."
+
+
+STAGE_EMPLOYEE_STATUSES = (("", "Все"), ("active", "Активные"), ("inactive", "Отключённые"))
+
+
 @with_stepper
 def stage_employee(request):
-    filterset = StageEmployeeStudentFilter(request.GET or None, queryset=request.stepper.get_stepper_employees())
+    get = request.GET
+    query = (get.get("q") or "").strip()
+    stage_id = get.get("stage") if (get.get("stage") or "").isdigit() else ""
+    status = get.get("status") if get.get("status") in ("active", "inactive") else ""
 
-    paginator = Pagination(request, filterset)
-    page_number = request.GET.get('page', 1)
-    employees = paginator.pagination_with_filters(page_number)
+    employees_qs = request.stepper.get_stepper_employees()
+    if query:
+        condition = Q(employee__email__icontains=query)
+        for part in query.split():
+            condition |= (Q(employee__last_name__icontains=part) | Q(employee__first_name__icontains=part) |
+                          Q(employee__fathers_name__icontains=part))
+        employees_qs = employees_qs.filter(condition)
+    if stage_id:
+        employees_qs = employees_qs.filter(template_stage_id=stage_id)
+    if status:
+        employees_qs = employees_qs.filter(is_active=status == "active")
 
+    paginator = Pagination(request, employees_qs)
+    employees = paginator.pagination(get.get('page', 1))
+
+    overview = request.stepper.stage_employee_overview()
     context = {
         "navbar": "roles",
         "employees": employees,
-        "form": filterset.form,
-        "title": "Связь сотрудника с этапом процесса"
+        "overview": overview,
+        "uncovered": [item for item in overview if not item["active"] and item["queue"]],
+        "query": query,
+        "stage_id": stage_id,
+        "status": status,
+        "statuses": STAGE_EMPLOYEE_STATUSES,
+        "stages": [item["step"] for item in overview],
+        "has_filters": bool(query or stage_id or status),
+        "title": "Сотрудники этапов обходного листа",
     }
     return render(request, "teachers/steppers/stage-employee.html", context)
 
 
 def stage_employee_create(request):
+    if not _is_stadmin(request):
+        return _deny(request)
     if request.method == 'POST':
         form = StageEmployeeForm(request.POST)
         if form.is_valid():
-            form.save()
+            obj = form.save()
+            messages.success(request, f"{obj.employee.full_name} назначен(а) на этап «{obj.template_stage.stage.name}».")
             return redirect('stepper:stage-employee')
-        else:
-            messages.error(request,
-                           "Этот пользователь уже назначен. Пожалуйста, укажите другого пользователя.")
+        messages.error(request, _form_errors(form))
     else:
-        form = StageEmployeeForm()
+        stage = request.GET.get("stage")
+        form = StageEmployeeForm(initial={"template_stage": stage} if stage and stage.isdigit() else None)
     return render(request, 'teachers/steppers/stage-employee-form.html', {
         'form': form,
         'is_edit': False,
@@ -552,15 +665,17 @@ def stage_employee_create(request):
 
 
 def stage_employee_update(request, pk):
+    if not _is_stadmin(request):
+        return _deny(request)
     obj = get_object_or_404(StageEmployee, pk=pk)
     if request.method == 'POST':
         form = StageEmployeeForm(request.POST, instance=obj)
         if form.is_valid():
-            form.save()
+            obj = form.save()
+            messages.success(request, f"Назначение сохранено: {obj.employee.full_name} — «{obj.template_stage.stage.name}»"
+                                      f"{'' if obj.is_active else ' (отключён)'}.")
             return redirect('stepper:stage-employee')
-        else:
-            messages.error(request,
-                           "Этот пользователь уже назначен. Пожалуйста, укажите другого пользователя.")
+        messages.error(request, _form_errors(form))
     else:
         form = StageEmployeeForm(instance=obj)
     return render(request, 'teachers/steppers/stage-employee-form.html', {
@@ -568,6 +683,27 @@ def stage_employee_update(request, pk):
         'is_edit': True,
         'navbar': 'roles'
     })
+
+
+@require_POST
+def stage_employee_toggle(request, pk):
+    """Быстро включить/отключить сотрудника на этапе (роль доступа обновляется так же, как в форме)."""
+    if not _is_stadmin(request):
+        return _deny(request)
+    obj = get_object_or_404(StageEmployee, pk=pk)
+    data = {"template_stage": obj.template_stage_id, "employee": obj.employee_id}
+    if not obj.is_active:
+        data["is_active"] = "on"
+    form = StageEmployeeForm(data, instance=obj)
+    if form.is_valid():
+        obj = form.save()
+        state = "включён(а)" if obj.is_active else "отключён(а)"
+        messages.success(request, f"{obj.employee.full_name} {state} на этапе «{obj.template_stage.stage.name}».")
+    else:
+        messages.error(request, _form_errors(form))
+    back = request.POST.get("next") or ""
+    return redirect(back if url_has_allowed_host_and_scheme(back, allowed_hosts={request.get_host()})
+                    else reverse('stepper:stage-employee'))
 
 
 @with_stepper
@@ -608,26 +744,178 @@ def student_survey_submissions(request):
     )
 
 
+CS_STATUSES = (
+    ("active", "Все активные"),
+    ("process", "В процессе"),
+    ("ready", "Пройдены, ждут выдачи"),
+    ("issued", "Выданы (история)"),
+)
+CS_DATE_FIELDS = (("issued_at", "Создан"), ("completed_at", "Завершён"))
+CS_STUCK_CHOICES = ((3, "3 дней"), (7, "7 дней"), (14, "14 дней"), (30, "30 дней"))
+CS_STUCK_WARN_DAYS = 7
+CS_SORT_CHOICES = (
+    ("new", "Сначала новые"),
+    ("old", "Сначала старые"),
+    ("completed", "Недавно завершённые"),
+    ("fio", "По ФИО"),
+)
+
+
+def _parse_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date() if value else None
+    except ValueError:
+        return None
+
+
+def _parse_int(value):
+    return int(value) if value and str(value).isdigit() else None
+
+
+def _cs_filters(request):
+    get = request.GET
+    filters = {
+        "q": (get.get("q") or get.get("search") or "").strip(),
+        "status": get.get("status") if get.get("status") in dict(CS_STATUSES) else "active",
+        "stage": _parse_int(get.get("stage")),
+        "faculty": _parse_int(get.get("faculty")),
+        "order_status": (get.get("order_status") or "").strip(),
+        "edu_year": _parse_int(get.get("edu_year")),
+        "date_field": get.get("date_field") if get.get("date_field") in dict(CS_DATE_FIELDS) else "issued_at",
+        "date_from": _parse_date(get.get("date_from")),
+        "date_to": _parse_date(get.get("date_to")),
+        "sort": get.get("sort") if get.get("sort") in dict(CS_SORT_CHOICES) else "new",
+        "stuck_days": _parse_int(get.get("stuck_days")) if _parse_int(get.get("stuck_days")) in dict(CS_STUCK_CHOICES) else None,
+    }
+    if filters["stuck_days"] and filters["status"] in ("ready", "issued"):
+        filters["status"] = "active"
+    if filters["stage"] and filters["status"] not in ("active", "process"):
+        filters["stage"] = None
+    return filters
+
+
+def _cs_url(filters, **changes):
+    """Ссылка на перечень с изменёнными фильтрами (страница сбрасывается)."""
+    params = {**filters, **changes}
+    query = {}
+    for key, value in params.items():
+        if value in (None, "") or (key == "status" and value == "active") or (key == "sort" and value == "new") \
+                or (key == "date_field" and value == "issued_at" and not (params.get("date_from") or params.get("date_to"))):
+            continue
+        query[key] = value.isoformat() if hasattr(value, "isoformat") else value
+    return reverse("stepper:cs") + ("?" + urlencode(query) if query else "")
+
+
+def _attach_cs_progress(sheets):
+    """Добавляет к листам страницы прогресс по этапам: [{name, done, current}], одним запросом."""
+    ids = [sheet.id for sheet in sheets]
+    steps_by_sheet = {}
+    for t in (Trajectory.objects.filter(clearance_sheet_id__in=ids)
+              .select_related("template_stage__stage").order_by("template_stage__order")):
+        steps_by_sheet.setdefault(t.clearance_sheet_id, []).append(t)
+    for sheet in sheets:
+        steps = steps_by_sheet.get(sheet.id, [])
+        current_found = False
+        progress = []
+        for t in steps:
+            done = t.completed_at is not None
+            current = not done and not current_found
+            current_found = current_found or current
+            progress.append({"name": t.template_stage.stage.name, "done": done, "current": current,
+                             "completed_at": t.completed_at})
+        sheet.progress = progress
+        sheet.progress_done = sum(step["done"] for step in progress)
+        sheet.progress_total = len(progress)
+        sheet.stage_days = None
+        if not sheet.completed_at and not sheet.type_choices and getattr(sheet, "stage_since", None):
+            sheet.stage_days = (now() - sheet.stage_since).days
+            sheet.stage_stuck = sheet.stage_days >= CS_STUCK_WARN_DAYS
+
+
 @with_stepper
 def cs(request):
     request.session['cs-nav'] = 'cs'
-    search_query = request.GET.get('search')
-    students_qs = request.stepper.get_open_clearance_sheets_with_stage(search_query, type_param=STUDENT_CS)
+    filters = _cs_filters(request)
+    students_qs, status_counts, stage_counts = request.stepper.filter_student_clearance_sheets(filters)
 
     paginator = Pagination(request, students_qs)
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination(page_number)
+    students = paginator.pagination(request.GET.get('page', 1))
     enrich_students_with_survey_status(students, id_key="myedu_id")
+    _attach_cs_progress(students)
 
     stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
-                                         stage__is_mandatory=True).select_related('stage')
+                                         stage__is_mandatory=True).select_related('stage').order_by('order')
+    faculties = list(request.stepper.student_clearance_faculties())
+    order_statuses = list(request.stepper.student_clearance_order_statuses())
+    edu_years = list(EduYear.objects.order_by('-id').values_list('id', 'title'))
 
+    # Единая полоса «где сейчас листы»: все → этапы по порядку → ждут выдачи → история.
+    pipeline = [{"label": "Все активные", "count": status_counts["active"],
+                 "active": filters["status"] == "active" and not filters["stage"],
+                 "url": _cs_url(filters, status="active", stage=None), "kind": "all"}]
+    for step in stages:
+        pipeline.append({"label": step.stage.name, "count": stage_counts.get(step.id, 0),
+                         "active": filters["stage"] == step.id,
+                         "url": _cs_url(filters, status="process", stage=step.id), "kind": "stage"})
+    pipeline.append({"label": "Ждут выдачи", "count": status_counts["ready"], "active": filters["status"] == "ready",
+                     "url": _cs_url(filters, status="ready", stage=None), "kind": "ready"})
+    history_link = {"label": "История", "count": status_counts["issued"], "active": filters["status"] == "issued",
+                    "url": _cs_url(filters, status="issued", stage=None)}
+
+    today = localdate()
+    date_presets = [
+        ("Сегодня", today, today),
+        ("Вчера", today - timedelta(days=1), today - timedelta(days=1)),
+        ("7 дней", today - timedelta(days=6), today),
+        ("30 дней", today - timedelta(days=29), today),
+        ("Этот месяц", today.replace(day=1), today),
+    ]
+    date_links = [
+        {"label": label, "url": _cs_url(filters, date_from=start, date_to=finish),
+         "active": filters["date_from"] == start and filters["date_to"] == finish}
+        for label, start, finish in date_presets
+    ]
+
+    faculty_names = dict(faculties)
+    date_label = dict(CS_DATE_FIELDS)[filters["date_field"]]
+    active_filters = []
+    if filters["q"]:
+        active_filters.append((f"Поиск: «{filters['q']}»", _cs_url(filters, q="")))
+    if filters["faculty"]:
+        active_filters.append((f"Факультет: {faculty_names.get(filters['faculty'], filters['faculty'])}",
+                               _cs_url(filters, faculty=None)))
+    if filters["order_status"]:
+        active_filters.append((f"Приказ: {filters['order_status']}", _cs_url(filters, order_status="")))
+    if filters["edu_year"]:
+        active_filters.append((f"Учебный год: {dict(edu_years).get(filters['edu_year'], filters['edu_year'])}",
+                               _cs_url(filters, edu_year=None)))
+    if filters["stuck_days"]:
+        active_filters.append((f"На этапе дольше {dict(CS_STUCK_CHOICES)[filters['stuck_days']]}",
+                               _cs_url(filters, stuck_days=None)))
+    if filters["date_from"] or filters["date_to"]:
+        period = " – ".join(d.strftime("%d.%m.%Y") for d in (filters["date_from"], filters["date_to"]) if d)
+        if filters["date_from"] == filters["date_to"]:
+            period = filters["date_from"].strftime("%d.%m.%Y")
+        active_filters.append((f"{date_label}: {period}", _cs_url(filters, date_from=None, date_to=None)))
+
+    is_history = filters["status"] == "issued"
     context = {
-        "title": "Перечень сформированных обходных листов",
+        "title": "История — выданные обходные листы" if is_history else "Перечень обходных листов",
         "students": students,
-        "navbar": "cs",
-        "stages": stages,
-        "status_filter": "all",
+        "navbar": "cs-done" if is_history else "cs",
+        "filters": filters,
+        "pipeline": pipeline,
+        "history_link": history_link,
+        "date_links": date_links,
+        "stuck_choices": CS_STUCK_CHOICES,
+        "faculties": faculties,
+        "order_statuses": order_statuses,
+        "edu_years": edu_years,
+        "date_fields": CS_DATE_FIELDS,
+        "sort_choices": CS_SORT_CHOICES,
+        "active_filters": active_filters,
+        "reset_url": _cs_url({"status": filters["status"], "stage": filters["stage"]}),
+        "sort_url": _cs_url(filters, sort=None),
     }
     return render(request, "teachers/steppers/cs.html", context)
 
@@ -659,120 +947,147 @@ def cs_delete(request):
 
 @with_stepper
 def cs_done(request):
-    search_query = request.GET.get('search')
-    students_qs = request.stepper.cs_done_list(search_query)
-
-    paginator = Pagination(request, students_qs)
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination(page_number)
-    enrich_students_with_survey_status(students, id_key="myedu_id")
-
-    context = {
-        "title": "История - Перечень завершенных обходных листов",
-        "students": students,
-        "navbar": "cs-done",
-        "history": True,
-        "status_filter": "done",
-    }
-    return render(request, "teachers/steppers/cs.html", context)
+    params = {"status": "issued"}
+    if request.GET.get("search"):
+        params["q"] = request.GET["search"]
+    return redirect(reverse("stepper:cs") + "?" + urlencode(params))
 
 
 @with_stepper
 def cs_debt_stage(request, stage):
-    search_query = request.GET.get('search')
-    students_qs = request.stepper.get_open_clearance_sheets_with_stage_filter(stage, search_query)
-
-    paginator = Pagination(request, students_qs)
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination(page_number)
-    enrich_students_with_survey_status(students, id_key="myedu_id")
-
-    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
-                                         stage__is_mandatory=True).select_related('stage')
-    current_stage = TemplateStep.objects.filter(id=stage).select_related('stage').first()
-
-    context = {
-        "title": "Перечень сформированных обходных листов",
-        "students": students,
-        "navbar": "cs",
-        "stage": True,
-        "current_stage": current_stage,
-        "stages": stages,
-        "status_filter": "all",
-    }
-    return render(request, "teachers/steppers/cs.html", context)
+    """Старый адрес фильтра по этапу: принимает id шаблона этапа или (как раньше в ссылках) id этапа."""
+    step = (TemplateStep.objects.filter(id=stage, category=TemplateStep.STUDENT).first()
+            or TemplateStep.objects.filter(stage_id=stage, category=TemplateStep.STUDENT).first())
+    params = {"status": "process"}
+    if step:
+        params["stage"] = step.id
+    if request.GET.get("search"):
+        params["q"] = request.GET["search"]
+    return redirect(reverse("stepper:cs") + "?" + urlencode(params))
 
 
 @with_stepper
 def cs_status(request):
-    search_query = request.GET.get('search')
-    status_param = CS_PROCESS
-    if request.method == "POST":
-        raw_status = (request.POST.get("status") or "").strip()
-        if not raw_status:
-            return redirect("stepper:cs")
-        try:
-            status_param = int(raw_status)
-        except (TypeError, ValueError):
-            return redirect("stepper:cs")
-        if status_param not in (CS_PROCESS, CS_FINISHED):
-            return redirect("stepper:cs")
+    raw_status = (request.POST.get("status") or request.GET.get("status") or "").strip()
+    params = {"status": {str(CS_PROCESS): "process", str(CS_FINISHED): "ready"}.get(raw_status, "active")}
+    if request.GET.get("search"):
+        params["q"] = request.GET["search"]
+    return redirect(reverse("stepper:cs") + "?" + urlencode(params))
 
-    students_qs = request.stepper.get_clearance_sheets_status(status_param, search_query)
 
-    paginator = Pagination(request, students_qs)
-    page_number = request.GET.get('page', 1)
-    students = paginator.pagination(page_number)
-    enrich_students_with_survey_status(students, id_key="myedu_id")
-
-    stages = TemplateStep.objects.filter(category=TemplateStep.STUDENT, order__gt=0,
-                                         stage__is_mandatory=True).select_related('stage')
-
-    context = {
-        "title": "Перечень обходных листов",
-        "students": students,
-        "navbar": "cs",
-        "stage": True,
-        "stages": stages,
-        "status_filter": status_param,
-    }
-    return render(request, "teachers/steppers/cs.html", context)
+ISSUANCE_SORTS = {
+    "new": ("-created_at", "-id"),
+    "old": ("created_at", "id"),
+    "fio": ("fio", "-id"),
+    "issue": (F("date_issue").desc(nulls_last=True), "-id"),
+}
+ISSUANCE_SORT_CHOICES = (
+    ("new", "Сначала новые"),
+    ("old", "Сначала старые"),
+    ("issue", "По дате выдачи диплома"),
+    ("fio", "По ФИО"),
+)
 
 
 @with_stepper
 def cs_issuance(request):
-    search_id = request.GET.get('search')
-    type_filter = request.GET.get('type', '')
+    get = request.GET
+    query = (get.get('q') or get.get('search') or '').strip()
+    type_filter = get.get('type') if get.get('type') in (Issuance.SPEC, Issuance.OTHER) else ''
+    status_filter = get.get('status') if get.get('status') in (Issuance.RECEIVED, Issuance.DOUBLE) else ''
+    faculty_id = _parse_int(get.get('faculty'))
+    date_from, date_to = _parse_date(get.get('date_from')), _parse_date(get.get('date_to'))
+    sort = get.get('sort') if get.get('sort') in ISSUANCE_SORTS else 'new'
 
-    issuance_qs = (
+    base = (
         Issuance.objects
-        .select_related('faculty', 'speciality', 'cs')
+        .select_related('faculty', 'speciality', 'cs', 'employee')
         .only(
-            'id', 'fio', 'student', 'doc_number', 'reg_number', 'date_issue',
-            'cs_id', 'type_choices', 'status', 'created_at',
-            'faculty__title', 'speciality__title',
-            'cs__student_fio',
+            'id', 'fio', 'student', 'doc_number', 'reg_number', 'date_issue', 'files',
+            'cs_id', 'type_choices', 'status', 'created_at', 'faculty_id',
+            'faculty__title', 'speciality__title', 'cs__student_fio',
+            'employee__first_name', 'employee__last_name',
         )
-        .order_by('-id')
+    )
+    # Общие фильтры (поиск, факультет, период) — от них считаются счётчики разделов.
+    if query:
+        condition = (Q(fio__icontains=query) | Q(cs__student_fio__icontains=query) |
+                     Q(student__icontains=query) | Q(doc_number__icontains=query) | Q(reg_number__icontains=query))
+        if query.isdigit():
+            condition |= Q(id=int(query)) | Q(cs_id=int(query))
+        base = base.filter(condition)
+    if faculty_id:
+        base = base.filter(faculty_id=faculty_id)
+    if date_from:
+        base = base.filter(created_at__date__gte=date_from)
+    if date_to:
+        base = base.filter(created_at__date__lte=date_to)
+
+    counts = base.aggregate(
+        total=Count('id'),
+        spec=Count('id', filter=Q(type_choices=Issuance.SPEC)),
+        archive=Count('id', filter=Q(type_choices=Issuance.OTHER)),
+        double=Count('id', filter=Q(status=Issuance.DOUBLE)),
     )
 
-    if search_id:
-        issuance_qs = issuance_qs.filter(Q(id=search_id) | Q(cs_id=search_id))
-
-    if type_filter in (Issuance.SPEC, Issuance.OTHER):
+    issuance_qs = base
+    if type_filter:
         issuance_qs = issuance_qs.filter(type_choices=type_filter)
-    else:
-        type_filter = ''
+    if status_filter:
+        issuance_qs = issuance_qs.filter(status=status_filter)
+    issuance_qs = issuance_qs.order_by(*ISSUANCE_SORTS[sort])
 
     paginator = Pagination(request, issuance_qs)
-    page_number = request.GET.get('page', 1)
-    issuance = StepperService.enrich_issuance_page(paginator.pagination(page_number))
+    issuance = StepperService.enrich_issuance_page(paginator.pagination(get.get('page', 1)))
+
+    filters = {"q": query, "type": type_filter, "status": status_filter, "faculty": faculty_id,
+               "date_from": date_from, "date_to": date_to, "sort": sort}
+
+    def url(**changes):
+        params = {**filters, **changes}
+        clean = {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in params.items()
+                 if v not in (None, "") and not (k == "sort" and v == "new")}
+        return reverse("stepper:cs-issuance") + ("?" + urlencode(clean) if clean else "")
+
+    faculties = list(Faculty.objects.filter(issuance__isnull=False).distinct()
+                     .order_by('title').values_list('id', 'title'))
+    today = localdate()
+    presets = [("Сегодня", today, today), ("7 дней", today - timedelta(days=6), today),
+               ("30 дней", today - timedelta(days=29), today), ("Этот месяц", today.replace(day=1), today)]
+
+    active = []
+    if query:
+        active.append((f"Поиск: «{query}»", url(q="")))
+    if faculty_id:
+        active.append((f"Факультет: {dict(faculties).get(faculty_id, faculty_id)}", url(faculty=None)))
+    if status_filter:
+        active.append(("Только дубликаты" if status_filter == Issuance.DOUBLE else "Только получившие", url(status="")))
+    if date_from or date_to:
+        period = " – ".join(d.strftime("%d.%m.%Y") for d in (date_from, date_to) if d)
+        active.append((f"Записано: {period}", url(date_from=None, date_to=None)))
 
     context = {
         "title": "Выданные документы",
         "issuance": issuance,
         "navbar": "issuance",
         "type_filter": type_filter,
+        "filters": filters,
+        "counts": counts,
+        "section_links": [
+            {"label": "Все", "count": counts["total"], "active": not type_filter, "url": url(type="")},
+            {"label": "Спец. часть", "count": counts["spec"], "active": type_filter == Issuance.SPEC,
+             "url": url(type=Issuance.SPEC), "icon": "fa-graduation-cap"},
+            {"label": "Архив", "count": counts["archive"], "active": type_filter == Issuance.OTHER,
+             "url": url(type=Issuance.OTHER), "icon": "fa-archive"},
+        ],
+        "double_link": {"count": counts["double"], "active": status_filter == Issuance.DOUBLE,
+                        "url": url(status="" if status_filter == Issuance.DOUBLE else Issuance.DOUBLE)},
+        "faculties": faculties,
+        "sort_choices": ISSUANCE_SORT_CHOICES,
+        "date_links": [{"label": label, "url": url(date_from=start, date_to=finish),
+                        "active": date_from == start and date_to == finish} for label, start, finish in presets],
+        "active_filters": active,
+        "reset_url": url(q="", faculty=None, status="", date_from=None, date_to=None, sort="new"),
     }
     return render(request, "teachers/steppers/cs-issuance.html", context)
 

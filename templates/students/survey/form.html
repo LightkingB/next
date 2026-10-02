@@ -20,6 +20,13 @@
                 {% if survey.description %}
                     <p class="desc">{{ survey.description }}</p>
                 {% endif %}
+                <div class="survey-take__progress" aria-live="polite">
+                    <div class="survey-take__progress-text">
+                        Отвечено <b id="answered-count">0</b> из <b>{{ survey.question_count }}</b>
+                        <span class="survey-take__saved" id="draft-saved" hidden><i class="fas fa-cloud" aria-hidden="true"></i> черновик сохранён</span>
+                    </div>
+                    <div class="survey-take__progress-bar" aria-hidden="true"><span id="answered-bar"></span></div>
+                </div>
             </div>
             <form method="post" id="survey-form" class="survey-student-form-layout">
                 {% csrf_token %}
@@ -32,14 +39,25 @@
                         </p>
                     </div>
                     {% for field in form %}
-                        <div class="survey-student-question">
+                        <div class="survey-student-question js-question{% if field.errors %} has-error{% endif %}"
+                             data-type="{{ field.field.survey_question_type }}" id="question-{{ forloop.counter }}">
+                            <div class="survey-take__qhead">
+                                <span class="survey-take__qnum">Вопрос {{ forloop.counter }} из {{ survey.question_count }}</span>
+                                <span class="survey-take__qhint">
+                                    {% if field.field.survey_question_type == 'text' %}Ответ своими словами
+                                    {% elif field.field.survey_question_type == 'checkbox' %}Можно выбрать несколько вариантов
+                                    {% else %}Выберите один вариант{% endif %}
+                                </span>
+                                <span class="survey-take__qok" aria-hidden="true"><i class="fas fa-check-circle"></i></span>
+                            </div>
                             <div class="survey-student-question-label">{{ field.label }}</div>
                             {% if field.errors %}
-                                <div class="text-danger small mb-2">{{ field.errors }}</div>
+                                <div class="survey-take__error"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> {{ field.errors|join:" " }}</div>
                             {% endif %}
                             {% if field.field.survey_question_type == 'text' %}
                                 <div class="survey-student-text-answer">
                                     {{ field }}
+                                    <small class="survey-take__counter"><span class="js-count">0</span> / {{ field.field.max_length }}</small>
                                 </div>
                             {% else %}
                                 <div class="survey-student-options{% if field.field.survey_question_type == 'checkbox' %} survey-student-options--checkbox{% endif %}">
@@ -54,9 +72,13 @@
                         </div>
                     {% endfor %}
                 </div>
-                <div class="survey-student-form-footer">
-                    <button type="button" class="survey-student-btn" data-toggle="modal" data-target="#confirmSurvey">
-                        Завершить анкетирование
+                <div class="survey-student-form-footer survey-take__footer">
+                    <div class="survey-take__left" id="left-info">
+                        <span id="left-text"></span>
+                        <button type="button" class="survey-take__jump" id="jump-unanswered">Перейти к неотвеченному <i class="fas fa-arrow-down" aria-hidden="true"></i></button>
+                    </div>
+                    <button type="button" class="survey-student-btn" id="finish-btn" disabled>
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i> Завершить анкетирование
                     </button>
                 </div>
             </form>
@@ -75,13 +97,12 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p class="lead mb-0">
-                        Вы уверены, что хотите завершить анкетирование? После отправки изменить ответы будет невозможно.
-                    </p>
+                    <p class="mb-2">Вы ответили на все <b>{{ survey.question_count }}</b> вопрос{{ survey.question_count|pluralize:"а,ов" }} анкеты «{{ survey.title }}».</p>
+                    <p class="mb-0 text-muted">После отправки изменить ответы будет невозможно.</p>
                 </div>
                 <div class="modal-footer survey-student-modal-footer">
                     <button type="button" class="btn btn-light survey-student-modal-btn" data-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-danger survey-student-modal-btn" id="confirm-submit">Подтвердить</button>
+                    <button type="button" class="btn btn-danger survey-student-modal-btn" id="confirm-submit">Отправить ответы</button>
                 </div>
             </div>
         </div>
@@ -97,23 +118,126 @@
 {% block scripts %}
     <script>
         (function () {
-            function initSurveyConfirmModal() {
-                var confirmBtn = document.getElementById('confirm-submit');
-                var surveyForm = document.getElementById('survey-form');
-                if (!confirmBtn || !surveyForm) {
-                    return;
+            var form = document.getElementById('survey-form');
+            if (!form) return;
+            var questions = Array.prototype.slice.call(form.querySelectorAll('.js-question'));
+            var finishBtn = document.getElementById('finish-btn');
+            var confirmBtn = document.getElementById('confirm-submit');
+            var leftText = document.getElementById('left-text');
+            var jumpBtn = document.getElementById('jump-unanswered');
+            var savedBadge = document.getElementById('draft-saved');
+            var DRAFT_KEY = 'survey-draft-{{ request.user.pk }}-{{ survey.id }}';
+            var hasServerErrors = {% if form.is_bound %}true{% else %}false{% endif %};
+            var submitting = false;
+
+            function isAnswered(q) {
+                if (q.dataset.type === 'text') {
+                    var input = q.querySelector('input[type="text"], textarea');
+                    return !!(input && input.value.trim());
                 }
-                confirmBtn.addEventListener('click', function () {
-                    confirmBtn.disabled = true;
-                    surveyForm.submit();
-                });
+                return !!q.querySelector('input:checked');
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initSurveyConfirmModal);
-            } else {
-                initSurveyConfirmModal();
+            function firstUnanswered() {
+                return questions.filter(function (q) { return !isAnswered(q); })[0];
             }
+
+            function update() {
+                var answered = 0;
+                questions.forEach(function (q) {
+                    var ok = isAnswered(q);
+                    q.classList.toggle('is-answered', ok);
+                    if (ok) { answered++; q.classList.remove('has-error'); }
+                    var input = q.querySelector('input[type="text"], textarea');
+                    var counter = q.querySelector('.js-count');
+                    if (input && counter) counter.textContent = input.value.length;
+                });
+                var total = questions.length, left = total - answered;
+                document.getElementById('answered-count').textContent = answered;
+                document.getElementById('answered-bar').style.width = (total ? answered * 100 / total : 0) + '%';
+                finishBtn.disabled = left > 0;
+                leftText.textContent = left > 0 ? 'Осталось ответить: ' + left : 'Все вопросы отвечены';
+                jumpBtn.hidden = left === 0;
+                return answered;
+            }
+
+            function saveDraft() {
+                var data = {};
+                questions.forEach(function (q) {
+                    q.querySelectorAll('input, textarea').forEach(function (el) {
+                        if (el.type === 'radio' || el.type === 'checkbox') {
+                            if (el.checked) (data[el.name] = data[el.name] || []).push(el.value);
+                        } else if (el.name) {
+                            data[el.name] = el.value;
+                        }
+                    });
+                });
+                try {
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+                    savedBadge.hidden = false;
+                } catch (e) {}
+            }
+
+            function restoreDraft() {
+                var raw;
+                try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) { return; }
+                if (!raw) return;
+                var data;
+                try { data = JSON.parse(raw); } catch (e) { return; }
+                Object.keys(data).forEach(function (name) {
+                    var value = data[name];
+                    form.querySelectorAll('[name="' + name + '"]').forEach(function (el) {
+                        if (el.type === 'radio' || el.type === 'checkbox') {
+                            el.checked = Array.isArray(value) && value.indexOf(el.value) !== -1;
+                        } else {
+                            el.value = value;
+                        }
+                    });
+                });
+                savedBadge.hidden = false;
+                if (window.toastr) toastr.info('Восстановлены ваши несохранённые ответы.');
+            }
+
+            if (!hasServerErrors) restoreDraft();
+            update();
+
+            form.addEventListener('input', function () { update(); saveDraft(); });
+            form.addEventListener('change', function () { update(); saveDraft(); });
+
+            jumpBtn.addEventListener('click', function () {
+                var q = firstUnanswered();
+                if (!q) return;
+                q.scrollIntoView({behavior: 'smooth', block: 'center'});
+                q.classList.add('is-highlight');
+                setTimeout(function () { q.classList.remove('is-highlight'); }, 1500);
+                var input = q.querySelector('input, textarea');
+                if (input) input.focus({preventScroll: true});
+            });
+
+            finishBtn.addEventListener('click', function () {
+                if (firstUnanswered()) { jumpBtn.click(); return; }
+                $('#confirmSurvey').modal('show');
+            });
+
+            confirmBtn.addEventListener('click', function () {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Отправка…';
+                submitting = true;
+                try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+                form.submit();
+            });
+
+            // Enter в текстовом поле не должен отправлять анкету без подтверждения.
+            form.addEventListener('submit', function (e) { if (!submitting) e.preventDefault(); });
+
+            window.addEventListener('beforeunload', function (e) {
+                if (submitting || update() === 0) return;
+                e.preventDefault();
+                e.returnValue = '';
+            });
+
+            var firstError = form.querySelector('.has-error');
+            if (firstError) firstError.scrollIntoView({block: 'center'});
         })();
     </script>
 {% endblock %}

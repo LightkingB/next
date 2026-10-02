@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Вход в личный кабинет | ОшГУ</title>
+    <link rel="icon" type="image/svg+xml" href="https://oshsu.kg/main/images/logo/white-logo.svg">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@700&display=swap">
+    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}">
+    <link rel="stylesheet" href="{% static 'css/auth_login.css' %}">
+</head>
+<body class="auth">
+{% include 'component/portal_scene.html' with soft=True %}
+<main class="auth__wrap">
+    <div class="auth__card">
+        <aside class="auth__brand">
+            <img src="https://oshsu.kg/main/images/logo/logo-ru.svg" alt="ОшГУ" class="auth__logo" width="180" height="50">
+            <h2>Личный кабинет ОшГУ</h2>
+            <p>Один вход для студентов и сотрудников — система сама откроет нужный раздел.</p>
+            <ul class="auth__who">
+                <li>
+                    <span class="auth__who-icon" aria-hidden="true"><i class="fas fa-user-graduate"></i></span>
+                    <div><b>Студентам</b><span>обходной лист, анкетирование, мои данные</span></div>
+                </li>
+                <li>
+                    <span class="auth__who-icon" aria-hidden="true"><i class="fas fa-briefcase"></i></span>
+                    <div><b>Сотрудникам</b><span>справки, обходные листы, анкеты — по вашим правам</span></div>
+                </li>
+            </ul>
+        </aside>
+
+        <section class="auth__panel">
+            <h1>Вход</h1>
+            <p class="auth__lead">Используйте логин и пароль от <b>MyEDU</b>.</p>
+
+            {% if error %}
+                <div class="auth__error" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                    <span>{{ error }}</span>
+                </div>
+            {% endif %}
+
+            <form method="post" id="login-form" novalidate>
+                {% csrf_token %}
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+                <label class="auth__field">
+                    <span>Логин</span>
+                    <div class="auth__input">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                        <input type="text" name="email" id="email" value="{{ form.email.value|default:'' }}"
+                               autocomplete="username" autocapitalize="none" spellcheck="false"
+                               placeholder="Логин или почта MyEDU" required
+                               {% if not form.email.value %}autofocus{% endif %}>
+                    </div>
+                </label>
+
+                <label class="auth__field">
+                    <span>Пароль</span>
+                    <div class="auth__input">
+                        <i class="fas fa-lock" aria-hidden="true"></i>
+                        <input type="password" name="password" id="password" autocomplete="current-password"
+                               placeholder="Пароль от MyEDU" required {% if form.email.value %}autofocus{% endif %}>
+                        <button type="button" class="auth__eye" id="toggle-password" aria-label="Показать пароль" aria-pressed="false">
+                            <i class="far fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <small class="auth__caps" id="caps-hint" hidden><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Включён Caps Lock</small>
+                </label>
+
+                <label class="auth__agree" id="agree-row">
+                    <input type="checkbox" id="agreement" name="agreement" {% if form.is_bound %}checked{% endif %}>
+                    <span>Я согласен(-на) на обработку персональных данных —
+                        <a href="#" data-toggle="modal" data-target="#agreementModalScrollable">условия</a></span>
+                </label>
+                <small class="auth__agree-error" id="agree-error" hidden>Подтвердите согласие, чтобы войти.</small>
+
+                <button type="submit" class="auth__submit" id="login-submit">
+                    <span class="auth__submit-text">Войти</span>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </button>
+            </form>
+
+            <p class="auth__help">
+                Забыли пароль? Восстановите его в MyEDU или обратитесь:
+                <a href="tel:+996322270712">+996 3222 7-07-12</a> · <a href="mailto:edu@oshsu.kg">edu@oshsu.kg</a>
+            </p>
+        </section>
+    </div>
+</main>
+
+{% include 'component/login_agreement_modal.html' %}
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script>
+    (function () {
+        var form = document.getElementById('login-form');
+        var password = document.getElementById('password');
+        var toggle = document.getElementById('toggle-password');
+        var agree = document.getElementById('agreement');
+        var agreeError = document.getElementById('agree-error');
+        var submit = document.getElementById('login-submit');
+        var caps = document.getElementById('caps-hint');
+
+        toggle.addEventListener('click', function () {
+            var show = password.type === 'password';
+            password.type = show ? 'text' : 'password';
+            toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
+            toggle.setAttribute('aria-label', show ? 'Скрыть пароль' : 'Показать пароль');
+            toggle.querySelector('i').className = show ? 'far fa-eye-slash' : 'far fa-eye';
+            password.focus();
+        });
+
+        password.addEventListener('keyup', function (e) {
+            if (e.getModifierState) caps.hidden = !e.getModifierState('CapsLock');
+        });
+
+        try { if (localStorage.getItem('oshsu-login-agree') === '1') agree.checked = true; } catch (e) {}
+        agree.addEventListener('change', function () {
+            agreeError.hidden = true;
+            document.getElementById('agree-row').classList.remove('is-invalid');
+        });
+
+        var accept = document.getElementById('acceptAgreement');
+        if (accept) accept.addEventListener('click', function () { agree.checked = true; agree.dispatchEvent(new Event('change')); });
+
+        form.addEventListener('submit', function (e) {
+            var email = document.getElementById('email');
+            if (!email.value.trim()) { e.preventDefault(); email.focus(); return; }
+            if (!password.value) { e.preventDefault(); password.focus(); return; }
+            if (!agree.checked) {
+                e.preventDefault();
+                agreeError.hidden = false;
+                document.getElementById('agree-row').classList.add('is-invalid');
+                return;
+            }
+            try { localStorage.setItem('oshsu-login-agree', '1'); } catch (err) {}
+            submit.disabled = true;
+            submit.classList.add('is-loading');
+            submit.querySelector('.auth__submit-text').textContent = 'Проверяем в MyEDU…';
+            submit.querySelector('i').className = 'fas fa-spinner fa-spin';
+        });
+
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) {
+                submit.disabled = false;
+                submit.classList.remove('is-loading');
+                submit.querySelector('.auth__submit-text').textContent = 'Войти';
+                submit.querySelector('i').className = 'fas fa-arrow-right';
+            }
+        });
+    })();
+</script>
+</body>
+</html>

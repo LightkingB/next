@@ -1,35 +1,11 @@
+{# Серверные сообщения показываются всплывающими уведомлениями (static/js/ui_toast.js). #}
 {% if messages %}
     {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message|linebreaksbr }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
+        <div class="js-flash" data-level="{{ message.level_tag }}" hidden>{{ message }}</div>
     {% endfor %}
+    <noscript>
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">{{ message|linebreaksbr }}</div>
+        {% endfor %}
+    </noscript>
 {% endif %}
-
-{#{% if form.non_field_errors %}#}
-{#    {% for error in form.non_field_errors %}#}
-{#        <div class="alert alert-danger alert-dismissible fade show" role="alert">#}
-{#            {{ error }}#}
-{#            <button type="button" class="close" data-dismiss="alert" aria-label="Close">#}
-{#                <span aria-hidden="true">&times;</span>#}
-{#            </button>#}
-{#        </div>#}
-{#    {% endfor %}#}
-{#{% endif %}#}
-
-
-{#{% if form.errors %}#}
-{#    {% for field in form %}#}
-{#        {% if field.errors %}#}
-{#            <div class="alert alert-danger alert-dismissible fade show" role="alert">#}
-{#                {{ field.label }}: {{ field.errors|striptags }}#}
-{#                <button type="button" class="close" data-dismiss="alert" aria-label="Close">#}
-{#                    <span aria-hidden="true">&times;</span>#}
-{#                </button>#}
-{#            </div>#}
-{#        {% endif %}#}
-{#    {% endfor %}#}
-{#{% endif %}#}

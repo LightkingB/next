@@ -1,198 +1,212 @@
 {% extends 'students/base.html' %}
 {% load static i18n %}
 
-{% block body_class %}student-portal-scene-page{% endblock %}
-
-{% block portal_scene %}
-    {% include 'component/portal_scene.html' with warm=True %}
-{% endblock %}
+{% block title %}<title>Главная | Личный кабинет ОшГУ</title>{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/portal_scene.css' %}"/>
-    <link rel="stylesheet" href="{% static 'css/app_modals.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/portal_home.css' %}"/>
 {% endblock %}
 
 {% block content %}
-    <div class="student-portal-page student-home">
-        <header class="student-portal-page__head">
-            <h1 class="student-portal-page__title">Мои обходные листы</h1>
-            <p class="student-portal-page__lead">Статус прохождения и этапы обходного листа ОшГУ</p>
-        </header>
+    <div class="ph">
+        <div class="ph-head">
+            <h1>Здравствуйте, {{ profile.fio|default:"студент" }}</h1>
+            <p>{% if is_employee %}Ваши данные и доступ к рабочим модулям ОшГУ.{% else %}Здесь видно, на каком этапе ваш обходной лист, и какие анкеты нужно пройти.{% endif %}</p>
+        </div>
 
-        {% if has_cs %}
-            <div class="student-portal-alert student-portal-alert--progress" role="alert">
-                <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-                <div>
-                    <strong>Процесс продолжается</strong>
-                    Ваш обходной лист пока не завершён. Нажмите на карточку, чтобы увидеть этапы.
-                </div>
-            </div>
-        {% else %}
-            {% if student and not request.user.is_worker %}
-                <div class="student-portal-action">
-                    <button type="button" class="student-portal-btn" data-toggle="modal"
-                            data-target="#requestCS">
-                        <i class="fas fa-plus-circle" aria-hidden="true"></i>
-                        Подать заявку
-                    </button>
-                </div>
-            {% endif %}
-        {% endif %}
+        <div class="ph-grid">
+            <div class="ph-main">
+                {# ── Обходной лист ── #}
+                <section class="ph-card" id="cs">
+                    <header class="ph-card__head">
+                        <h2>Обходной лист</h2>
+                        {% if active_cs %}
+                            <span class="ph-badge ph-badge--blue"><i class="fas fa-spinner" aria-hidden="true"></i> В процессе</span>
+                        {% elif cs_list %}
+                            <span class="ph-badge ph-badge--green"><i class="fas fa-check" aria-hidden="true"></i> Завершён</span>
+                        {% elif not is_employee %}
+                            <span class="ph-badge">Не подан</span>
+                        {% endif %}
+                    </header>
 
-        {% if cs_list %}
-            <section class="student-portal-cs-section">
-                <div class="student-portal-cs-section__head">
-                    <h2 class="student-portal-cs-section__title">История обходных листов</h2>
-                    <span class="student-portal-cs-section__count">{{ cs_list|length }}</span>
-                </div>
+                    {% if active_cs %}
+                        <p class="ph-meta">№ {{ active_cs.id }} · подан {{ active_cs.issued_at|date:"d.m.Y" }}</p>
 
-                <div class="student-portal-cs-list">
-                    {% for cs in cs_list %}
-                        <article class="student-portal-cs-card{% if cs.trajectory_total and not cs.completed_at %} is-open{% elif cs.trajectory_total and forloop.first and not has_cs %} is-open{% endif %}{% if cs.completed_at and not cs.trajectory_total %} student-portal-cs-card--static{% endif %}"
-                                 data-cs-card{% if cs.completed_at and not cs.trajectory_total %} data-cs-static{% endif %}>
-                            {% if cs.trajectory_total or not cs.completed_at %}
-                            <button type="button"
-                                    class="student-portal-cs-card__toggle"
-                                    aria-expanded="{% if cs.trajectory_total and not cs.completed_at %}true{% elif cs.trajectory_total and forloop.first and not has_cs %}true{% else %}false{% endif %}"
-                                    aria-controls="cs-stages-{{ cs.id }}">
-                            {% else %}
-                            <div class="student-portal-cs-card__summary-wrap">
-                            {% endif %}
-                                <div class="student-portal-cs-card__summary">
-                                    <div class="student-portal-cs-card__main">
-                                        <span class="student-portal-cs-card__label">Обходной лист</span>
-                                        <span class="student-portal-cs-card__title">№ {{ cs.id }}</span>
-                                        <span class="student-portal-cs-card__date">
-                                            Выдан {{ cs.issued_at|date:"d.m.Y" }}
-                                        </span>
-                                        {% if cs.completed_at and not cs.trajectory_total %}
-                                            <span class="student-portal-cs-card__note">
-                                                Завершён без прохождения этапов
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="student-portal-cs-card__aside">
-                                        {% if cs.completed_at %}
-                                            <span class="student-portal-cs-card__status student-portal-cs-card__status--done">
-                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
-                                                {% trans 'Завершен' %} · {{ cs.completed_at|date:"d.m.Y" }}
-                                            </span>
-                                        {% else %}
-                                            <span class="student-portal-cs-card__status student-portal-cs-card__status--active">
-                                                <i class="fas fa-spinner" aria-hidden="true"></i>
-                                                {% trans 'В процессе' %}
-                                            </span>
-                                        {% endif %}
-                                        {% if cs.trajectory_total %}
-                                            <span class="student-portal-cs-card__progress">
-                                                {{ cs.trajectory_done }}/{{ cs.trajectory_total }} этапов
-                                            </span>
-                                            <i class="fas fa-chevron-down student-portal-cs-card__chevron" aria-hidden="true"></i>
-                                        {% elif not cs.completed_at %}
-                                            <i class="fas fa-chevron-down student-portal-cs-card__chevron" aria-hidden="true"></i>
-                                        {% endif %}
-                                    </div>
+                        {% if active_cs.current_step %}
+                            <div class="ph-now">
+                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                                <div>
+                                    Сейчас: <b>{{ active_cs.current_step.template_stage.stage.name }}</b>
+                                    <span>Подойдите туда для отметки — после неё лист перейдёт на следующий этап.</span>
                                 </div>
-                                {% if cs.trajectory_total %}
-                                    <div class="student-portal-cs-card__bar" aria-hidden="true">
-                                        <span style="width: {% widthratio cs.trajectory_done cs.trajectory_total 100 %}%;"></span>
-                                    </div>
-                                {% endif %}
-                            {% if cs.trajectory_total or not cs.completed_at %}
-                            </button>
-                            {% else %}
                             </div>
-                            {% endif %}
 
-                            {% if cs.trajectory_total or not cs.completed_at %}
-                            <div class="student-portal-cs-card__body" id="cs-stages-{{ cs.id }}">
-                                {% if cs.trajectory_set.all %}
-                                    <ul class="student-portal-stages">
-                                        {% for trajectory in cs.trajectory_set.all %}
-                                            <li class="student-portal-stages__item{% if trajectory.completed_at %} is-done{% else %} is-wait{% endif %}">
-                                                <div class="student-portal-stages__row">
-                                                    <div class="student-portal-stages__main">
-                                                        <span class="student-portal-stages__num">{{ forloop.counter }}</span>
-                                                        <span class="student-portal-stages__name">
-                                                            {{ trajectory.template_stage.stage.name }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="student-portal-stages__meta">
-                                                        {% if trajectory.completed_at %}
-                                                            <span class="student-portal-stages__badge student-portal-stages__badge--done">
-                                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
-                                                                {{ trajectory.completed_at|date:"d.m.Y H:i" }}
-                                                            </span>
-                                                        {% else %}
-                                                            <span class="student-portal-stages__badge student-portal-stages__badge--wait">
-                                                                <i class="fas fa-clock" aria-hidden="true"></i>
-                                                                Ожидание
-                                                            </span>
-                                                        {% endif %}
-                                                    </div>
+                            <ol class="ph-steps">
+                                {% for t in active_cs.trajectory_set.all %}
+                                    {% with last=t.stagestatus_set.all|first %}
+                                        <li class="ph-step{% if t.completed_at %} is-done{% elif t == active_cs.current_step %} is-current{% endif %}">
+                                            <span class="ph-step__num" aria-hidden="true">
+                                                {% if t.completed_at %}<i class="fas fa-check"></i>{% else %}{{ forloop.counter }}{% endif %}
+                                            </span>
+                                            <div class="ph-step__body">
+                                                <div class="ph-step__row">
+                                                    <span class="ph-step__name">{{ t.template_stage.stage.name }}</span>
+                                                    <span class="ph-step__state">
+                                                        {% if t.completed_at %}Пройден {{ t.completed_at|date:"d.m.Y" }}
+                                                        {% elif t == active_cs.current_step %}Сейчас здесь
+                                                        {% else %}Ожидает{% endif %}
+                                                    </span>
                                                 </div>
-                                                {% with statuses=trajectory.stagestatus_set.all %}
-                                                    {% if statuses %}
-                                                        <ul class="student-portal-stages__history">
-                                                            {% for status in statuses %}
-                                                                <li>
-                                                                    <time datetime="{{ status.created_at|date:'c' }}">
-                                                                        {{ status.created_at|date:"d.m.Y H:i" }}
-                                                                    </time>
-                                                                    {% if status.comment_text %}
-                                                                        <span>{{ status.comment_text }}</span>
-                                                                    {% endif %}
-                                                                </li>
-                                                            {% endfor %}
-                                                        </ul>
-                                                    {% endif %}
-                                                {% endwith %}
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                {% else %}
-                                    <div class="student-portal-stages__empty">
-                                        <i class="fas fa-route" aria-hidden="true"></i>
-                                        Этапы ещё не назначены. Ожидайте формирования траектории.
-                                    </div>
-                                {% endif %}
+                                                {% if last %}
+                                                    <div class="ph-step__note">
+                                                        <i class="far fa-comment" aria-hidden="true"></i>
+                                                        {% if last.comment_text %}«{{ last.comment_text }}»{% endif %}
+                                                        <span>— {% if last.processed_by %}{{ last.processed_by.last_name }} {{ last.processed_by.first_name }}, {% endif %}{{ last.created_at|date:"d.m.Y H:i" }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                    {% endwith %}
+                                {% endfor %}
+                            </ol>
+
+                            <div class="ph-progress">
+                                <div class="ph-progress__bar"><span style="width: {% widthratio active_cs.trajectory_done active_cs.trajectory_total 100 %}%"></span></div>
+                                <span>Пройдено {{ active_cs.trajectory_done }} из {{ active_cs.trajectory_total }}</span>
                             </div>
-                            {% endif %}
-                        </article>
-                    {% endfor %}
-                </div>
-            </section>
-        {% else %}
-            <div class="student-portal-panel">
-                <div class="student-portal-panel__head">
-                    <i class="fas fa-clipboard-list" aria-hidden="true"></i>Обходной лист
-                </div>
-                <div class="student-portal-panel__body student-portal-empty">
-                    Нет активной траектории. Возможно, она будет сформирована позже.
-                </div>
+                        {% else %}
+                            <p class="ph-text">Заявка принята. Этапы ещё формируются — как только они появятся, здесь будет видно, куда обратиться.</p>
+                        {% endif %}
+
+                    {% elif cs_list %}
+                        <p class="ph-text">
+                            Последний обходной лист № {{ cs_list.0.id }} завершён{% if cs_list.0.completed_at %} {{ cs_list.0.completed_at|date:"d.m.Y" }}{% endif %}. Все этапы пройдены.
+                        </p>
+
+                    {% elif is_employee %}
+                        <p class="ph-text">Вы вошли как сотрудник ОшГУ. Обходной лист оформляют студенты — для работы с обходными листами и справками перейдите в модули.</p>
+                        <a href="{% url 'integrator:index' %}" class="ph-btn"><i class="fas fa-th-large" aria-hidden="true"></i> Открыть модули</a>
+
+                    {% elif student %}
+                        <p class="ph-text">У вас ещё нет обходного листа. Подайте заявку — система сформирует этапы (бухгалтерия, библиотека и др.), и вы увидите их здесь.</p>
+                        <button type="button" class="ph-btn" data-toggle="modal" data-target="#requestCS">
+                            <i class="fas fa-plus" aria-hidden="true"></i> Подать заявку
+                        </button>
+
+                    {% elif myedu_status == MYEDU_UNAVAILABLE %}
+                        <p class="ph-text">MyEDU сейчас не отвечает, поэтому подать заявку нельзя. Обновите страницу через пару минут.</p>
+
+                    {% else %}
+                        <p class="ph-text">Обходной лист оформляют студенты. Для вашей учётной записи в MyEDU не найдено данных студента.</p>
+                        <p class="ph-hint mt-0 pt-0 border-0">Если вы студент — обратитесь в деканат. Если вы сотрудник — откройте <a href="{% url 'integrator:index' %}">модули</a>.</p>
+                    {% endif %}
+                </section>
+
+                {# ── История ── #}
+                {% if cs_list|length > 1 or cs_list and not active_cs %}
+                    <section class="ph-card">
+                        <header class="ph-card__head"><h2>История обходных листов</h2></header>
+                        <div class="table-responsive">
+                            <table class="ph-table">
+                                <thead>
+                                <tr><th>№</th><th>Подан</th><th>Этапы</th><th>Статус</th><th></th></tr>
+                                </thead>
+                                <tbody>
+                                {% for cs in cs_list %}
+                                    <tr>
+                                        <td>{{ cs.id }}</td>
+                                        <td>{{ cs.issued_at|date:"d.m.Y" }}</td>
+                                        <td>{% if cs.trajectory_total %}{{ cs.trajectory_done }} из {{ cs.trajectory_total }}{% else %}—{% endif %}</td>
+                                        <td>
+                                            {% if cs.completed_at %}<span class="ph-badge ph-badge--green">Завершён {{ cs.completed_at|date:"d.m.Y" }}</span>
+                                            {% else %}<span class="ph-badge ph-badge--blue">В процессе</span>{% endif %}
+                                        </td>
+                                        <td class="text-right">
+                                            {% if cs.trajectory_total %}
+                                                <a href="{% url 'students:cs-history' cs_id=cs.id %}" class="ph-link">Этапы <i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                {% endif %}
             </div>
-        {% endif %}
+
+            {# ── Боковая колонка ── #}
+            <aside class="ph-side">
+                <section class="ph-card">
+                    <header class="ph-card__head">
+                        <h2>Мои данные</h2>
+                        <span class="ph-badge">{% if is_employee %}Сотрудник{% elif student %}Студент{% else %}Пользователь{% endif %}</span>
+                    </header>
+                    <dl class="ph-facts">
+                        <dt>ФИО</dt><dd>{{ profile.fio|default:"—" }}</dd>
+                        <dt>ID MyEDU</dt><dd>{{ profile.myedu_id|default:"—" }}</dd>
+                        {% if profile.faculty %}<dt>Факультет</dt><dd>{{ profile.faculty }}</dd>{% endif %}
+                        {% if profile.speciality %}<dt>Специальность</dt><dd>{{ profile.speciality }}</dd>{% endif %}
+                        {% if profile.order_status %}<dt>Статус</dt><dd>{{ profile.order_status }}</dd>{% endif %}
+                        {% if profile.order %}<dt>Приказ</dt><dd>№ {{ profile.order }}{% if profile.order_date %} от {{ profile.order_date }}{% endif %}</dd>{% endif %}
+                        <dt>Почта</dt><dd>{{ profile.email|default:"—" }}</dd>
+                    </dl>
+                    {% if myedu_status == MYEDU_UNAVAILABLE %}
+                        <p class="ph-hint ph-hint--warn">MyEDU сейчас не отвечает — показаны последние сохранённые данные.</p>
+                    {% elif is_employee %}
+                        <p class="ph-hint">Учётная запись сотрудника. Рабочие разделы — в меню «Модули».</p>
+                    {% elif myedu_status == MYEDU_NOT_FOUND %}
+                        <p class="ph-hint">Данные студента в MyEDU не найдены. Если вы студент — обратитесь в деканат.</p>
+                    {% else %}
+                        <p class="ph-hint">Данные из MyEDU. Если что-то неверно — обратитесь в деканат.</p>
+                    {% endif %}
+                </section>
+
+                {% if survey_kpi.total %}
+                    <section class="ph-card">
+                        <header class="ph-card__head">
+                            <h2>Анкетирование</h2>
+                            {% if survey_kpi.left %}
+                                <span class="ph-badge ph-badge--red">Осталось {{ survey_kpi.left }}</span>
+                            {% else %}
+                                <span class="ph-badge ph-badge--green"><i class="fas fa-check" aria-hidden="true"></i> Пройдено</span>
+                            {% endif %}
+                        </header>
+                        <p class="ph-text">Пройдено {{ survey_kpi.done }} из {{ survey_kpi.total }} анкет за {{ survey_kpi.edu_year.title }} учебный год.</p>
+                        {% if survey_kpi.first_todo %}
+                            <a href="{% url 'students:survey-take' survey_id=survey_kpi.first_todo.id %}" class="ph-btn ph-btn--block">Пройти анкету</a>
+                        {% else %}
+                            <a href="{% url 'students:survey' %}" class="ph-btn ph-btn--ghost ph-btn--block">Открыть анкеты</a>
+                        {% endif %}
+                    </section>
+                {% endif %}
+            </aside>
+        </div>
     </div>
 {% endblock %}
 
 {% block modals %}
     <div class="modal fade" id="requestCS" tabindex="-1" aria-labelledby="requestCSModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form action="" method="post">
+            <div class="modal-content ph-modal">
+                <form method="post">
                     {% csrf_token %}
                     <div class="modal-header">
-                        <h5 class="modal-title" id="requestCSModalLabel">Подача заявки</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <h5 class="modal-title" id="requestCSModalLabel">Подать заявку на обходной лист?</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        <p class="lead mb-0">Вы действительно хотите создать заявку на обходной лист?</p>
+                        <p>Лист будет создан по вашим данным из MyEDU:</p>
+                        <dl class="ph-facts ph-facts--compact">
+                            <dt>ФИО</dt><dd>{{ profile.fio }}</dd>
+                            <dt>Факультет</dt><dd>{{ profile.faculty|default:"—" }}</dd>
+                            <dt>Специальность</dt><dd>{{ profile.speciality|default:"—" }}</dd>
+                        </dl>
+                        <p class="ph-hint mb-0">Если данные неверны, сначала обратитесь в деканат.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
-                        <button type="submit" class="btn btn-sm btn-danger">Подтвердить</button>
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Отмена</button>
+                        <button type="submit" class="ph-btn" id="requestCSSubmit">Подать заявку</button>
                     </div>
                 </form>
             </div>
@@ -202,18 +216,14 @@
 
 {% block scripts %}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('[data-cs-card]:not([data-cs-static])').forEach(function (card) {
-                var toggle = card.querySelector('.student-portal-cs-card__toggle');
-                if (!toggle) {
-                    return;
-                }
-                toggle.addEventListener('click', function () {
-                    var isOpen = card.classList.contains('is-open');
-                    card.classList.toggle('is-open', !isOpen);
-                    toggle.setAttribute('aria-expanded', String(!isOpen));
-                });
+        (function () {
+            var form = document.querySelector('#requestCS form');
+            if (!form) return;
+            form.addEventListener('submit', function () {
+                var btn = document.getElementById('requestCSSubmit');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Отправка…';
             });
-        });
+        })();
     </script>
 {% endblock %}

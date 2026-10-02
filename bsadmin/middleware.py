@@ -1,5 +1,7 @@
 # import logging
 from django.shortcuts import redirect
+from urllib.parse import urlencode
+
 from django.urls import reverse, resolve, Resolver404
 
 
@@ -70,8 +72,11 @@ class AuthRequiredMiddleware:
         #     extra=log_details
         # )
 
-        # Перенаправляем пользователя на единую страницу "Доступ ограничен"
-        return redirect(reverse('auth_required'))
+        # Перенаправляем на единый вход; после входа пользователь вернётся на эту страницу.
+        login_url = reverse('students:next-student-login')
+        if request.method == 'GET' and request.path not in ('/', login_url):
+            return redirect(f"{login_url}?{urlencode({'next': request.get_full_path()})}")
+        return redirect(login_url)
 
 
 class HistoryMiddleware:

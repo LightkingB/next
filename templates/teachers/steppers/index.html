@@ -5,6 +5,8 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/admin_module.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_cs.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/stepper_students.css' %}"/>
 {% endblock %}
 
 {% block content %}
@@ -13,118 +15,189 @@
         <span>Загрузка…</span>
     </div>
 
-    <div class="container-fluid admin-module">
+    <div class="container-fluid admin-module stepper-cs students-page">
         <header class="admin-module__header">
             <h1><i class="fas fa-user-graduate" aria-hidden="true"></i>{{ title }}</h1>
-            <p>Поиск студентов и управление обходными листами</p>
+            <p>Найдите студента в MyEDU: видно его долги, приказ и состояние обходного листа.</p>
         </header>
 
         {% if CUSTOM_ROLES.STADMIN in DB_ROLES %}
             {% include 'utils/_messages.html' %}
 
-            <div class="admin-module__panel">
-                <div class="admin-module__panel-head">
-                    <span><i class="fas fa-search" aria-hidden="true"></i>Поиск студентов</span>
-                </div>
-                <div class="admin-module__panel-body">
-                    <form action="" method="post" id="search-form">
-                        {% csrf_token %}
-                        <div class="admin-module__filter-grid">
-                            <div class="admin-module__filter-field admin-module__filter-field--search">
-                                <label for="search">ФИО / MyEDU ID</label>
-                                <input type="text" class="form-control form-control-sm" name="search"
-                                       placeholder="230795" id="search"/>
-                            </div>
-                            <div class="admin-module__filter-field">
-                                <label for="faculty">Факультет</label>
-                                <select id="faculty" class="form-control form-control-sm" name="faculty_id">
-                                    <option value="0" disabled selected>Выберите факультет</option>
-                                    {% for faculty in faculties %}
-                                        <option value="{{ faculty.myedu_faculty_id }}">{{ faculty.title }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="admin-module__filter-field">
-                                <label for="speciality">Специальность</label>
-                                <select id="speciality" class="form-control form-control-sm" name="specialty_id">
-                                    <option value="0" disabled selected>Выберите специальность</option>
-                                </select>
-                            </div>
-                            <div class="admin-module__filter-actions">
-                                <button type="submit" id="search-btn" class="btn btn-sm admin-module__btn-primary">
-                                    <i class="fas fa-search" aria-hidden="true"></i> Поиск
-                                </button>
-                            </div>
+            <form method="get" class="stepper-cs__toolbar stepper-cs__filters" id="search-form">
+                {% if view %}<input type="hidden" name="view" value="{{ view }}">{% endif %}
+                <div class="students-search">
+                    <label class="students-search__field">
+                        <span>ФИО или MyEDU ID</span>
+                        <div class="stepper-cs__search-field">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="search" class="form-control form-control-sm" name="q" id="search"
+                                   value="{{ query }}" placeholder="например, Асанов или 230795" autocomplete="off">
                         </div>
-                    </form>
+                    </label>
+                    <label class="students-search__field">
+                        <span>Факультет</span>
+                        <select id="faculty" class="form-control form-control-sm" name="faculty">
+                            <option value="">Все факультеты</option>
+                            {% for faculty in faculties %}
+                                <option value="{{ faculty.myedu_faculty_id }}" {% if faculty.myedu_faculty_id == faculty_id %}selected{% endif %}>{{ faculty.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label class="students-search__field">
+                        <span>Специальность</span>
+                        <select id="speciality" class="form-control form-control-sm" name="speciality" {% if not specialities %}disabled{% endif %}>
+                            <option value="">{% if specialities %}Все специальности{% else %}Сначала факультет{% endif %}</option>
+                            {% for spec in specialities %}
+                                <option value="{{ spec.myedu_spec_id }}" {% if spec.myedu_spec_id == speciality_id %}selected{% endif %}>{{ spec.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button type="submit" id="search-btn" class="btn btn-sm btn-danger students-search__btn">
+                        <i class="fas fa-search" aria-hidden="true"></i> Найти
+                    </button>
                 </div>
-                <div class="admin-module__table-zone">
-                    <div class="table-responsive">
-                        <table class="table table-sm admin-module__table mb-0">
+                <p class="students-search__hint">Введите ФИО/ID или выберите факультет — данные загружаются из MyEDU.</p>
+            </form>
+
+            {% if not searched %}
+                <div class="admin-module__panel">
+                    <div class="admin-module__panel-body students-empty">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <div><b>Начните с поиска</b><span>Введите ФИО или MyEDU ID студента либо выберите факультет.</span></div>
+                    </div>
+                </div>
+            {% elif api_failed %}
+                <div class="admin-module__panel">
+                    <div class="admin-module__panel-body students-empty students-empty--bad">
+                        <i class="fas fa-plug" aria-hidden="true"></i>
+                        <div><b>MyEDU сейчас не отвечает</b><span>Повторите поиск через минуту.</span></div>
+                    </div>
+                </div>
+            {% else %}
+                <nav class="stepper-cs__pipeline" aria-label="Быстрый фильтр">
+                    <div class="stepper-cs__pipeline-steps">
+                        {% for item in view_links %}
+                            <a href="{{ item.url }}" class="stepper-cs__pipe students-pipe--{{ item.value }}{% if item.active %} is-active{% endif %}{% if not item.count %} is-empty{% endif %}">
+                                <span class="stepper-cs__pipe-count">{{ item.count }}</span>
+                                <span class="stepper-cs__pipe-label">{{ item.label }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <select class="form-control form-control-sm students-sort" form="search-form" name="sort" data-autosubmit aria-label="Сортировка">
+                        {% for value, label in sort_choices %}
+                            <option value="{{ value }}" {% if sort == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </nav>
+
+                <div class="stepper-cs__results">
+                    <div class="stepper-cs__table-wrap">
+                        <table class="stepper-cs__table students-table">
                             <thead>
                             <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">ФИО</th>
-                                <th scope="col">Заявка</th>
-                                <th scope="col" title="Анкетирование">Анк.</th>
-                                <th scope="col">Факультет</th>
-                                <th scope="col">Специальность</th>
-                                <th scope="col">Приказ</th>
-                                <th scope="col">Статус</th>
-                                <th scope="col">Долги</th>
+                                <th class="stepper-cs__col-num">№</th>
+                                <th class="students-col-student">Студент</th>
+                                <th class="students-col-order">Приказ</th>
+                                <th class="students-col-state">Заявка на обходной</th>
+                                <th class="students-col-state">Анкета</th>
+                                <th>Долги</th>
+                                <th class="stepper-cs__col-actions"></th>
                             </tr>
                             </thead>
-                            <tbody class="order">
+                            <tbody>
                             {% for student in objects %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
+                                <tr class="{% if student.sheet %}has-sheet{% endif %}">
+                                    <td class="stepper-cs__col-num">{{ objects.start_index|add:forloop.counter0 }}</td>
+                                    <td class="students-col-student">
+                                        <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}" class="students-name" title="{{ student.student_fio }}">{{ student.student_fio }}</a>
+                                        <span class="stepper-cs__student-line"><strong>ID {{ student.student_id }}</strong></span>
+                                        {% if student.faculty_name %}<span class="students-sub" title="{{ student.faculty_name }}">{{ student.faculty_name }}</span>{% endif %}
+                                        {% if student.speciality_name %}<span class="students-sub" title="{{ student.speciality_name }}">{{ student.speciality_name }}</span>{% endif %}
+                                    </td>
+                                    <td class="students-col-order">
+                                        {% if student.id_movement_info %}<span class="students-status">{{ student.id_movement_info }}</span>{% endif %}
+                                        {% if student.info %}<span class="stepper-cs__order-num">№ {{ student.info }}</span>{% endif %}
+                                        {% if student.date_movement %}<span class="stepper-cs__order-sub">от {{ student.date_movement }}</span>{% endif %}
+                                        {% if not student.info and not student.id_movement_info %}<span class="stepper-cs__order-sub">—</span>{% endif %}
+                                    </td>
+
+                                    <td class="students-col-state">
+                                        {% if student.sheet %}
+                                            <span class="students-state students-state--ok">
+                                                <i class="fas fa-check-circle" aria-hidden="true"></i> Заявка подана
+                                            </span>
+                                            <span class="students-state__meta">лист № {{ student.sheet.id }} от {{ student.sheet.issued_at|date:"d.m.Y" }}</span>
+                                            {% if student.sheet_state == 'process' %}
+                                                <span class="students-state__step students-state__step--process">
+                                                    <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                                                    {% if student.sheet.current_stage_name %}Сейчас: {{ student.sheet.current_stage_name }}{% else %}Этапы формируются{% endif %}
+                                                </span>
+                                            {% elif student.sheet_state == 'done' %}
+                                                <span class="students-state__step students-state__step--done"><i class="fas fa-flag-checkered" aria-hidden="true"></i> Пройден — ждёт выдачи</span>
+                                            {% else %}
+                                                <span class="students-state__step students-state__step--issued"><i class="fas fa-archive" aria-hidden="true"></i> Справка выдана</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="students-state students-state--none">
+                                                <i class="far fa-circle" aria-hidden="true"></i> Заявки нет
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="students-col-state survey-status-cell">
+                                        {% if student.survey_has_submissions %}
+                                            <button type="button" class="students-state students-state--ok students-state--btn survey-status-btn"
+                                                    data-myedu-id="{{ student.student_id }}" data-fio="{{ student.student_fio }}"
+                                                    title="Показать ответы">
+                                                <i class="fas fa-check-circle" aria-hidden="true"></i> Заполнена
+                                            </button>
+                                            <span class="students-state__meta">
+                                                {% if student.survey_submission_count > 1 %}{{ student.survey_submission_count }} анкеты · {% endif %}нажмите, чтобы открыть
+                                            </span>
+                                        {% else %}
+                                            <span class="students-state students-state--no">
+                                                <i class="fas fa-times-circle" aria-hidden="true"></i> Не заполнена
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
                                     <td>
-                                        <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}">
-                                            {{ student.student_fio }} ({{ student.student_id }})
+                                        {% if student.debt_list %}
+                                            <div class="students-debts">
+                                                {% for d in student.debt_list %}<span class="students-debt">{{ d }}</span>{% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="students-clean"><i class="fas fa-check" aria-hidden="true"></i> Без долгов</span>
+                                        {% endif %}
+                                    </td>
+
+
+                                    <td class="stepper-cs__col-actions">
+                                        <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}" class="students-open" title="Открыть карточку студента">
+                                            Открыть <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                         </a>
-                                    </td>
-                                    <td class="text-center">
-                                        {% if student.exist %}
-                                            <div class="text-success">
-                                                <i class="fas fa-check-circle" aria-hidden="true"></i>
-                                            </div>
-                                        {% else %}
-                                            <div class="text-danger">
-                                                <i class="fas fa-minus-circle" aria-hidden="true"></i>
-                                            </div>
-                                        {% endif %}
-                                    </td>
-                                    {% include 'teachers/steppers/_survey_status_cell.html' with myedu_id=student.student_id student_fio=student.student_fio survey_has_submissions=student.survey_has_submissions survey_submission_count=student.survey_submission_count %}
-                                    <td>{{ student.faculty_name }}</td>
-                                    <td>{{ student.speciality_name }}</td>
-                                    <td>№ {{ student.info }} <br/> Дата: {{ student.date_movement }}</td>
-                                    <td>{{ student.id_movement_info }}</td>
-                                    <td class="duty">
-                                        {% if student.debt %}
-                                            <div class="text-danger">
-                                                {{ student.debt|join_names }}
-                                            </div>
-                                        {% else %}
-                                            <div class="text-success">
-                                                Без долгов <i class="fas fa-check-circle" aria-hidden="true"></i>
-                                            </div>
-                                        {% endif %}
                                     </td>
                                 </tr>
                             {% empty %}
-                                <tr class="admin-module__empty nosort">
-                                    <td colspan="100%" class="text-center">
-                                        <small>{% trans 'Пусто' %}</small>
+                                <tr>
+                                    <td colspan="7" class="stepper-cs__empty">
+                                        {% if view %}По этому фильтру никого нет. <a href="?{% if query %}q={{ query|urlencode }}{% endif %}{% if faculty_id %}&faculty={{ faculty_id }}{% endif %}">Показать всех</a>
+                                        {% else %}По запросу никто не найден. Проверьте ФИО/ID или выберите другой факультет.{% endif %}
                                     </td>
                                 </tr>
                             {% endfor %}
                             </tbody>
                         </table>
                     </div>
+                    <div class="stepper-cs__footer">
+                        <div class="stepper-cs__footer-meta">
+                            {% if objects.paginator.count %}Показано <strong>{{ objects.start_index }}–{{ objects.end_index }}</strong> из <strong>{{ objects.paginator.count }}</strong>{% else %}Записей нет{% endif %}
+                        </div>
+                        {% include "utils/_pagination.html" with page_obj=objects %}
+                    </div>
                 </div>
-            </div>
-
-            {% include "utils/_pagination.html" with page_obj=objects %}
+            {% endif %}
         {% else %}
             {% include 'utils/_access.html' %}
         {% endif %}
@@ -159,17 +232,35 @@
     <script src="{% static 'js/stepper_survey.js' %}"></script>
     <script type="text/javascript">
         $(document).ready(function () {
-            document.getElementById('search-form').addEventListener('submit', function (e) {
-                const btn = document.getElementById('search-btn');
-                const overlay = document.getElementById('loading-overlay');
-
-                overlay.classList.add('is-visible');
-                if (btn) {
-                    btn.disabled = true;
-                }
-
-                document.body.style.pointerEvents = 'none';
-                overlay.style.pointerEvents = 'auto';
+            var searchForm = document.getElementById('search-form');
+            if (searchForm) {
+                searchForm.addEventListener('submit', function (e) {
+                    const btn = document.getElementById('search-btn');
+                    const overlay = document.getElementById('loading-overlay');
+                    var q = document.getElementById('search').value.trim();
+                    var fac = document.getElementById('faculty').value;
+                    if (!q && !fac) {
+                        e.preventDefault();
+                        document.getElementById('search').focus();
+                        toastr.warning('Введите ФИО/MyEDU ID или выберите факультет.');
+                        return;
+                    }
+                    searchForm.querySelectorAll('input, select').forEach(function (f) { if (!f.value) f.disabled = true; });
+                    overlay.classList.add('is-visible');
+                    if (btn) btn.disabled = true;
+                    document.body.style.pointerEvents = 'none';
+                    overlay.style.pointerEvents = 'auto';
+                });
+                document.querySelectorAll('[data-autosubmit]').forEach(function (field) {
+                    field.addEventListener('change', function () {
+                        searchForm.requestSubmit ? searchForm.requestSubmit() : searchForm.submit();
+                    });
+                });
+            }
+            window.addEventListener('pageshow', function (e) {
+                if (!e.persisted) return;
+                document.getElementById('loading-overlay').classList.remove('is-visible');
+                document.body.style.pointerEvents = '';
             });
             $('#faculty').change(function () {
                 const faculty_id = $(this).val();
@@ -181,16 +272,16 @@
                             'faculty_id': faculty_id
                         },
                         success: function (data) {
-                            $('#speciality').empty();
-                            $('#speciality').append('<option value="">Выберите специальность</option>');
+                            $('#speciality').empty().prop('disabled', false);
+                            $('#speciality').append('<option value="">Все специальности</option>');
                             $.each(data, function (index, item) {
-                                $('#speciality').append('<option value="' + item.myedu_spec_id + '">' + item.title + '</option>');
+                                $('#speciality').append($('<option>', {value: item.myedu_spec_id, text: item.title}));
                             });
                         }
                     });
                 } else {
-                    $('#speciality').empty();
-                    $('#speciality').append('<option value="">Выберите специальность</option>');
+                    $('#speciality').empty().prop('disabled', true);
+                    $('#speciality').append('<option value="">Сначала факультет</option>');
                 }
             });
 

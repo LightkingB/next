@@ -41,6 +41,12 @@ class MyEduService:
         return None
 
     @classmethod
+    def search_students(cls, query):
+        """Поиск студентов MyEDU по ФИО или ID. None — API недоступно."""
+        url = f"{API_URL}/obhadnoi/searchstudent"
+        return cls._safe_request("POST", url, data={"search": query})
+
+    @classmethod
     def handle_student_search(cls, request):
         """Метод поиска студента (был в отдельной функции)"""
         student_query = request.POST.get("student")
@@ -60,6 +66,18 @@ class MyEduService:
             messages.error(request, "Не удалось получить список студентов.")
             return []
         return result
+
+    @classmethod
+    def search_debt_students(cls, url, search=None, faculty_id=0, specialty_id=0):
+        """Как get_stepper_data_from_api, но различает сбой (None) и пустой результат ([])."""
+        payload = {"login": MYEDU_LOGIN, "password": MYEDU_PASSWORD,
+                   "faculty_id": faculty_id or 0, "speciality_id": specialty_id or 0}
+        if search:
+            payload["search"] = search
+        result = cls._safe_request("POST", url, data=payload)
+        if result is None:
+            return None
+        return result if isinstance(result, list) else []
 
     @classmethod
     def get_stepper_data_from_api(cls, url, search=None, faculty_id=0, specialty_id=0):

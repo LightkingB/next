@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Q, Exists, OuterRef
+from django.db.models import Count, Q, Exists, OuterRef, Subquery, Max
 from django.http import Http404
 
 from bsadmin.models import *
@@ -10,7 +10,9 @@ from utils.myedu import MyEduService
 class UserService:
     @staticmethod
     def update_or_create_user(email, password, myedu_data):
-        user, _ = CustomUser.objects.get_or_create(
+        # Данные из MyEDU обновляются при каждом входе через MyEDU — в том числе признак сотрудника,
+        # иначе однажды записанное значение не менялось (студент стал сотрудником и наоборот).
+        user, _ = CustomUser.objects.update_or_create(
             email=email,
             defaults={
                 "myedu_id": myedu_data['user']['id'],
@@ -48,12 +50,71 @@ class UserService:
         return Speciality.objects.filter(faculty_id=faculty_id).values('id', 'title', 'code')
 
     @staticmethod
-    def academic_transcripts_by_faculty_id(faculty_id, sort_field):
-        return FacultyTranscript.objects.filter(faculty_id=faculty_id).select_related('category').annotate(
-            is_used=Exists(
-                RegistrationTranscript.objects.filter(faculty_transcript=OuterRef('pk'))
-            )
-        ).order_by(sort_field, '-id')
+    def academic_transcript_status_counts(faculty_id, category_id=None):
+        transcripts = FacultyTranscript.objects.filter(faculty_id=faculty_id)
+        if category_id:
+            transcripts = transcripts.filter(category_id=category_id)
+        return transcripts.annotate(
+            is_used=Exists(RegistrationTranscript.objects.filter(faculty_transcript=OuterRef('pk')))
+        ).aggregate(
+            total=Count('id'),
+            free=Count('id', filter=Q(is_used=False, is_defective=False)),
+            used=Count('id', filter=Q(is_used=True)),
+            defective=Count('id', filter=Q(is_defective=True)),
+        )
+
+    @staticmethod
+    def _transcripts_with_registration():
+        registration = RegistrationTranscript.objects.filter(faculty_transcript=OuterRef('pk')).order_by('-id')
+        return FacultyTranscript.objects.select_related('category', 'faculty').annotate(
+            is_used=Exists(registration),
+            student_fio=Subquery(registration.values('student_fio')[:1]),
+            student_uuid=Subquery(registration.values('student_uuid')[:1]),
+            student_faculty=Subquery(registration.values('faculty_history')[:1]),
+            student_speciality=Subquery(registration.values('speciality_history')[:1]),
+            issue_date=Subquery(registration.values('create_date')[:1]),
+        )
+
+    @staticmethod
+    def find_academic_transcript(query, similar_limit=30):
+        """Точное совпадение номера + похожие записи (часть номера или ФИО студента)."""
+        transcripts = UserService._transcripts_with_registration()
+        number = query.replace(" ", "")
+        exact = transcripts.filter(transcript_number=number).first()
+        similar = transcripts.filter(
+            Q(transcript_number__icontains=number) |
+            Q(registrationtranscript__student_fio__icontains=query.strip())
+        ).distinct().order_by('transcript_number')
+        if exact:
+            similar = similar.exclude(pk=exact.pk)
+        return exact, list(similar[:similar_limit + 1])
+
+    @staticmethod
+    def academic_transcript_category_stats(faculty_id):
+        """{category_id: {total, free, used, defective}} по бланкам факультета."""
+        rows = (FacultyTranscript.objects.filter(faculty_id=faculty_id)
+                .annotate(is_used=Exists(RegistrationTranscript.objects.filter(faculty_transcript=OuterRef('pk'))))
+                .values('category_id')
+                .annotate(total=Count('id'),
+                          free=Count('id', filter=Q(is_used=False, is_defective=False)),
+                          used=Count('id', filter=Q(is_used=True)),
+                          defective=Count('id', filter=Q(is_defective=True))))
+        return {row.pop('category_id'): row for row in rows}
+
+    @staticmethod
+    def academic_transcripts_by_faculty_id(faculty_id, sort_field, query=None, status=None, category_id=None):
+        transcripts = UserService._transcripts_with_registration().filter(faculty_id=faculty_id)
+        if category_id:
+            transcripts = transcripts.filter(category_id=category_id)
+        if query:
+            transcripts = transcripts.filter(transcript_number__icontains=query)
+        if status == "free":
+            transcripts = transcripts.filter(is_used=False, is_defective=False)
+        elif status == "used":
+            transcripts = transcripts.filter(is_used=True)
+        elif status == "defective":
+            transcripts = transcripts.filter(is_defective=True)
+        return transcripts.order_by(sort_field, '-id')
 
     @staticmethod
     def active_faculties_transcripts():
@@ -66,9 +127,17 @@ class UserService:
                 'facultytranscript',
                 filter=Q(facultytranscript__is_defective=True),
                 distinct=True
-            )
+            ),
+            free_documents=Count(
+                'facultytranscript',
+                filter=Q(facultytranscript__is_defective=False,
+                         facultytranscript__registrationtranscript__isnull=True),
+                distinct=True
+            ),
+            last_issued=Max('facultytranscript__registrationtranscript__create_date'),
         ).values(
-            'id', 'title', 'short_name', 'total_documents', 'used_documents', 'defective_documents'
+            'id', 'title', 'short_name', 'total_documents', 'used_documents', 'defective_documents',
+            'free_documents', 'last_issued'
         ).order_by('title')
         return faculties
 
@@ -107,6 +176,37 @@ class UserService:
             return FacultyTranscript.objects.get(transcript_number=transcript_number)
         except FacultyTranscript.DoesNotExist:
             return None
+
+    @staticmethod
+    def check_transcript_for_issue(transcript_number):
+        """
+        Проверяет, можно ли выдать бланк. Возвращает (transcript | None, ошибка | None).
+        Ошибка объясняет причину: не зарегистрирован, повреждён или уже выдан (кому).
+        """
+        number = (transcript_number or "").replace(" ", "").strip()
+        if not number:
+            return None, "Введите номер справки."
+        transcript = (FacultyTranscript.objects.select_related("faculty", "category")
+                      .filter(transcript_number=number).first())
+        if not transcript:
+            return None, f"Бланк № {number} не зарегистрирован. Сначала внесите его в категорию факультета."
+        if transcript.is_defective:
+            return None, f"Бланк № {number} отмечен как повреждённый — выдать его нельзя."
+        issued = RegistrationTranscript.objects.filter(faculty_transcript=transcript).first()
+        if issued:
+            return None, (f"Бланк № {number} уже выдан: {issued.student_fio} "
+                          f"({issued.create_date:%d.%m.%Y}).")
+        return transcript, None
+
+    @staticmethod
+    def issued_transcripts_by_students(student_ids):
+        """{student_uuid: [выданные справки]} — чтобы видеть, кому справка уже выдавалась."""
+        result = {}
+        for reg in (RegistrationTranscript.objects
+                    .filter(student_uuid__in=[str(s) for s in student_ids if s])
+                    .select_related("faculty_transcript").order_by("-create_date")):
+            result.setdefault(reg.student_uuid, []).append(reg)
+        return result
 
     @staticmethod
     def get_active_academic_transcript_by_number(transcript_number):
@@ -213,17 +313,38 @@ class UserService:
         return self.active_faculties(), None
 
     @staticmethod
-    def report_faculty_reg_academic_transcript(faculty_id):
-        return RegistrationTranscript.objects.select_related('faculty_transcript', 'faculty').filter(
-            faculty_transcript__faculty_id=faculty_id).order_by('student_fio')
+    def report_faculty_reg_academic_transcript(faculty_id, query=None):
+        reports = RegistrationTranscript.objects.select_related('faculty_transcript', 'faculty').filter(
+            faculty_transcript__faculty_id=faculty_id)
+        if query:
+            reports = reports.filter(
+                Q(faculty_transcript__transcript_number__icontains=query) | Q(student_fio__icontains=query))
+        return reports.order_by('student_fio')
+
+    REPORT_SORTS = {
+        "faculty": ("faculty_history", "student_fio"),
+        "new": ("-create_date", "-id"),
+        "old": ("create_date", "id"),
+        "fio": ("student_fio", "-id"),
+    }
 
     @staticmethod
-    def report_all_faculty_reg_academic_transcript():
-        return RegistrationTranscript.objects.select_related('faculty_transcript', 'faculty').order_by(
-            'faculty_history', 'student_fio')
-
-    @staticmethod
-    def search_academic_transcript_number(transcript_number):
-        reg_transcript_number = RegistrationTranscript.objects.select_related('faculty_transcript').filter(
-            faculty_transcript__transcript_number__endswith=transcript_number).first()
-        return reg_transcript_number
+    def report_all_faculty_reg_academic_transcript(filters=None):
+        filters = filters or {}
+        reports = RegistrationTranscript.objects.select_related(
+            'faculty_transcript', 'faculty_transcript__category', 'faculty')
+        query = filters.get("q")
+        if query:
+            reports = reports.filter(
+                Q(faculty_transcript__transcript_number__icontains=query.replace(" ", "")) |
+                Q(student_fio__icontains=query))
+        if filters.get("faculty"):
+            reports = reports.filter(faculty_id=filters["faculty"])
+        if filters.get("category"):
+            reports = reports.filter(faculty_transcript__category_id=filters["category"])
+        if filters.get("date_from"):
+            reports = reports.filter(create_date__date__gte=filters["date_from"])
+        if filters.get("date_to"):
+            reports = reports.filter(create_date__date__lte=filters["date_to"])
+        sort = UserService.REPORT_SORTS.get(filters.get("sort") or "faculty", UserService.REPORT_SORTS["faculty"])
+        return reports.order_by(*sort)

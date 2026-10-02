@@ -1,0 +1,345 @@
+/* Единый вход в личный кабинет ОшГУ */
+
+:root {
+    --a-red: #A00E07;
+    --a-red-dark: #8a0c06;
+    --a-red-soft: #fbeceb;
+    --a-ink: #1c1c1c;
+    --a-text: #3a3a3a;
+    --a-muted: #6b6b6b;
+    --a-line: #ddd9d4;
+    --a-bg: #f2f0ed;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body.auth {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    color: var(--a-text);
+    background: #3d0806;
+    -webkit-font-smoothing: antialiased;
+}
+
+.auth__wrap {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.auth__card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    max-width: 900px;
+    overflow: hidden;
+    background: #fcfbfa;
+    border: 1px solid var(--a-line);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(60, 20, 10, 0.12);
+}
+
+/* Левая часть */
+.auth__brand {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2.5rem 2.25rem;
+    color: #fff;
+    background: linear-gradient(150deg, #b8140b 0%, var(--a-red) 45%, #6f0a05 100%);
+}
+
+.auth__logo {
+    width: 170px;
+    height: auto;
+    margin-bottom: 1.75rem;
+    filter: brightness(0) invert(1);
+}
+
+.auth__brand h2 {
+    margin: 0 0 0.5rem;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+}
+
+.auth__brand > p {
+    margin: 0 0 1.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.auth__who {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.auth__who li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.auth__who-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+}
+
+.auth__who b {
+    display: block;
+    font-size: 0.9375rem;
+}
+
+.auth__who span {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Правая часть */
+.auth__panel {
+    padding: 2.5rem 2.25rem;
+}
+
+.auth__panel h1 {
+    margin: 0 0 0.3rem;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--a-ink);
+}
+
+.auth__lead {
+    margin: 0 0 1.4rem;
+    color: var(--a-muted);
+}
+
+.auth__lead b {
+    color: var(--a-ink);
+}
+
+.auth__error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin-bottom: 1.1rem;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.875rem;
+    color: #8e1b1b;
+    background: #fff4f4;
+    border: 1px solid #f1cccc;
+    border-radius: 8px;
+}
+
+.auth__error i {
+    margin-top: 0.15rem;
+    color: #c62828;
+}
+
+.auth__field {
+    display: block;
+    margin: 0 0 1rem;
+}
+
+.auth__field > span {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--a-ink);
+}
+
+.auth__input {
+    position: relative;
+}
+
+.auth__input > i {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: #a39e98;
+    pointer-events: none;
+}
+
+.auth__input input {
+    width: 100%;
+    height: 46px;
+    padding: 0 2.75rem 0 2.5rem;
+    font-size: 0.9375rem;
+    color: var(--a-ink);
+    background: #fff;
+    border: 1px solid var(--a-line);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.auth__input input:focus {
+    border-color: var(--a-red);
+    box-shadow: 0 0 0 3px rgba(160, 14, 7, 0.1);
+}
+
+.auth__eye {
+    position: absolute;
+    top: 50%;
+    right: 0.4rem;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    color: var(--a-muted);
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.auth__eye:hover {
+    color: var(--a-ink);
+    background: var(--a-bg);
+}
+
+.auth__caps {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    color: #8a5a00;
+}
+
+.auth__agree {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 0.25rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--a-text);
+    cursor: pointer;
+}
+
+.auth__agree input {
+    margin-top: 0.2rem;
+    accent-color: var(--a-red);
+}
+
+.auth__agree a {
+    color: var(--a-red);
+    text-decoration: underline;
+}
+
+.auth__agree.is-invalid {
+    color: #8e1b1b;
+}
+
+.auth__agree-error {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    color: #c62828;
+}
+
+.auth__submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    width: 100%;
+    height: 48px;
+    margin-top: 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--a-red);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.auth__submit:hover {
+    background: var(--a-red-dark);
+}
+
+.auth__submit.is-loading {
+    cursor: progress;
+    opacity: 0.85;
+}
+
+.auth__help {
+    margin: 1.4rem 0 0;
+    padding-top: 1rem;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--a-muted);
+    border-top: 1px solid var(--a-line);
+}
+
+.auth__help a {
+    color: var(--a-ink);
+    white-space: nowrap;
+}
+
+/* Мобильная версия */
+@media (max-width: 767px) {
+    .auth__wrap {
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .auth__card {
+        grid-template-columns: 1fr;
+    }
+
+    .auth__brand {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .auth__logo {
+        width: 130px;
+        margin-bottom: 1rem;
+    }
+
+    .auth__brand > p {
+        margin-bottom: 1rem;
+    }
+
+    .auth__who {
+        display: none;
+    }
+
+    .auth__panel {
+        padding: 1.5rem 1.25rem;
+    }
+}
+
+.auth__input input:focus,
+.auth__submit:focus {
+    outline: none;
+}
+
+.auth__submit:focus-visible {
+    box-shadow: 0 0 0 3px rgba(160, 14, 7, 0.25);
+}
+
+.auth__agree input:focus-visible {
+    outline: 2px solid var(--a-red);
+    outline-offset: 2px;
+}
