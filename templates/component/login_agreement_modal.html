@@ -1,16 +1,20 @@
-<div class="modal fade portal-agreement-modal" id="agreementModalScrollable" tabindex="-1" role="dialog"
+<div class="modal fade auth-modal" id="agreementModalScrollable" tabindex="-1" role="dialog"
      aria-labelledby="agreementModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered portal-agreement-modal__dialog" role="document">
-        <div class="modal-content portal-agreement-modal__content">
-            <div class="modal-header portal-agreement-modal__header">
-                <h5 class="modal-title" id="agreementModalTitle">Пользовательское соглашение</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
-                    <span aria-hidden="true">&times;</span>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="auth-modal__head">
+                <span class="auth-modal__icon" aria-hidden="true"><i class="fas fa-user-shield"></i></span>
+                <div>
+                    <div class="auth-modal__eyebrow">Личный кабинет ОшГУ</div>
+                    <h5 class="auth-modal__title" id="agreementModalTitle">Согласие на обработку персональных данных</h5>
+                </div>
+                <button type="button" class="auth-modal__close" data-dismiss="modal" aria-label="Закрыть">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
-            <div class="modal-body portal-login-agree portal-agreement-modal__body">
-                <p class="portal-agreement-modal__intro">Я ознакомлен(а) с тем, что:</p>
-                <ol class="portal-agreement-modal__list">
+            <div class="auth-modal__body">
+                <p class="auth-modal__intro">Я ознакомлен(а) с тем, что:</p>
+                <ol class="auth-modal__list">
                     <li>согласие на обработку персональных данных действует с даты подписания настоящего
                         согласия в течение всего срока предоставления мне государственной (муниципальной) услуги и
                         хранения данных об оказанной услуге в соответствии с законодательством Кыргызской Республики;
@@ -24,9 +28,10 @@
                     </li>
                 </ol>
             </div>
-            <div class="modal-footer portal-agreement-modal__footer">
-                <button type="button" class="btn btn-danger portal-agreement-modal__accept" data-dismiss="modal" id="acceptAgreement">
-                    Согласен(-на)
+            <div class="auth-modal__foot">
+                <button type="button" class="auth-modal__btn auth-modal__btn--ghost" data-dismiss="modal">Закрыть</button>
+                <button type="button" class="auth-modal__btn auth-modal__btn--primary" data-dismiss="modal" id="acceptAgreement">
+                    <i class="fas fa-check" aria-hidden="true"></i> Согласен(-на)
                 </button>
             </div>
         </div>

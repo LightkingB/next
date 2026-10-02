@@ -34,6 +34,7 @@
         </aside>
 
         <section class="auth__panel">
+            <span class="auth__badge"><i class="fas fa-lock" aria-hidden="true"></i> Безопасный вход</span>
             <h1>Вход</h1>
             <p class="auth__lead">Используйте логин и пароль от <b>MyEDU</b>.</p>
 
@@ -73,9 +74,14 @@
                 </label>
 
                 <label class="auth__agree" id="agree-row">
-                    <input type="checkbox" id="agreement" name="agreement" {% if form.is_bound %}checked{% endif %}>
-                    <span>Я согласен(-на) на обработку персональных данных —
-                        <a href="#" data-toggle="modal" data-target="#agreementModalScrollable">условия</a></span>
+                    <input type="checkbox" id="agreement" name="agreement" class="auth__check" {% if form.is_bound %}checked{% endif %}>
+                    <span class="auth__check-box" aria-hidden="true"><i class="fas fa-check"></i></span>
+                    <span class="auth__agree-text">
+                        Я согласен(-на) на обработку персональных данных
+                        <a href="#" class="auth__agree-link" data-toggle="modal" data-target="#agreementModalScrollable">
+                            <i class="far fa-file-alt" aria-hidden="true"></i> Прочитать условия
+                        </a>
+                    </span>
                 </label>
                 <small class="auth__agree-error" id="agree-error" hidden>Подтвердите согласие, чтобы войти.</small>
 
