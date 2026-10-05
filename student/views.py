@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 
 from stepper.decorators import with_stepper
-from stepper.models import ClearanceSheet, Trajectory, StageStatus
+from stepper.models import ClearanceSheet, Issuance, Trajectory, StageStatus
 from student.dashboard import dashboard_context
 from student.myedu_student import get_student
 
@@ -69,12 +70,24 @@ def student_index(request):
         steps = list(cs.trajectory_set.all())
         cs.current_step = next((t for t in steps if t.completed_at is None), None)
         cs.current_index = steps.index(cs.current_step) + 1 if cs.current_step else None
+        cs.steps = steps
+        cs.days_open = (timezone.now() - cs.issued_at).days if cs.issued_at else None
     active_cs = next((cs for cs in cs_list if not cs.completed_at), None)
+
+    # Академические задолженности из MyEDU и выданные документы
+    debts = [d.get("type") for d in ((student or {}).get("debt") or []) if isinstance(d, dict) and d.get("type")]
+    issuances = list(
+        Issuance.objects.filter(student=myedu_id)
+        .select_related("employee")
+        .order_by("-date_issue", "-id")
+    ) if myedu_id else []
 
     context = {
         "cs_list": cs_list,
         "has_cs": has_cs,
         "active_cs": active_cs,
+        "debts": debts,
+        "issuances": issuances,
         **dashboard_context(request, cs_list[0] if cs_list else None, tab="overview"),
     }
     return render(request, "students/index.html", context)

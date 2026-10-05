@@ -1,0 +1,75 @@
+/* Главная личного кабинета — дополнения к portal_home.css (тот же стиль, что у «Анкетирования»). */
+
+.ph-alert {
+    margin: 0 0 1.25rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: #7a4b00;
+    background: #fff8e8;
+    border: 1px solid #f0dcae;
+    border-radius: 8px;
+}
+
+.ph-alert i { margin-right: 0.4rem; color: #c48a00; }
+
+/* Реквизиты листа */
+.hd-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--pt-line-soft);
+}
+
+.hd-meta dt {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--pt-muted);
+}
+
+.hd-meta dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--pt-ink);
+}
+
+.hd-progress { margin-bottom: 1rem; }
+
+/* Таблица этапов */
+.hd-stages td { vertical-align: top; }
+.hd-stages__name { font-weight: 600; color: var(--pt-ink); }
+.hd-stages tr.is-current td { background: #f1f7fc !important; }
+.hd-stages tr:not(.is-done):not(.is-current) .hd-stages__name { font-weight: 500; color: var(--pt-muted); }
+
+.hd-nowrap { white-space: nowrap; }
+
+.hd-note { min-width: 200px; }
+
+.hd-note__text {
+    display: block;
+    color: var(--pt-text);
+}
+
+.hd-note__by {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--pt-muted);
+}
+
+/* Задолженности */
+.hd-debts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.hd-debts li {
+    padding: 0.45rem 0;
+    font-size: 0.9rem;
+    color: var(--pt-ink);
+    border-top: 1px solid var(--pt-line-soft);
+}
+
+.hd-debts li:first-child { padding-top: 0; border-top: 0; }
+.hd-debts i { margin-right: 0.35rem; color: #b42318; }
