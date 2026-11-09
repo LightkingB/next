@@ -323,3 +323,56 @@
 .students-col-order .stepper-cs__order-sub {
     display: block;
 }
+
+/* ── Группы результатов поиска: точные совпадения сверху, связанные ниже ── */
+.students-table tbody tr.students-group td {
+    padding: 0.45rem 0.75rem;
+    background: #f1f3f5;
+    color: #495057;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    border-top: 2px solid #dee2e6;
+}
+
+.students-table tbody tr.students-group--exact td {
+    background: #e8f5e9;
+    color: #1e7e34;
+    border-top-color: #b7dfbf;
+}
+
+.students-table tbody tr.is-exact td:first-child {
+    box-shadow: inset 3px 0 0 #28a745;
+}
+
+/* ── Выданная справка: заметная отметка с датой выдачи ── */
+.students-issued {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid #b7dfbf;
+    border-left: 4px solid #28a745;
+    border-radius: 4px;
+    background: #e8f5e9;
+    color: #1e7e34;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: normal;
+}
+
+.students-issued i { font-size: 1rem; }
+
+.students-issued b {
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.students-issued small {
+    display: block;
+    font-weight: 500;
+    color: #2e7d32;
+}

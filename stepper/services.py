@@ -489,6 +489,60 @@ class StepperService:
         return ClearanceSheet.objects.filter(myedu_id=myedu_id).prefetch_related(trajectory_prefetch)
 
     @staticmethod
+    def create_new_student_sheet(student: dict, myedu_id):
+        """
+        Новый обходной лист студенту — в любом состоянии прежних (в т.ч. завершённых).
+        Все прежние листы студента перестают быть актуальными, актуальным становится новый.
+        """
+        with transaction.atomic():
+            ClearanceSheet.objects.filter(myedu_id=myedu_id, category=ClearanceSheet.STUDENT) \
+                .update(last_active=False)
+            return StepperService().create_clearance_sheet(student, myedu_id)
+
+    @staticmethod
+    def student_sheets_report(myedu_id):
+        """
+        Все обходные листы студента (новые сверху) с этапами, статусами этапов и выдачей документа.
+        Каждому листу добавляются: state / state_label, steps_done / steps_total, current_step,
+        duration_days, issuance.
+        """
+        trajectories = Prefetch(
+            "trajectory_set",
+            queryset=(Trajectory.objects
+                      .select_related("template_stage__stage", "assigned_by")
+                      .prefetch_related(Prefetch("stagestatus_set",
+                                                 queryset=StageStatus.objects.select_related("processed_by")
+                                                 .order_by("created_at")))
+                      .order_by("template_stage__order")),
+        )
+        issuances = Prefetch("issuance_set",
+                             queryset=Issuance.objects.select_related("employee").order_by("-id"))
+        sheets = list(
+            ClearanceSheet.objects.filter(myedu_id=myedu_id, category=ClearanceSheet.STUDENT)
+            .select_related("edu_year")
+            .prefetch_related(trajectories, issuances)
+            .order_by("-id")
+        )
+        for sheet in sheets:
+            steps = list(sheet.trajectory_set.all())
+            sheet.steps = steps
+            sheet.steps_total = len(steps)
+            sheet.steps_done = sum(1 for t in steps if t.completed_at)
+            sheet.current_step = next((t for t in steps if not t.completed_at), None)
+            sheet.issuance = next(iter(sheet.issuance_set.all()), None)
+            finish = sheet.completed_at or tz_now()
+            sheet.duration_days = (finish - sheet.issued_at).days if sheet.issued_at else None
+            if not sheet.completed_at:
+                sheet.state, sheet.state_label = "process", "В процессе"
+            elif not sheet.type_choices:
+                sheet.state, sheet.state_label = "ready", "Пройден, ждёт передачи"
+            elif sheet.issuance:
+                sheet.state, sheet.state_label = "issued", "Документ выдан"
+            else:
+                sheet.state, sheet.state_label = "transferred", f"Передан: {sheet.get_type_choices_display()}"
+        return sheets
+
+    @staticmethod
     def cs_history_detail(cs_object):
         return (
             Trajectory.objects.filter(clearance_sheet=cs_object)

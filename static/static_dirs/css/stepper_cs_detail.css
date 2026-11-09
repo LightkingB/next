@@ -947,3 +947,194 @@
         height: 9rem;
     }
 }
+
+/* ── Кнопка «Создание нового обходного листа» в шапке ── */
+.stepper-cs-detail__head-action {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+@media (max-width: 575.98px) {
+    .stepper-cs-detail__head {
+        flex-wrap: wrap;
+    }
+
+    .stepper-cs-detail__head-action {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ── История обходных листов ── */
+.stepper-cs-detail__history {
+    margin-top: 1rem;
+}
+
+.stepper-cs-detail__history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+}
+
+.scd-sheet {
+    border: 1px solid var(--scd-line);
+    border-left: 3px solid var(--scd-line);
+    border-radius: 6px;
+    background: #fff;
+}
+
+.scd-sheet--process { border-left-color: #1976d2; }
+.scd-sheet--ready { border-left-color: #f0ad4e; }
+.scd-sheet--transferred { border-left-color: #6f42c1; }
+.scd-sheet--issued { border-left-color: #28a745; }
+
+.scd-sheet__summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    padding: 0.6rem 0.85rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--scd-text);
+    list-style: none;
+}
+
+.scd-sheet__summary::-webkit-details-marker { display: none; }
+
+.scd-sheet__summary::before {
+    content: '\25B8';
+    color: var(--scd-muted);
+    transition: transform 0.15s;
+}
+
+.scd-sheet[open] > .scd-sheet__summary::before { transform: rotate(90deg); }
+
+.scd-sheet__num {
+    font-weight: 700;
+    color: var(--scd-ink);
+}
+
+.scd-sheet__tag {
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: var(--scd-surface);
+    color: var(--scd-muted);
+}
+
+.scd-sheet__tag--active {
+    background: var(--scd-red-soft);
+    color: var(--scd-red);
+    border: 1px solid var(--scd-red-line);
+}
+
+.scd-sheet__state { font-weight: 600; }
+.scd-sheet--process .scd-sheet__state { color: #1565c0; }
+.scd-sheet--ready .scd-sheet__state { color: #b26a00; }
+.scd-sheet--transferred .scd-sheet__state { color: #5a32a3; }
+.scd-sheet--issued .scd-sheet__state { color: #1e7e34; }
+
+.scd-sheet__dates,
+.scd-sheet__progress {
+    color: var(--scd-muted);
+    white-space: nowrap;
+}
+
+.scd-sheet__progress { margin-left: auto; }
+
+.scd-sheet__body {
+    padding: 0.25rem 0.85rem 0.85rem;
+    border-top: 1px solid var(--scd-line);
+}
+
+.scd-sheet__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.5rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.8125rem;
+}
+
+.scd-sheet__facts dt {
+    font-weight: 500;
+    color: var(--scd-muted);
+}
+
+.scd-sheet__facts dd {
+    margin: 0;
+    color: var(--scd-ink);
+    overflow-wrap: anywhere;
+}
+
+.scd-sheet__issuance {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 4px;
+    background: #e8f5e9;
+    color: #1e7e34;
+    font-size: 0.8125rem;
+}
+
+.scd-sheet__steps tr.is-done td { color: var(--scd-muted); }
+.scd-sheet__steps tr.is-current td { background: var(--scd-red-soft); font-weight: 600; }
+
+.scd-sheet__note + .scd-sheet__note { margin-top: 0.35rem; }
+
+.scd-sheet__note-meta {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--scd-muted);
+}
+
+.scd-sheet__empty {
+    margin: 0 0 0.5rem;
+    color: var(--scd-muted);
+    font-size: 0.8125rem;
+}
+
+.scd-sheet__link {
+    display: inline-block;
+    margin-top: 0.6rem;
+    font-size: 0.8125rem;
+    color: var(--scd-red);
+}
+
+/* ── Предупреждение в модалке создания нового листа ── */
+.scd-new-warning {
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid #f5d48a;
+    border-left: 4px solid #f0ad4e;
+    border-radius: 4px;
+    background: #fff8e6;
+    color: #6b4a00;
+    font-size: 0.875rem;
+}
+
+.scd-new-warning__title {
+    margin: 0 0 0.4rem;
+    font-weight: 700;
+}
+
+.scd-new-warning__title i { margin-right: 0.35rem; color: #e08e0b; }
+
+.scd-new-warning__list {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.scd-new-warning__list li + li { margin-top: 0.2rem; }
+
+.scd-new-warning__state { font-weight: 600; }
+.scd-new-warning__state--process { color: #1565c0; }
+.scd-new-warning__state--ready { color: #b26a00; }
+.scd-new-warning__state--transferred { color: #5a32a3; }
+.scd-new-warning__state--issued { color: #1e7e34; }
+
+.scd-new-warning__note {
+    margin: 0.5rem 0 0;
+    font-weight: 600;
+}

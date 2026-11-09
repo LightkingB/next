@@ -31,6 +31,13 @@
                             {% endif %}
                         </div>
                     </div>
+                    <button type="button"
+                            class="stepper-cs-detail__btn stepper-cs-detail__btn--primary stepper-cs-detail__head-action"
+                            data-toggle="modal"
+                            data-target="#newSheetModal">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        Создание нового обходного листа
+                    </button>
                 </header>
 
                 <div class="stepper-cs-detail__workspace">
@@ -86,11 +93,7 @@
                                             <i class="fas fa-check-square" aria-hidden="true"></i>
                                             {{ cs_student.completed_at|date:"d-m-Y H:i" }}
                                         </span>
-                                        <a href="{% url 'stepper:cs-force' myedu_id=cs_student.myedu_id %}?type=student"
-                                           class="stepper-cs-detail__btn stepper-cs-detail__btn--danger">
-                                            <i class="fas fa-fire" aria-hidden="true"></i>
-                                            {% trans 'Форс-мажор' %}
-                                        </a>
+                                        {# Кнопка «Форс-мажор» скрыта: новый лист создаётся кнопкой «Создание нового обходного листа». #}
                                     </div>
                                 {% endif %}
                                 </div>
@@ -197,6 +200,107 @@
                                 </div>
                                 {% endif %}
                             {% endif %}
+
+                            {% if sheets_history %}
+                                <div class="admin-module__panel stepper-cs-detail__history">
+                                    <div class="stepper-cs-detail__panel-head-light">
+                                        <span><i class="fas fa-history" aria-hidden="true"></i>История обходных листов · {{ sheets_history|length }}</span>
+                                    </div>
+                                    <div class="stepper-cs-detail__history-list">
+                                        {% for sheet in sheets_history %}
+                                            <details class="scd-sheet scd-sheet--{{ sheet.state }}{% if sheet.last_active %} is-active{% endif %}">
+                                                <summary class="scd-sheet__summary">
+                                                    <span class="scd-sheet__num">№ {{ sheet.id }}</span>
+                                                    {% if sheet.last_active %}<span class="scd-sheet__tag scd-sheet__tag--active">Активный</span>{% endif %}
+                                                    {% if cs_student and sheet.id == cs_student.id %}<span class="scd-sheet__tag">Открыт выше</span>{% endif %}
+                                                    <span class="scd-sheet__state">{{ sheet.state_label }}</span>
+                                                    <span class="scd-sheet__dates">
+                                                        {{ sheet.issued_at|date:"d.m.Y H:i" }}
+                                                        {% if sheet.completed_at %} → {{ sheet.completed_at|date:"d.m.Y H:i" }}{% endif %}
+                                                    </span>
+                                                    <span class="scd-sheet__progress" title="Пройдено этапов">
+                                                        {% if sheet.steps_total %}{{ sheet.steps_done }} / {{ sheet.steps_total }}{% else %}без этапов{% endif %}
+                                                    </span>
+                                                </summary>
+
+                                                <div class="scd-sheet__body">
+                                                    <dl class="scd-sheet__facts">
+                                                        <div><dt>Приказ</dt><dd>{% if sheet.order %}№ {{ sheet.order }}{% if sheet.order_date %} от {{ sheet.order_date }}{% endif %}{% else %}—{% endif %}</dd></div>
+                                                        <div><dt>Статус приказа</dt><dd>{{ sheet.order_status|default:"—" }}</dd></div>
+                                                        <div><dt>Учебный год</dt><dd>{{ sheet.edu_year.title|default:"—" }}</dd></div>
+                                                        <div><dt>Факультет</dt><dd>{{ sheet.myedu_faculty|default:"—" }}</dd></div>
+                                                        <div><dt>Специальность</dt><dd>{{ sheet.myedu_spec|default:"—" }}</dd></div>
+                                                        <div><dt>{% if sheet.completed_at %}Длительность{% else %}В работе{% endif %}</dt><dd>{% if sheet.duration_days is not None %}{{ sheet.duration_days }} дн.{% else %}—{% endif %}</dd></div>
+                                                        {% if sheet.current_step %}
+                                                            <div><dt>Текущий этап</dt><dd>{{ sheet.current_step.template_stage.stage.name }}</dd></div>
+                                                        {% endif %}
+                                                        <div><dt>Передан</dt><dd>{% if sheet.type_choices %}{{ sheet.get_type_choices_display }}{% else %}—{% endif %}</dd></div>
+                                                    </dl>
+
+                                                    {% if sheet.issuance %}
+                                                        <div class="scd-sheet__issuance">
+                                                            <i class="fas fa-file-signature" aria-hidden="true"></i>
+                                                            Выдан документ № {{ sheet.issuance.doc_number|default:"—" }}
+                                                            {% if sheet.issuance.reg_number %}, рег. № {{ sheet.issuance.reg_number }}{% endif %}
+                                                            {% if sheet.issuance.date_issue %} · {{ sheet.issuance.date_issue|date:"d.m.Y" }}{% endif %}
+                                                            · {{ sheet.issuance.get_status_display }}
+                                                            {% if sheet.issuance.employee %} · выдал {{ sheet.issuance.employee.last_name }} {{ sheet.issuance.employee.first_name }}{% endif %}
+                                                        </div>
+                                                    {% endif %}
+
+                                                    {% if sheet.steps %}
+                                                        <div class="stepper-cs-detail__status-table-wrap">
+                                                            <table class="stepper-cs-detail__status-table scd-sheet__steps mb-0">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>#</th>
+                                                                    <th>Этап</th>
+                                                                    <th>Результат</th>
+                                                                    <th>Отметки сотрудников</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                {% for step in sheet.steps %}
+                                                                    <tr class="{% if step.completed_at %}is-done{% elif step == sheet.current_step %}is-current{% endif %}">
+                                                                        <td>{{ forloop.counter }}</td>
+                                                                        <td>{{ step.template_stage.stage.name }}</td>
+                                                                        <td class="text-nowrap">
+                                                                            {% if step.completed_at %}
+                                                                                <i class="far fa-check-square" aria-hidden="true"></i> {{ step.completed_at|date:"d.m.Y H:i" }}
+                                                                            {% elif step == sheet.current_step %}
+                                                                                Текущий
+                                                                            {% else %}
+                                                                                Ожидает
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td>
+                                                                            {% for status in step.stagestatus_set.all %}
+                                                                                <div class="scd-sheet__note">
+                                                                                    <span class="scd-sheet__note-meta">{{ status.created_at|date:"d.m.Y H:i" }}{% if status.processed_by %} · {{ status.processed_by.last_name }} {{ status.processed_by.first_name }}{% endif %}</span>
+                                                                                    {{ status.comment_text|default:"—" }}
+                                                                                </div>
+                                                                            {% empty %}
+                                                                                —
+                                                                            {% endfor %}
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    {% else %}
+                                                        <p class="scd-sheet__empty">Этапы для этого листа не создавались.</p>
+                                                    {% endif %}
+
+                                                    <a href="{% url 'stepper:cs-history' myedu_id=sheet.myedu_id cs_id=sheet.id %}" class="scd-sheet__link">
+                                                        Открыть страницу листа <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                                    </a>
+                                                </div>
+                                            </details>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
 
                         <aside class="stepper-cs-detail__aside">
@@ -300,6 +404,55 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
                             <button type="submit" class="btn btn-sm btn-danger">Потверждаю</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="newSheetModal" tabindex="-1" role="dialog" aria-labelledby="newSheetModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form action="{% url 'stepper:cs-new-sheet' myedu_id=student.student_id %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="newSheetModalLabel">Создание нового обходного листа</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            {% if sheets_history %}
+                                <div class="scd-new-warning" role="alert">
+                                    <p class="scd-new-warning__title">
+                                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                                        {% if sheets_history|length > 1 %}У студента уже есть обходные листы ({{ sheets_history|length }}){% else %}У студента уже есть обходной лист{% endif %}
+                                    </p>
+                                    <ul class="scd-new-warning__list">
+                                        {% for sheet in sheets_history %}
+                                            <li>
+                                                <b>№ {{ sheet.id }}</b> от {{ sheet.issued_at|date:"d.m.Y" }} —
+                                                <span class="scd-new-warning__state scd-new-warning__state--{{ sheet.state }}">{{ sheet.state_label }}</span>
+                                                {% if sheet.last_active %}<span class="scd-sheet__tag scd-sheet__tag--active">Активный</span>{% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% if has_open_sheet %}
+                                        <p class="scd-new-warning__note">
+                                            Есть незавершённый лист: он перестанет быть активным, но его этапы у сотрудников останутся.
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            Студенту <b>{{ student.student_fio }}</b> будет создан новый обходной лист
+                            по приказу № {{ student.info|default:"—" }}.
+                            {% if sheets_history %}Новый лист станет активным, прежние останутся в истории.{% endif %}
+                            Продолжить?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Создать</button>
                         </div>
                     </form>
                 </div>

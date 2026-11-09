@@ -81,7 +81,9 @@
                             <th>{% trans 'Специальность' %}</th>
                             <th>Приказ</th>
                             <th>Дата приказа</th>
-                            <th>Статус</th>
+                            <th>Статус приказа</th>
+                            <th>{% trans 'Создан' %}</th>
+                            <th>{% trans 'Состояние' %}</th>
                             {% if not history %}
                                 <th>Ваш вердикт</th>
                             {% endif %}
@@ -111,6 +113,27 @@
                                 <td>{{ student.order|default:"—" }}</td>
                                 <td>{{ student.order_date|default:"—" }}</td>
                                 <td>{{ student.order_status|default:"—" }}</td>
+                                <td class="stepper-debts__nowrap" title="Дата создания обходного листа">
+                                    {{ student.issued_at|date:"d.m.Y" }}
+                                    <span class="stepper-debts__sub">{{ student.issued_at|date:"H:i" }}</span>
+                                </td>
+                                <td class="stepper-debts__nowrap">
+                                    {% if student.last_active %}
+                                        <span class="stepper-debts__badge stepper-debts__badge--active">Активный</span>
+                                    {% else %}
+                                        <span class="stepper-debts__badge stepper-debts__badge--inactive"
+                                              title="У студента создан более новый обходной лист">Не активный</span>
+                                    {% endif %}
+                                    <span class="stepper-debts__sub">
+                                        {% if history %}
+                                            Пройден{% if student.status %} {{ student.status|date:"d.m.Y" }}{% endif %}
+                                        {% elif student.last_comment %}
+                                            Отложен
+                                        {% else %}
+                                            В процессе
+                                        {% endif %}
+                                    </span>
+                                </td>
                                 {% if not history %}
                                     <td>
                                         <span class="stepper-debts__verdict">{{ student.last_comment|default:"—" }}</span>
@@ -119,7 +142,7 @@
                             </tr>
                         {% empty %}
                             <tr class="stepper-debts__empty-row nosort">
-                                <td colspan="{% if history %}7{% else %}8{% endif %}" class="stepper-debts__empty">
+                                <td colspan="{% if history %}9{% else %}10{% endif %}" class="stepper-debts__empty">
                                     <div class="stepper-debts__empty-state">
                                         <i class="fas fa-inbox" aria-hidden="true"></i>
                                         <p>{% trans 'Пусто' %}</p>

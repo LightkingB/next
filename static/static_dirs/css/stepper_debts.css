@@ -649,3 +649,35 @@
         min-width: 9rem;
     }
 }
+
+/* ── Дата создания и состояние обходного листа ── */
+.stepper-debts__nowrap {
+    white-space: nowrap;
+}
+
+.stepper-debts__sub {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    color: var(--sd-muted);
+}
+
+.stepper-debts__badge {
+    display: inline-block;
+    padding: 0.08rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.stepper-debts__badge--active {
+    color: #1e7e34;
+    background: #e8f5e9;
+    border: 1px solid #b7dfbf;
+}
+
+.stepper-debts__badge--inactive {
+    color: var(--sd-muted);
+    background: var(--sd-surface);
+    border: 1px solid var(--sd-line);
+}

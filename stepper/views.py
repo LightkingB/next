@@ -1,5 +1,7 @@
 import base64
 import json
+import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from io import BytesIO
 from urllib.parse import urlencode
@@ -62,6 +64,70 @@ STUDENT_VIEWS = (
 )
 
 
+def _words(text):
+    return re.findall(r"\w+", (text or "").lower().replace("ё", "е"))
+
+
+def _search_rank(student, query):
+    """
+    MyEDU ищет по каждому слову отдельно («Эргешов Илимбек Даниярович» → все Эргешовы, все Илимбеки…).
+    Возвращает (точное совпадение, сколько слов запроса нашлось в ФИО):
+    точное — совпал ID или каждое слово запроса — начало какого-то слова ФИО.
+    """
+    query = (query or "").strip()
+    if query.isdigit():
+        return str(student.get("student_id")) == query, 0
+    q_words, fio_words = _words(query), _words(student.get("student_fio"))
+    matched = sum(1 for w in q_words if any(f.startswith(w) for f in fio_words))
+    return bool(q_words) and matched == len(q_words), matched
+
+
+EXTRA_MATCH_LIMIT = 10
+
+
+def _add_missing_exact_matches(students, query, faculty_id=None, speciality_id=None):
+    """
+    Поиск MyEDU для обходного (stepper) ищет по каждому слову отдельно и обрезает выдачу, поэтому
+    человек с точно введённым ФИО может в неё не попасть. Точный поиск MyEDU (searchstudent) находит его,
+    но без долгов — такие записи догружаем полными данными по ID (как при поиске по ID) и ставим в начало.
+    """
+    if not query or query.isdigit():
+        return students
+    found = MyEduService.search_students(query)
+    if not isinstance(found, list):
+        return students
+
+    known = {str(st.get("student_id")) for st in students}
+    missing = []
+    for item in found:
+        student_id = str(item.get("student_id") or "")
+        if not student_id or student_id in known:
+            continue
+        if faculty_id and item.get("faculty_id") != faculty_id:
+            continue
+        if speciality_id and item.get("speciality_id") != speciality_id:
+            continue
+        if not _search_rank(item, query)[0]:
+            continue
+        missing.append(student_id)
+        known.add(student_id)
+    missing = missing[:EXTRA_MATCH_LIMIT]
+    if not missing:
+        return students
+
+    def fetch(student_id):
+        return MyEduService.search_debt_students(STUDENT_STEPPER_URL, student_id, faculty_id, speciality_id) or []
+
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        results = list(pool.map(fetch, missing))
+    extra = []
+    for student_id, result in zip(missing, results):
+        match = next((st for st in result if str(st.get("student_id")) == student_id), None)
+        if match:
+            extra.append(match)
+    return extra + students
+
+
 def _sheet_state(sheet):
     if not sheet:
         return "nocs"
@@ -93,12 +159,19 @@ def cs_index(request):
             if students is None:
                 api_failed, students = True, []
             else:
+                students = _add_missing_exact_matches(students, query, faculty_id, speciality_id)
                 cache.set(cache_key, students, 5 * 60)
 
     sheets = request.stepper.latest_sheets_by_myedu_ids([st.get("student_id") for st in students])
+    # Выдача документа по последнему листу (одним запросом): отличает «выдано» от «передано, но не выдано».
+    issuances = {}
+    for issuance in Issuance.objects.filter(cs_id__in=[sh.id for sh in sheets.values() if sh.type_choices]) \
+            .only("id", "cs_id", "date_issue", "created_at", "doc_number", "status").order_by("id"):
+        issuances[issuance.cs_id] = issuance
     for st in students:
         sheet = sheets.get(str(st.get("student_id")))
         st["sheet"] = sheet
+        st["issuance"] = issuances.get(sheet.id) if sheet else None
         st["sheet_state"] = _sheet_state(sheet)
         st["debt_list"] = [d.get("type", "") for d in (st.get("debt") or []) if d.get("type")]
 
@@ -118,10 +191,22 @@ def cs_index(request):
         "process": lambda st: st["sheet_state"] == "process",
         "done": lambda st: st["sheet_state"] in ("done", "issued"),
     }
-    visible = sorted((st for st in students if matches[view](st)), key=STUDENT_SORTS[sort])
+    for st in students:
+        st["exact"], st["matched_words"] = _search_rank(st, query) if query else (False, 0)
+    # Точные совпадения с запросом — сверху, связанные результаты MyEDU — ниже (по числу совпавших слов).
+    visible = sorted((st for st in students if matches[view](st)),
+                     key=lambda st: (not st["exact"], -st["matched_words"], STUDENT_SORTS[sort](st)))
+    exact_count = sum(1 for st in visible if st["exact"])
+    # Группы нужны, только если среди результатов есть не точные совпадения.
+    grouped = bool(query) and exact_count < len(visible)
 
     paginator = Pagination(request, visible)
     page = paginator.pagination(get.get('page', 1))
+    # Заголовок группы — в начале страницы и там, где точные совпадения сменяются связанными.
+    previous = None
+    for st in page:
+        st["group_header"] = grouped and st["exact"] != previous
+        previous = st["exact"]
     enrich_students_with_survey_status(page, id_key="student_id")
 
     params = {"q": query, "faculty": faculty_id, "speciality": speciality_id, "sort": sort}
@@ -150,6 +235,8 @@ def cs_index(request):
         "view": view,
         "sort": sort,
         "sort_choices": STUDENT_SORT_CHOICES,
+        "exact_count": exact_count,
+        "other_count": len(visible) - exact_count,
         "view_links": [{"label": label, "count": counts[value], "active": view == value,
                         "url": url(view=value), "value": value or "all"} for value, label in STUDENT_VIEWS],
         "success": True,
@@ -1241,6 +1328,7 @@ def cs_detail(request, myedu_id):
             messages.error(request, "Выберите этапы, которые обязательны к выполнению")
 
     trajectories = request.stepper.cs_history_detail(cs_student)
+    sheets_history = request.stepper.student_sheets_report(myedu_id)
     context = {
         "student": student,
         "student_data": json.dumps(student),
@@ -1249,8 +1337,31 @@ def cs_detail(request, myedu_id):
         "trajectories": trajectories,
         "navbar": nav,
         "type_choices": TypeChoices.choices,
+        "sheets_history": sheets_history,
+        "has_open_sheet": any(sheet.state == "process" for sheet in sheets_history),
     }
     return render(request, "teachers/steppers/cs-detail.html", context)
+
+
+@with_stepper
+@require_POST
+def cs_new_sheet(request, myedu_id):
+    """Создание нового обходного листа студенту, даже если прежний завершён; новый становится активным."""
+    student = EntityCache.get_or_set(
+        entity_id=myedu_id,
+        fetch_func=MyEduService.get_stepper_data_from_api,
+        fetch_kwargs={
+            "url": STUDENT_STEPPER_URL,
+            "search": myedu_id,
+        },
+    )
+    if not student:
+        messages.error(request, "Не удалось получить данные студента из MyEDU — лист не создан.")
+        return redirect("stepper:cs-detail", myedu_id=myedu_id)
+
+    sheet = request.stepper.create_new_student_sheet(student, myedu_id)
+    messages.success(request, f"Создан новый обходной лист № {sheet.id}. Выберите обязательные этапы.")
+    return redirect("stepper:cs-detail", myedu_id=myedu_id)
 
 
 @with_stepper

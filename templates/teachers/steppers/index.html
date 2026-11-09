@@ -107,7 +107,20 @@
                             </thead>
                             <tbody>
                             {% for student in objects %}
-                                <tr class="{% if student.sheet %}has-sheet{% endif %}">
+                                {% if student.group_header %}
+                                    <tr class="students-group{% if student.exact %} students-group--exact{% endif %}">
+                                        <td colspan="7">
+                                            {% if student.exact %}
+                                                <i class="fas fa-check-circle" aria-hidden="true"></i> Точное совпадение с «{{ query }}» · {{ exact_count }}
+                                            {% elif exact_count %}
+                                                <i class="fas fa-link" aria-hidden="true"></i> Связанные результаты MyEDU · {{ other_count }}
+                                            {% else %}
+                                                Точных совпадений с «{{ query }}» нет — связанные результаты MyEDU · {{ other_count }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                                <tr class="{% if student.sheet %}has-sheet{% endif %}{% if student.exact %} is-exact{% endif %}">
                                     <td class="stepper-cs__col-num">{{ objects.start_index|add:forloop.counter0 }}</td>
                                     <td class="students-col-student">
                                         <a href="{% url 'stepper:cs-detail' myedu_id=student.student_id %}" class="students-name" title="{{ student.student_fio }}">{{ student.student_fio }}</a>
@@ -135,8 +148,17 @@
                                                 </span>
                                             {% elif student.sheet_state == 'done' %}
                                                 <span class="students-state__step students-state__step--done"><i class="fas fa-flag-checkered" aria-hidden="true"></i> Пройден — ждёт выдачи</span>
+                                            {% elif student.issuance %}
+                                                <span class="students-issued" title="Документ выдан">
+                                                    <i class="fas fa-file-signature" aria-hidden="true"></i>
+                                                    <span>
+                                                        Справка выдана
+                                                        <b>{{ student.issuance.date_issue|default:student.issuance.created_at|date:"d.m.Y" }}</b>
+                                                        {% if student.issuance.doc_number %}<small>№ {{ student.issuance.doc_number }}</small>{% endif %}
+                                                    </span>
+                                                </span>
                                             {% else %}
-                                                <span class="students-state__step students-state__step--issued"><i class="fas fa-archive" aria-hidden="true"></i> Справка выдана</span>
+                                                <span class="students-state__step students-state__step--issued"><i class="fas fa-archive" aria-hidden="true"></i> Передан: {{ student.sheet.get_type_choices_display }} — ещё не выдан</span>
                                             {% endif %}
                                         {% else %}
                                             <span class="students-state students-state--none">

@@ -9,6 +9,7 @@ urlpatterns = [
     path('students/survey-submissions/', student_survey_submissions, name='student-survey-submissions'),
     path('student/<int:myedu_id>/detail/', cs_detail, name='cs-detail'),
     path('student/<int:myedu_id>/force/', cs_force, name='cs-force'),
+    path('student/<int:myedu_id>/new/', cs_new_sheet, name='cs-new-sheet'),
     path('student/<int:myedu_id>/order/done/', order_done, name='order-done'),
     path('student/<int:myedu_id>/request/', request_cs, name='request-cs'),
     path('student/<int:id>/step/remove/', step_remove, name='step-remove'),
